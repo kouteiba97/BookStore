@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================= ENUMS =================
+
+enum InventoryStatus {
+  available
+  on_request
+  rare
+}
+
+enum RequestStatus {
+  pending
+  contacted
+  done
+}
+
+// ================= CORE =================
+
+model Store {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  books       Book[]
+  inventories Inventory[]
+  requests    Request[]
+}
+
+// ================= BOOK =================
+
+model Book {
+  id              String  @id @default(uuid())
+  title           String
+  titleNormalized String?
+
+  description String?
+  year        Int?
+
+  authorId    String?
+  publisherId String?
+  countryId   String?
+
+  categoryId String
+  storeId    String
+
+  imageUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relations
+  store     Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category  Category   @relation(fields: [categoryId], references: [id])
+  author    Author?    @relation(fields: [authorId], references: [id])
+  publisher Publisher? @relation(fields: [publisherId], references: [id])
+  country   Country?   @relation(fields: [countryId], references: [id])
+
+  inventory Inventory?
+  subjects  BookOnSubject[]
+
+  @@index([storeId, title])
+  @@index([titleNormalized])
+}
+
+// ================= REFERENCE TABLES =================
+
+model Author {
+  id   String @id @default(uuid())
+  name String @unique
+
+  books Book[]
+}
+
+model Publisher {
+  id   String @id @default(uuid())
+  name String @unique
+
+  books Book[]
+}
+
+model Country {
+  id   String @id @default(uuid())
+  name String @unique
+
+  books Book[]
+}
+
+model Category {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+
+  books Book[]
+}
+
+// ================= INVENTORY =================
+
+model Inventory {
+  id      String          @id @default(uuid())
+  bookId  String          @unique
+  storeId String
+
+  stock  Int?
+  status InventoryStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, status])
+}
+
+// ================= ACADEMIC =================
+
+model Field {
+  id   String @id @default(uuid())
+  name String @unique
+
+  years AcademicYear[]
+}
+
+model AcademicYear {
+  id      String @id @default(uuid())
+  name    String
+  fieldId String
+
+  field    Field     @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  subjects Subject[]
+
+  @@index([fieldId])
+}
+
+model Subject {
+  id     String @id @default(uuid())
+  name   String
+  yearId String
+
+  year  AcademicYear    @relation(fields: [yearId], references: [id], onDelete: Cascade)
+  books BookOnSubject[]
+
+  @@index([yearId])
+}
+
+model BookOnSubject {
+  bookId    String
+  subjectId String
+
+  book    Book    @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, subjectId])
+}
+
+// ================= REQUEST =================
+
+model Request {
+  id      String @id @default(uuid())
+  storeId String
+
+  bookName  String
+  userPhone String
+  userType  String?
+
+  status RequestStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, status])
+}
