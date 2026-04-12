@@ -85,3 +85,70 @@ export function LogoMark({ className = "", onDark = false }: LogoProps) {
           opacity="0.5"
         />
       </g>
+
+      {/* The letter ب (bā') — stylized geometric form */}
+      <g transform="translate(50 50)">
+        {/* The curved body of the bā' — a wide, shallow bowl */}
+        <path
+          d="M -22 -4
+             Q -22 14, 0 14
+             Q 22 14, 22 -4"
+          fill="none"
+          stroke={dark}
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* The rising tail on the right (RTL start of the letter) */}
+        <path
+          d="M 22 -4 L 22 -12"
+          fill="none"
+          stroke={dark}
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        {/* The descending tail on the left (end of the letter) */}
+        <path
+          d="M -22 -4 L -22 -10"
+          fill="none"
+          stroke={dark}
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        {/* The single dot below — "all knowledge in the dot of the bā'" */}
+        <circle cx="0" cy="22" r="3.2" fill="url(#bayan-gold)" />
+      </g>
+    </svg>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+ * Logo — icon mark + wordmark lockup (horizontal)
+ * Use for: hero, footer, large brand placements
+ * ──────────────────────────────────────────────────────────── */
+export function Logo({ className = "", onDark = false }: LogoProps) {
+  const textColor = onDark ? "#E8C574" : "#1F3A2E";
+  const subColor = onDark ? "#C9A85C" : "#6B5838";
+
+  return (
+    <div className={`inline-flex items-center gap-3 ${className}`} dir="rtl">
+      <LogoMark onDark={onDark} className="h-12 w-12 shrink-0" />
+      <div className="flex flex-col leading-none">
+        <span
+          className="font-heading text-2xl font-bold tracking-tight"
+          style={{ color: textColor }}
+        >
+          مكتبة البيان
+        </span>
+        <span
+          className="mt-1 text-[10px] font-medium tracking-[0.15em]"
+          style={{ color: subColor }}
+        >
+          مكتبة شرعية متخصصة
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export default LogoMark;
