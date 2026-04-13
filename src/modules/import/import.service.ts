@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ImagesService } from '../images/images.service';
 import { normalizeArabic } from '../../common/utils/normalize-arabic';
 import { parse } from 'csv-parse/sync';
 import * as XLSX from 'xlsx';
@@ -32,11 +33,15 @@ export interface ImportResult {
 // ── Constants ──────────────────────────────────────────
 
 const BATCH_SIZE = 50;
+const IMAGE_CONCURRENCY = 12;
 const REQUIRED_FIELDS: (keyof RawRow)[] = ['title', 'author'];
 
 @Injectable()
 export class ImportService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly imagesService: ImagesService,
+  ) {}
 
   // ── Public ──────────────────────────────────────────
 
@@ -50,16 +55,18 @@ export class ImportService {
 
     const result: ImportResult = { total: rows.length, created: 0, skipped: 0, errors: 0, errorDetails: [] };
 
-    // Pre-load caches to avoid N+1 queries
     const authorCache = new Map<string, string>();
     const categoryCache = new Map<string, string>();
     const publisherCache = new Map<string, string>();
+    const imageCache = new Map<string, string | null>();
     const existingBooks = await this.loadExistingBooks(store.id);
 
-    // Process in batches
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
       const batchOffset = i;
+
+      // Pre-fetch images for the entire batch (limited concurrency) before any DB writes
+      await this.prefetchImages(batch, imageCache);
 
       await Promise.all(
         batch.map((row, idx) =>
@@ -68,6 +75,7 @@ export class ImportService {
             categoryCache,
             publisherCache,
             existingBooks,
+            imageCache,
           }, result),
         ),
       );
@@ -76,18 +84,55 @@ export class ImportService {
     return result;
   }
 
+  // ── Image Pre-fetching ──────────────────────────────
+
+  private async prefetchImages(
+    rows: RawRow[],
+    imageCache: Map<string, string | null>,
+  ): Promise<void> {
+    // Collect unique (title, author) pairs not already in cache
+    const seen = new Map<string, { title: string; author: string }>();
+
+    for (const row of rows) {
+      if (!row.title?.trim() || !row.author?.trim()) continue;
+
+      const title = row.title.trim();
+      const author = this.normalizeSpacing(row.author);
+      const key = `${title}::${author}`;
+
+      if (!imageCache.has(key) && !seen.has(key)) {
+        seen.set(key, { title, author });
+      }
+    }
+
+    const pairs = [...seen.values()];
+    if (pairs.length === 0) return;
+
+    // Fetch in chunks to keep concurrency within bounds
+    for (let i = 0; i < pairs.length; i += IMAGE_CONCURRENCY) {
+      const chunk = pairs.slice(i, i + IMAGE_CONCURRENCY);
+
+      await Promise.all(
+        chunk.map(async ({ title, author }) => {
+          const key = `${title}::${author}`;
+          try {
+            const url = await this.imagesService.getBookImage(title, author);
+            imageCache.set(key, url);
+          } catch {
+            imageCache.set(key, null);
+          }
+        }),
+      );
+    }
+  }
+
   // ── File Parsing ─────────────────────────────────────
 
   private parseFile(file: Express.Multer.File): RawRow[] {
     const ext = this.getExtension(file.originalname);
 
-    if (ext === '.csv') {
-      return this.parseCsv(file.buffer);
-    }
-
-    if (ext === '.xlsx' || ext === '.xls') {
-      return this.parseExcel(file.buffer);
-    }
+    if (ext === '.csv') return this.parseCsv(file.buffer);
+    if (ext === '.xlsx' || ext === '.xls') return this.parseExcel(file.buffer);
 
     throw new BadRequestException('Unsupported file format. Use CSV or XLSX.');
   }
@@ -125,6 +170,7 @@ export class ImportService {
       categoryCache: Map<string, string>;
       publisherCache: Map<string, string>;
       existingBooks: Set<string>;
+      imageCache: Map<string, string | null>;
     },
     result: ImportResult,
   ): Promise<void> {
@@ -158,7 +204,10 @@ export class ImportService {
         return;
       }
 
-      // 4. Create book + inventory
+      // 4. Resolve image from pre-fetched cache (null if not found or API failed)
+      const imageUrl = caches.imageCache.get(`${title}::${authorName}`) ?? null;
+
+      // 5. Create book with image
       const book = await this.prisma.book.create({
         data: {
           title,
@@ -168,9 +217,11 @@ export class ImportService {
           authorId,
           categoryId,
           publisherId,
+          imageUrl,
         },
       });
 
+      // 6. Create inventory (unchanged)
       await this.prisma.inventory.create({
         data: {
           bookId: book.id,
@@ -179,7 +230,6 @@ export class ImportService {
         },
       });
 
-      // Update cache so subsequent rows in the same batch detect duplicates
       caches.existingBooks.add(dedupeKey);
       result.created++;
     } catch {

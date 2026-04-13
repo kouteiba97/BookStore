@@ -16,7 +16,7 @@ export default function Layout() {
   return (
     <div dir="rtl" className="flex min-h-screen flex-col bg-background">
       {/* ── Header ── */}
-      <header className="sticky top-0 z-50 border-b border-gold/15 bg-[#1F3A2E]/95 backdrop-blur-md supports-[backdrop-filter]:bg-[#1F3A2E]/80">
+      <header className="sticky top-0 z-50 border-b border-gold/20 bg-[#1F3A2E] backdrop-blur-md supports-[backdrop-filter]:bg-[#1F3A2E]/95">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="group flex items-center gap-2.5">
             <LogoMark onDark className="h-10 w-10 shrink-0 transition-transform group-hover:scale-105" />
@@ -33,7 +33,7 @@ export default function Layout() {
                 className={`rounded-lg px-3 py-1.5 transition-all ${
                   isActive(link.to)
                     ? "bg-gold/15 font-semibold text-gold"
-                    : "text-gold/65 hover:bg-gold/10 hover:text-gold/95"
+                    : "text-gold/80 hover:bg-gold/10 hover:text-gold"
                 }`}
               >
                 {link.label}

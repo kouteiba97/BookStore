@@ -5,6 +5,7 @@ export interface Book {
   description: string | null;
   year: number | null;
   imageUrl: string | null;
+  price?: number | null;
   inventory: Inventory | null;
   category: Category | null;
   author: Author | null;

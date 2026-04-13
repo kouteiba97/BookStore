@@ -82,7 +82,7 @@ export class ImagesService {
 
   // ── Image Resolution (Google → OpenLibrary) ─────────
 
-  private async getBookImage(title: string, author?: string): Promise<string | null> {
+  async getBookImage(title: string, author?: string): Promise<string | null> {
     const cleanTitle = this.cleanSearchQuery(title);
     const cleanAuthor = author ? this.cleanSearchQuery(author) : undefined;
 
