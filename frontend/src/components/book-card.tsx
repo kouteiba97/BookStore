@@ -74,24 +74,47 @@ export default function BookCard({ book }: { book: Book }) {
         </div>
 
         {/* Info */}
-        <div className="flex flex-1 flex-col gap-1.5 p-4 pb-3">
+        <div className="flex flex-1 flex-col gap-1 p-4 pb-3">
+          {/* Title */}
           <h3 className="text-[13px] font-bold leading-snug line-clamp-2 text-foreground">
             {book.title}
           </h3>
 
+          {/* Author */}
           {book.author && (
-            <p className="line-clamp-1 text-[11px] text-muted-foreground">
-              {book.author.name}
-            </p>
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3 shrink-0 text-gold/70">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <span className="line-clamp-1">{book.author.name}</span>
+            </div>
           )}
 
-          {book.category && (
-            <div className="mt-auto pt-2">
+          {/* Publisher */}
+          {book.publisher && (
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3 shrink-0 text-gold/50">
+                <path d="M3 9h18M9 21V9" />
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+              </svg>
+              <span className="line-clamp-1">{book.publisher.name}</span>
+            </div>
+          )}
+
+          {/* Year + Category row */}
+          <div className="mt-auto flex items-center gap-2 pt-2.5">
+            {book.category && (
               <span className="inline-block rounded-md bg-primary/8 px-2 py-0.5 text-[10px] font-medium text-primary/80">
                 {book.category.name}
               </span>
-            </div>
-          )}
+            )}
+            {book.year && (
+              <span className="text-[10px] text-muted-foreground/60">
+                {book.year}
+              </span>
+            )}
+          </div>
         </div>
       </Link>
 

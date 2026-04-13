@@ -72,21 +72,6 @@ export default function HomePage() {
           <div className="mx-auto mt-7 max-w-2xl">
             <SearchBox size="large" />
           </div>
-          <div className="mt-4 flex items-center justify-center">
-            <RequestDialog
-              trigger={
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#2A5A42] px-6 py-2.5 text-sm font-bold text-gold shadow-lg shadow-[#2A5A42]/25 transition-all hover:-translate-y-0.5 hover:bg-[#347A56] hover:shadow-xl hover:shadow-[#2A5A42]/30"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  لم تجد الكتاب؟ اطلبه الآن
-                </button>
-              }
-            />
-          </div>
         </div>
       </section>
 
@@ -108,36 +93,6 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-
-      {/* ── Latest Books ── */}
-      <section>
-        <SectionHeader title="أحدث الإضافات" hint="جديدنا في المكتبة" />
-        {booksLoading ? (
-          <BookGridSkeleton count={8} />
-        ) : books.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {books.slice(0, 8).map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-card/50 py-14 text-center text-sm text-muted-foreground">
-            لا توجد كتب لعرضها حاليًا
-          </div>
-        )}
-      </section>
-
-      {/* ── Most Requested ── */}
-      {books.length > 8 && (
-        <section>
-          <SectionHeader title="الأكثر طلبًا" hint="اختيارات قراء المكتبة" />
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {books.slice(8, 16).map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* ── Academic ── */}
       <section className="relative overflow-hidden rounded-3xl border border-gold/25 bg-gradient-to-br from-gold-light/40 via-card to-card p-6 sm:p-8">
@@ -185,6 +140,61 @@ export default function HomePage() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* ── Latest Books ── */}
+      <section>
+        <SectionHeader title="أحدث الإضافات" hint="جديدنا في المكتبة" />
+        {booksLoading ? (
+          <BookGridSkeleton count={8} />
+        ) : books.length > 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {books.slice(0, 8).map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border bg-card/50 py-14 text-center text-sm text-muted-foreground">
+            لا توجد كتب لعرضها حاليًا
+          </div>
+        )}
+      </section>
+
+      {/* ── Most Requested ── */}
+      {books.length > 8 && (
+        <section>
+          <SectionHeader title="الأكثر طلبًا" hint="اختيارات قراء المكتبة" />
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            {books.slice(8, 16).map((book) => (
+              <BookCard key={book.id} book={book} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── CTA — Request Book ── */}
+      <section className="rounded-3xl border border-gold/25 bg-gradient-to-br from-[#1F3A2E] to-[#2A5A42] px-6 py-10 text-center sm:px-12">
+        <h2 className="font-heading text-2xl font-bold text-gold sm:text-3xl">
+          لم تجد الكتاب الذي تبحث عنه؟
+        </h2>
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gold/60">
+          أرسل لنا طلبك وسنوفّره لك في أقرب وقت
+        </p>
+        <div className="mt-6 flex items-center justify-center">
+          <RequestDialog
+            trigger={
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold px-7 py-3 text-sm font-bold text-[#1F3A2E] shadow-lg transition-all hover:-translate-y-0.5 hover:bg-gold/90 hover:shadow-xl active:scale-[0.97]"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                اطلب كتابك الآن
+              </button>
+            }
+          />
         </div>
       </section>
     </div>
