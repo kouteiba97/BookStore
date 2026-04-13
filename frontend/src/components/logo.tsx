@@ -1,130 +1,178 @@
 /**
  * مكتبة البيان — Logo system
  *
- * The mark is a geometric monogram of the Arabic letter ب (bā'),
- * the first letter of "البيان". It sits inside an eight-pointed star
- * frame — a classic Islamic geometric motif symbolizing harmony and
- * the meeting of the celestial and the earthly — a fitting container
- * for a library of sacred knowledge.
+ * Inspired by the classical Islamic شمسة (shamsa) — the illuminated
+ * sun-medallion that opens precious Arabic manuscripts. The mark
+ * centers on the letter ب (bā'), the first letter of "البيان",
+ * with a gold dot beneath it — a reference to the saying that
+ * "all knowledge is contained in the dot beneath the bā'".
  *
- * The dot beneath the ب is rendered as a small gold disc, a nod to
- * the famous saying that "all knowledge is contained in the dot
- * beneath the bā'".
+ * Two variants:
+ * - <LogoMark />   simplified, for small sizes (header, footer, favicon)
+ * - <LogoShamsa /> full medallion, for large sizes (hero, print)
  */
 
 type LogoProps = {
   className?: string;
-  /** When true, uses light colors suited for dark backgrounds (header). */
+  /** Light-palette variant for use on dark backgrounds. */
   onDark?: boolean;
 };
 
 /* ────────────────────────────────────────────────────────────
- * LogoMark — the icon alone (square, 1:1)
- * Use for: header, favicon, avatars, loading states
+ * LogoMark — simplified mark for small sizes
+ * Dark green disc + gold ring + 8-point Rub al-Hizb star + ب
  * ──────────────────────────────────────────────────────────── */
 export function LogoMark({ className = "", onDark = false }: LogoProps) {
-  const gold = onDark ? "#D4A84B" : "#B8832A";
-  const goldLight = onDark ? "#E8C574" : "#D4A84B";
-  const dark = onDark ? "#F5E6C3" : "#1F3A2E";
-  const bgFrom = onDark ? "#2A4A3A" : "#FDFAF3";
-  const bgTo = onDark ? "#1F3A2E" : "#F5EFE0";
+  const discFrom = onDark ? "#32604A" : "#1F3A2E";
+  const discTo = onDark ? "#1A3025" : "#122318";
+  const goldFrom = onDark ? "#F2D690" : "#E8C574";
+  const goldTo = onDark ? "#C9962E" : "#A8761E";
 
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 0 200 200"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       role="img"
       aria-label="مكتبة البيان"
     >
       <defs>
-        <linearGradient id="bayan-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={bgFrom} />
-          <stop offset="100%" stopColor={bgTo} />
-        </linearGradient>
-        <linearGradient id="bayan-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={goldLight} />
-          <stop offset="100%" stopColor={gold} />
+        <radialGradient id="lm-disc" cx="50%" cy="30%" r="80%">
+          <stop offset="0%" stopColor={discFrom} />
+          <stop offset="100%" stopColor={discTo} />
+        </radialGradient>
+        <linearGradient id="lm-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={goldFrom} />
+          <stop offset="100%" stopColor={goldTo} />
         </linearGradient>
       </defs>
 
-      {/* Eight-pointed star frame (two overlapping squares) */}
-      <g transform="translate(50 50)">
-        {/* Outer star — filled background */}
-        <g>
-          <rect
-            x="-38"
-            y="-38"
-            width="76"
-            height="76"
-            rx="8"
-            fill="url(#bayan-bg)"
-            stroke="url(#bayan-gold)"
-            strokeWidth="1.5"
-          />
-          <rect
-            x="-38"
-            y="-38"
-            width="76"
-            height="76"
-            rx="8"
-            fill="url(#bayan-bg)"
-            stroke="url(#bayan-gold)"
-            strokeWidth="1.5"
-            transform="rotate(45)"
-            opacity="0.95"
-          />
-        </g>
+      {/* Disc + gold rings */}
+      <circle cx="100" cy="100" r="94" fill="url(#lm-disc)" />
+      <circle cx="100" cy="100" r="91" fill="none" stroke="url(#lm-gold)" strokeWidth="3" />
+      <circle cx="100" cy="100" r="86" fill="none" stroke={goldFrom} strokeWidth="0.75" opacity="0.55" />
 
-        {/* Inner octagonal highlight ring */}
-        <circle
-          r="30"
-          fill="none"
-          stroke="url(#bayan-gold)"
-          strokeWidth="0.75"
-          opacity="0.5"
-        />
+      {/* 8-point Rub al-Hizb star */}
+      <g fill={goldFrom} fillOpacity="0.15">
+        <polygon points="54,54 146,54 146,146 54,146" />
+        <polygon points="100,35 165,100 100,165 35,100" />
+      </g>
+      <g fill="none" stroke="url(#lm-gold)" strokeWidth="2.25" strokeLinejoin="round">
+        <polygon points="54,54 146,54 146,146 54,146" />
+        <polygon points="100,35 165,100 100,165 35,100" />
       </g>
 
-      {/* The letter ب (bā') — stylized geometric form */}
-      <g transform="translate(50 50)">
-        {/* The curved body of the bā' — a wide, shallow bowl */}
-        <path
-          d="M -22 -4
-             Q -22 14, 0 14
-             Q 22 14, 22 -4"
-          fill="none"
-          stroke={dark}
-          strokeWidth="5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* The rising tail on the right (RTL start of the letter) */}
-        <path
-          d="M 22 -4 L 22 -12"
-          fill="none"
-          stroke={dark}
-          strokeWidth="5"
-          strokeLinecap="round"
-        />
-        {/* The descending tail on the left (end of the letter) */}
-        <path
-          d="M -22 -4 L -22 -10"
-          fill="none"
-          stroke={dark}
-          strokeWidth="5"
-          strokeLinecap="round"
-        />
-        {/* The single dot below — "all knowledge in the dot of the bā'" */}
-        <circle cx="0" cy="22" r="3.2" fill="url(#bayan-gold)" />
+      {/* Letter ب */}
+      <g fill="none" stroke="#FDFAF0" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M 72 96 Q 72 124, 100 124 Q 128 124, 128 96" />
+        <path d="M 128 96 L 128 82" />
+        <path d="M 72 96 L 72 82" />
       </g>
+      <circle cx="100" cy="138" r="4.5" fill="url(#lm-gold)" />
     </svg>
   );
 }
 
 /* ────────────────────────────────────────────────────────────
- * Logo — icon mark + wordmark lockup (horizontal)
- * Use for: hero, footer, large brand placements
+ * LogoShamsa — full illuminated medallion for hero / print
+ * Double gold ring + 12 pearls + cream panel + star + inner disc + ب
+ * ──────────────────────────────────────────────────────────── */
+export function LogoShamsa({ className = "", onDark = false }: LogoProps) {
+  const pearl = onDark ? "#F2D690" : "#E8C574";
+  const goldHi = onDark ? "#F2D690" : "#F0D082";
+  const goldMid = "#D4A84B";
+  const goldLo = onDark ? "#A8761E" : "#8B5F15";
+  const creamFrom = onDark ? "#2A4A3A" : "#FDFAF0";
+  const creamTo = onDark ? "#1F3A2E" : "#F0E4C4";
+  const starStroke = onDark ? "#F2D690" : "#1F3A2E";
+
+  return (
+    <svg
+      viewBox="0 0 340 340"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      role="img"
+      aria-label="مكتبة البيان"
+    >
+      <defs>
+        <radialGradient id="ls-disc" cx="50%" cy="30%" r="80%">
+          <stop offset="0%" stopColor="#32604A" />
+          <stop offset="55%" stopColor="#1F3A2E" />
+          <stop offset="100%" stopColor="#122318" />
+        </radialGradient>
+        <linearGradient id="ls-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={goldHi} />
+          <stop offset="50%" stopColor={goldMid} />
+          <stop offset="100%" stopColor={goldLo} />
+        </linearGradient>
+        <linearGradient id="ls-cream" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={creamFrom} />
+          <stop offset="100%" stopColor={creamTo} />
+        </linearGradient>
+      </defs>
+
+      {/* Outer disc + double gold ring */}
+      <circle cx="170" cy="170" r="156" fill="url(#ls-disc)" />
+      <circle cx="170" cy="170" r="153" fill="none" stroke="url(#ls-gold)" strokeWidth="1.5" />
+      <circle cx="170" cy="170" r="148" fill="none" stroke={goldMid} strokeWidth="0.5" opacity="0.6" />
+
+      {/* 12 pearls */}
+      <g fill={pearl}>
+        <circle cx="170" cy="32" r="2.5" />
+        <circle cx="239" cy="51" r="2.5" />
+        <circle cx="290" cy="101" r="2.5" />
+        <circle cx="308" cy="170" r="2.5" />
+        <circle cx="290" cy="239" r="2.5" />
+        <circle cx="239" cy="289" r="2.5" />
+        <circle cx="170" cy="308" r="2.5" />
+        <circle cx="101" cy="289" r="2.5" />
+        <circle cx="50" cy="239" r="2.5" />
+        <circle cx="32" cy="170" r="2.5" />
+        <circle cx="50" cy="101" r="2.5" />
+        <circle cx="101" cy="51" r="2.5" />
+      </g>
+
+      {/* Cream panel */}
+      <circle cx="170" cy="170" r="130" fill="none" stroke={goldMid} strokeWidth="0.5" opacity="0.7" />
+      <circle cx="170" cy="170" r="124" fill="url(#ls-cream)" />
+      <circle cx="170" cy="170" r="124" fill="none" stroke="url(#ls-gold)" strokeWidth="1.25" />
+
+      {/* 8-point Rub al-Hizb star */}
+      <g fill={pearl} fillOpacity="0.14">
+        <polygon points="93.6,93.6 246.4,93.6 246.4,246.4 93.6,246.4" />
+        <polygon points="170,62 278,170 170,278 62,170" />
+      </g>
+      <g fill="none" stroke={starStroke} strokeWidth="1.75" strokeLinejoin="round">
+        <polygon points="93.6,93.6 246.4,93.6 246.4,246.4 93.6,246.4" />
+        <polygon points="170,62 278,170 170,278 62,170" />
+      </g>
+
+      {/* Diamond-tip jewels */}
+      <g fill="url(#ls-gold)">
+        <circle cx="170" cy="62" r="3.5" />
+        <circle cx="278" cy="170" r="3.5" />
+        <circle cx="170" cy="278" r="3.5" />
+        <circle cx="62" cy="170" r="3.5" />
+      </g>
+
+      {/* Inner disc with letter */}
+      <circle cx="170" cy="170" r="50" fill="url(#ls-disc)" />
+      <circle cx="170" cy="170" r="50" fill="none" stroke="url(#ls-gold)" strokeWidth="1.5" />
+      <circle cx="170" cy="170" r="45" fill="none" stroke={goldMid} strokeWidth="0.5" opacity="0.6" />
+
+      {/* Letter ب */}
+      <g fill="none" stroke="#FDFAF0" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M 142 166 Q 142 196, 170 196 Q 198 196, 198 166" />
+        <path d="M 198 166 L 198 152" />
+        <path d="M 142 166 L 142 152" />
+      </g>
+      <circle cx="170" cy="208" r="3.8" fill="url(#ls-gold)" />
+    </svg>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+ * Logo — horizontal lockup (icon + Arabic wordmark + Latin subline)
  * ──────────────────────────────────────────────────────────── */
 export function Logo({ className = "", onDark = false }: LogoProps) {
   const textColor = onDark ? "#E8C574" : "#1F3A2E";
@@ -132,7 +180,7 @@ export function Logo({ className = "", onDark = false }: LogoProps) {
 
   return (
     <div className={`inline-flex items-center gap-3 ${className}`} dir="rtl">
-      <LogoMark onDark={onDark} className="h-12 w-12 shrink-0" />
+      <LogoMark onDark={onDark} className="h-14 w-14 shrink-0" />
       <div className="flex flex-col leading-none">
         <span
           className="font-heading text-2xl font-bold tracking-tight"
@@ -141,10 +189,10 @@ export function Logo({ className = "", onDark = false }: LogoProps) {
           مكتبة البيان
         </span>
         <span
-          className="mt-1 text-[10px] font-medium tracking-[0.15em]"
+          className="mt-1 text-[10px] font-medium tracking-[0.2em]"
           style={{ color: subColor }}
         >
-          مكتبة شرعية متخصصة
+          BAYAN LIBRARY
         </span>
       </div>
     </div>

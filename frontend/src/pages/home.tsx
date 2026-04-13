@@ -4,6 +4,7 @@ import SearchBox from "@/components/search-box";
 import BookCard from "@/components/book-card";
 import { BookGridSkeleton } from "@/components/book-card-skeleton";
 import RequestDialog from "@/components/request-dialog";
+import { LogoShamsa } from "@/components/logo";
 import { fetchBooks, fetchFields } from "@/lib/queries";
 
 const categories = [
@@ -57,7 +58,8 @@ export default function HomePage() {
         <div className="pointer-events-none absolute -top-24 right-1/2 h-64 w-64 translate-x-1/2 rounded-full bg-gold/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 left-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative">
-          <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold-light/50 px-3.5 py-1 text-xs font-semibold text-[oklch(0.38_0.08_75)]">
+          <LogoShamsa className="mx-auto h-32 w-32 drop-shadow-[0_8px_24px_rgba(31,58,46,0.18)] sm:h-40 sm:w-40" />
+          <span className="mt-7 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold-light/50 px-3.5 py-1 text-xs font-semibold text-[oklch(0.38_0.08_75)]">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
             مكتبة شرعية متخصصة
           </span>
@@ -75,9 +77,9 @@ export default function HomePage() {
               trigger={
                 <button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-5 py-2 text-sm font-medium text-foreground shadow-warm transition-all hover:-translate-y-0.5 hover:border-gold/50 hover:shadow-warm-lg"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#2A5A42] px-6 py-2.5 text-sm font-bold text-gold shadow-lg shadow-[#2A5A42]/25 transition-all hover:-translate-y-0.5 hover:bg-[#347A56] hover:shadow-xl hover:shadow-[#2A5A42]/30"
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-gold">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
                   لم تجد الكتاب؟ اطلبه الآن

@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
+import { LogoMark } from "@/components/logo";
 
 export default function Layout() {
   const { pathname } = useLocation();
@@ -15,15 +16,10 @@ export default function Layout() {
   return (
     <div dir="rtl" className="flex min-h-screen flex-col bg-background">
       {/* ── Header ── */}
-      <header className="sticky top-0 z-50 border-b border-gold/15 bg-[oklch(0.20_0.03_155)]/95 backdrop-blur-md supports-[backdrop-filter]:bg-[oklch(0.20_0.03_155)]/80">
+      <header className="sticky top-0 z-50 border-b border-gold/15 bg-[#1F3A2E]/95 backdrop-blur-md supports-[backdrop-filter]:bg-[#1F3A2E]/80">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="group flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gold/15 text-gold ring-1 ring-gold/25 transition-all group-hover:bg-gold/25 group-hover:ring-gold/40">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-              </svg>
-            </span>
+            <LogoMark onDark className="h-10 w-10 shrink-0 transition-transform group-hover:scale-105" />
             <span className="font-heading text-xl font-bold text-gold tracking-tight">
               مكتبة البيان
             </span>
@@ -53,16 +49,11 @@ export default function Layout() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="mt-12 border-t border-border/60 bg-[oklch(0.20_0.03_155)] text-gold/70">
+      <footer className="mt-12 border-t border-border/60 bg-[#1F3A2E] text-gold/70">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3 sm:px-6">
           <div className="sm:col-span-2">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/15 text-gold ring-1 ring-gold/25">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                </svg>
-              </span>
+              <LogoMark onDark className="h-9 w-9 shrink-0" />
               <span className="font-heading text-lg font-bold text-gold">مكتبة البيان</span>
             </div>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-gold/55">
