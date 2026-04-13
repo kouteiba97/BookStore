@@ -36,8 +36,8 @@ export interface FillResult {
 // ── Constants ──────────────────────────────────────────
 
 const BATCH_SIZE = 20;
-const DELAY_MS = 250;
-const REQUEST_TIMEOUT = 8000;
+const DELAY_MS = 300;
+const REQUEST_TIMEOUT = 10000;
 
 @Injectable()
 export class ImagesService {
@@ -80,43 +80,89 @@ export class ImagesService {
     return result;
   }
 
-  // ── Image Resolution (Google → OpenLibrary) ─────────
+  // ── Image Resolution — Multi-Strategy Pipeline ──────
+  //
+  // Strategy order (stops on first hit):
+  //  1. Google Books — Arabic query + langRestrict=ar (title + author)
+  //  2. Google Books — Arabic query, title only (broader match)
+  //  3. Google Books — intitle: prefix (Latin-friendly fallback)
+  //  4. OpenLibrary  — title + author
+  //  5. OpenLibrary  — title only
+  //
 
   async getBookImage(title: string, author?: string): Promise<string | null> {
+    const rawTitle = this.stripDiacritics(title);
     const cleanTitle = this.cleanSearchQuery(title);
     const cleanAuthor = author ? this.cleanSearchQuery(author) : undefined;
 
     return (
-      (await this.searchGoogleBooks(cleanTitle, cleanAuthor)) ??
-      (await this.searchOpenLibrary(cleanTitle, cleanAuthor))
+      // 1. Google Books — plain Arabic query with author
+      (await this.searchGoogleBooksArabic(rawTitle, author)) ??
+      // 2. Google Books — plain Arabic title only (wider net)
+      (await this.searchGoogleBooksArabic(rawTitle)) ??
+      // 3. Google Books — intitle: prefix (legacy, works for some)
+      (await this.searchGoogleBooksIntitle(cleanTitle, cleanAuthor)) ??
+      // 4. OpenLibrary — title + author
+      (await this.searchOpenLibrary(cleanTitle, cleanAuthor)) ??
+      // 5. OpenLibrary — title only
+      (cleanAuthor ? await this.searchOpenLibrary(cleanTitle) : null)
     );
   }
 
-  private async searchGoogleBooks(title: string, author?: string): Promise<string | null> {
-    try {
-      let q = `intitle:${title}`;
-      if (author) q += `+inauthor:${author}`;
+  // ── Google Books — Arabic plain query (best for Arabic) ──
 
-      const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=1&fields=totalItems,items(volumeInfo/imageLinks)`;
+  private async searchGoogleBooksArabic(title: string, author?: string): Promise<string | null> {
+    try {
+      let q = title;
+      if (author) q += ` ${author}`;
+
+      const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&langRestrict=ar&maxResults=3&fields=items(volumeInfo/imageLinks)`;
 
       const response = await this.fetchJson<GoogleBooksResponse>(url);
-
-      if (!response?.items?.length) return null;
-
-      const links = response.items[0].volumeInfo?.imageLinks;
-      const thumbnail = links?.thumbnail ?? links?.smallThumbnail;
-
-      if (!thumbnail) return null;
-
-      return thumbnail.replace(/^http:/, 'https:');
+      return this.extractGoogleThumbnail(response);
     } catch {
       return null;
     }
   }
 
+  // ── Google Books — intitle: prefix (Latin fallback) ──────
+
+  private async searchGoogleBooksIntitle(title: string, author?: string): Promise<string | null> {
+    try {
+      let q = `intitle:${title}`;
+      if (author) q += `+inauthor:${author}`;
+
+      const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=1&fields=items(volumeInfo/imageLinks)`;
+
+      const response = await this.fetchJson<GoogleBooksResponse>(url);
+      return this.extractGoogleThumbnail(response);
+    } catch {
+      return null;
+    }
+  }
+
+  private extractGoogleThumbnail(response: GoogleBooksResponse | null): string | null {
+    if (!response?.items?.length) return null;
+
+    // Try all results for one with an image
+    for (const item of response.items) {
+      const links = item.volumeInfo?.imageLinks;
+      const thumbnail = links?.thumbnail ?? links?.smallThumbnail;
+      if (thumbnail) {
+        // Upgrade to higher quality (zoom=2) and force HTTPS
+        return thumbnail
+          .replace(/^http:/, 'https:')
+          .replace(/zoom=\d/, 'zoom=2');
+      }
+    }
+    return null;
+  }
+
+  // ── OpenLibrary ──────────────────────────────────────
+
   private async searchOpenLibrary(title: string, author?: string): Promise<string | null> {
     try {
-      const params = new URLSearchParams({ title, limit: '1', fields: 'cover_i' });
+      const params = new URLSearchParams({ title, limit: '3', fields: 'cover_i' });
       if (author) params.set('author', author);
 
       const url = `https://openlibrary.org/search.json?${params}`;
@@ -125,10 +171,13 @@ export class ImagesService {
 
       if (!response?.docs?.length) return null;
 
-      const coverId = response.docs[0].cover_i;
-      if (!coverId) return null;
-
-      return `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`;
+      // Find the first doc with a cover
+      for (const doc of response.docs) {
+        if (doc.cover_i) {
+          return `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`;
+        }
+      }
+      return null;
     } catch {
       return null;
     }
@@ -156,6 +205,15 @@ export class ImagesService {
     }
   }
 
+  /** Remove Arabic diacritics/tashkeel but keep the original letters (no normalization) */
+  private stripDiacritics(text: string): string {
+    return text
+      .replace(/[\u064B-\u065F\u0670]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /** Full normalization for search (hamza, ta marbuta, etc) */
   private cleanSearchQuery(text: string): string {
     return normalizeArabic(text)
       .replace(/[^\p{L}\p{N}\s]/gu, '')
