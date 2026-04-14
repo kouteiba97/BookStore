@@ -169,9 +169,13 @@ model Request {
   id      String @id @default(uuid())
   storeId String
 
+  firstName String
+  lastName  String
+  phone     String
+  wilaya    String
+  address   String
+  bookId    String?
   bookName  String
-  userPhone String
-  userType  String?
 
   status RequestStatus
 

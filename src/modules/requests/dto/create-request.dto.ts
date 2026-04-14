@@ -1,15 +1,32 @@
-import { IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import { IsOptional, IsString, IsNotEmpty, MinLength } from 'class-validator';
 
 export class CreateRequestDto {
   @IsString()
   @IsNotEmpty()
-  bookName: string;
+  firstName: string;
 
   @IsString()
   @IsNotEmpty()
-  userPhone: string;
+  lastName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  phone: string;
+
+  @IsString()
+  @IsNotEmpty()
+  wilaya: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(10)
+  address: string;
 
   @IsString()
   @IsOptional()
-  userType?: string;
+  bookId?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  bookName: string;
 }
