@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import type { Book } from "@/lib/types";
 
@@ -47,6 +47,7 @@ function getPalette(title: string) {
 
 export default function BookCard({ book }: { book: Book }) {
   const [imgError, setImgError] = useState(false);
+  useEffect(() => { setImgError(false); }, [book.imageUrl]);
   const status = book.inventory ? statusConfig[book.inventory.status] : null;
   const palette = getPalette(book.title);
 

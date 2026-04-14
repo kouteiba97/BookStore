@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import BookCard from "@/components/book-card";
@@ -116,6 +116,7 @@ import type { Book } from "@/lib/types";
 export default function BookPage() {
   const { id } = useParams<{ id: string }>();
   const [imgError, setImgError] = useState(false);
+  useEffect(() => { setImgError(false); }, [id]);
 
   const { data: book, isLoading } = useQuery({
     queryKey: ["book", id],
