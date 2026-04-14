@@ -337,7 +337,13 @@ export class ImageSyncService {
     const noExt = path.parse(filename).name;
     let title = noExt.replace(/[_\-]+/g, ' ').trim();
     title = this.normalizeTitleText(title);
-    const isWeak = title.length < 3 || WEAK_PATTERN.test(title.replace(/\s/g, ''));
+
+    const hasArabic = /[\u0600-\u06FF]/.test(title);
+    const isWeak =
+      title.length < 3 ||
+      !hasArabic ||                                        // timestamp / random / Latin filenames
+      WEAK_PATTERN.test(title.replace(/\s/g, ''));
+
     return { title, isWeak };
   }
 
