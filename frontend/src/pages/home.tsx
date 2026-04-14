@@ -184,15 +184,14 @@ export default function HomePage() {
         <div className="mt-6 flex items-center justify-center">
           <RequestDialog
             trigger={
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold px-7 py-3 text-sm font-bold text-[#1F3A2E] shadow-lg transition-all hover:-translate-y-0.5 hover:bg-gold/90 hover:shadow-xl active:scale-[0.97]"
+              <span
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-gold/30 bg-gold px-7 py-3 text-sm font-bold text-[#1F3A2E] shadow-lg transition-all hover:-translate-y-0.5 hover:bg-gold/90 hover:shadow-xl active:scale-[0.97]"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
                 اطلب كتابك الآن
-              </button>
+              </span>
             }
           />
         </div>

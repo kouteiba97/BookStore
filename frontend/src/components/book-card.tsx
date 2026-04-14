@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import type { Book } from "@/lib/types";
 
@@ -45,6 +46,7 @@ function getPalette(title: string) {
 // ── Component ────────────────────────────────────────────
 
 export default function BookCard({ book }: { book: Book }) {
+  const [imgError, setImgError] = useState(false);
   const status = book.inventory ? statusConfig[book.inventory.status] : null;
   const palette = getPalette(book.title);
 
@@ -60,12 +62,13 @@ export default function BookCard({ book }: { book: Book }) {
 
       {/* ── Cover image ── */}
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-xl">
-        {book.imageUrl ? (
+        {book.imageUrl && !imgError ? (
           <img
             src={book.imageUrl}
             alt={book.title}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className={`flex h-full w-full items-center justify-center p-4 ${palette.bg}`}>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import BookCard from "@/components/book-card";
@@ -93,8 +94,7 @@ function OrderButton({ book }: { book: NonNullable<ReturnType<typeof useQuery<ty
     <OrderModal
       book={book}
       trigger={
-        <button
-          type="button"
+        <span
           className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-primary-foreground shadow-warm transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-warm-lg active:scale-[0.98] sm:w-auto"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -103,7 +103,7 @@ function OrderButton({ book }: { book: NonNullable<ReturnType<typeof useQuery<ty
             <path d="M16 10a4 4 0 0 1-8 0" />
           </svg>
           اطلب هذا الكتاب
-        </button>
+        </span>
       }
     />
   );
@@ -115,6 +115,7 @@ import type { Book } from "@/lib/types";
 
 export default function BookPage() {
   const { id } = useParams<{ id: string }>();
+  const [imgError, setImgError] = useState(false);
 
   const { data: book, isLoading } = useQuery({
     queryKey: ["book", id],
@@ -177,11 +178,12 @@ export default function BookPage() {
         {/* Cover — appears first in DOM = right side in RTL */}
         <div className="mx-auto w-full max-w-[240px] md:mx-0 md:max-w-none">
           <div className="group relative aspect-[4/5] overflow-hidden rounded-xl shadow-md ring-1 ring-border/40">
-            {book.imageUrl ? (
+            {book.imageUrl && !imgError ? (
               <img
                 src={book.imageUrl}
                 alt={book.title}
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                onError={() => setImgError(true)}
               />
             ) : (
               <div className={`flex h-full w-full items-center justify-center p-5 ${palette.bg}`}>
