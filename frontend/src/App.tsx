@@ -9,6 +9,7 @@ import FieldsPage from "@/pages/academic/fields";
 import YearsPage from "@/pages/academic/years";
 import SubjectsPage from "@/pages/academic/subjects";
 import SubjectBooksPage from "@/pages/academic/subject-books";
+import AdminRequestsPage from "@/pages/admin/requests";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +34,9 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
+          {/* Admin — no navbar layout */}
+          <Route path="admin/requests" element={<AdminRequestsPage />} />
+
           <Route element={<Layout />}>
             <Route index element={<HomePage />} />
             <Route path="search" element={<SearchPage />} />

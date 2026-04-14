@@ -8,11 +8,10 @@ const WHATSAPP_NUMBER = process.env.WHATSAPP_NUMBER ?? '213XXXXXXXXX';
 export class RequestsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // ── Create ───────────────────────────────────────────────
+
   async create(storeSlug: string, dto: CreateRequestDto) {
-    const store = await this.prisma.store.findUnique({
-      where: { slug: storeSlug },
-    });
-    if (!store) throw new NotFoundException('Store not found');
+    const store = await this.resolveStore(storeSlug);
 
     const request = await this.prisma.request.create({
       data: {
@@ -28,12 +27,69 @@ export class RequestsService {
       },
     });
 
-    const whatsappUrl = this.buildWhatsappUrl(dto);
-
-    return { id: request.id, whatsappUrl };
+    return { id: request.id, whatsappUrl: this.buildWhatsappUrl(dto) };
   }
 
-  // ── Private ──────────────────────────────────────────────
+  // ── Find all (admin) ─────────────────────────────────────
+
+  async findAll(
+    storeSlug: string,
+    filters: { status?: string; wilaya?: string; search?: string },
+  ) {
+    const store = await this.resolveStore(storeSlug);
+
+    const { status, wilaya, search } = filters;
+
+    const requests = await this.prisma.request.findMany({
+      where: {
+        storeId: store.id,
+        ...(status ? { status: status as any } : {}),
+        ...(wilaya ? { wilaya: { contains: wilaya } } : {}),
+        ...(search
+          ? {
+              OR: [
+                { firstName: { contains: search, mode: 'insensitive' } },
+                { lastName:  { contains: search, mode: 'insensitive' } },
+                { phone:     { contains: search } },
+              ],
+            }
+          : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const counts = await this.prisma.request.groupBy({
+      by: ['status'],
+      where: { storeId: store.id },
+      _count: true,
+    });
+
+    return { requests, counts };
+  }
+
+  // ── Update status ────────────────────────────────────────
+
+  async updateStatus(storeSlug: string, id: string, status: string) {
+    const store = await this.resolveStore(storeSlug);
+
+    const existing = await this.prisma.request.findFirst({
+      where: { id, storeId: store.id },
+    });
+    if (!existing) throw new NotFoundException('Request not found');
+
+    return this.prisma.request.update({
+      where: { id },
+      data: { status: status as any },
+    });
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+
+  private async resolveStore(slug: string) {
+    const store = await this.prisma.store.findUnique({ where: { slug } });
+    if (!store) throw new NotFoundException('Store not found');
+    return store;
+  }
 
   private buildWhatsappUrl(dto: CreateRequestDto): string {
     const message = [

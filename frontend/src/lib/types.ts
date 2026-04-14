@@ -60,3 +60,30 @@ export interface Suggestions {
   authors: Author[];
   books: AutocompleteItem[];
 }
+
+// ── Admin ────────────────────────────────────────────────
+
+export type RequestStatus = 'pending' | 'contacted' | 'done';
+
+export interface OrderRequest {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  wilaya: string;
+  address: string;
+  bookId: string | null;
+  bookName: string;
+  status: RequestStatus;
+  createdAt: string;
+}
+
+export interface StatusCount {
+  status: RequestStatus;
+  _count: number;
+}
+
+export interface RequestsResponse {
+  requests: OrderRequest[];
+  counts: StatusCount[];
+}

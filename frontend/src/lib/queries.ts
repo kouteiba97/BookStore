@@ -31,5 +31,21 @@ export const fetchSubjects = (yearId: string) =>
 export const fetchSubjectBooks = (subjectId: string) =>
   api.get<Book[]>(`/subjects/${subjectId}/books`).then((r) => r.data);
 
-export const createRequest = (data: { bookName: string; userPhone: string; notes?: string }) =>
-  api.post("/requests", data).then((r) => r.data);
+export const createRequest = (data: {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  wilaya: string;
+  address: string;
+  bookId?: string;
+  bookName: string;
+}) => api.post("/requests", data).then((r) => r.data);
+
+export const fetchRequests = (params?: {
+  status?: string;
+  wilaya?: string;
+  search?: string;
+}) => api.get("/requests", { params }).then((r) => r.data);
+
+export const updateRequestStatus = (id: string, status: string) =>
+  api.patch(`/requests/${id}/status`, { status }).then((r) => r.data);
