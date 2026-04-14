@@ -13,7 +13,17 @@ const BATCH_SIZE = 12;
 const SUPPORTED_EXT = new Set(['.jpg', '.jpeg', '.png']);
 const WEAK_PATTERN = /^(img|image|photo|pic|dsc|cam|screenshot|p\d+|img_\d+|dscn?\d+|dcim\d*)$/i;
 
+// Noise words stripped before matching (but kept in stored title)
+const NOISE_WORDS = new Set([
+  'كتاب', 'شرح', 'جزء', 'المجلد', 'مجلد', 'الجزء', 'الكتاب',
+  'متن', 'نص', 'مختصر', 'تفسير', 'كتب',
+]);
+
 // ── Types ─────────────────────────────────────────────────
+
+export interface SyncOptions {
+  allowCreate?: boolean; // default true
+}
 
 interface ImageFile {
   fullPath: string;
@@ -21,10 +31,13 @@ interface ImageFile {
   ext: string;
 }
 
+type MatchStrategy = 'exact' | 'partial' | 'denoised' | 'firstWords' | 'created';
+
 interface ProcessedResult {
   filename: string;
   finalTitle: string;
   ocrUsed: boolean;
+  matchStrategy?: MatchStrategy;
   action: 'updated' | 'created' | 'skipped' | 'error';
   reason?: string;
 }
@@ -37,6 +50,7 @@ export interface SyncResult {
   ocrUsedCount: number;
   skipped: number;
   errors: number;
+  unmatchedTitles: string[];
 }
 
 // ── Service ───────────────────────────────────────────────
@@ -49,7 +63,12 @@ export class ImageSyncService {
 
   // ── Public ────────────────────────────────────────────
 
-  async syncFromFolder(storeSlug: string): Promise<SyncResult> {
+  async syncFromFolder(
+    storeSlug: string,
+    options: SyncOptions = {},
+  ): Promise<SyncResult> {
+    const { allowCreate = true } = options;
+
     const store = await this.prisma.store.findUnique({ where: { slug: storeSlug } });
     if (!store) throw new NotFoundException(`Store not found: ${storeSlug}`);
 
@@ -57,29 +76,41 @@ export class ImageSyncService {
 
     const files = this.scanFolder(IMAGES_FOLDER);
     if (files.length === 0) {
-      return { totalProcessed: 0, booksMatched: 0, booksCreated: 0, imagesUpdated: 0, ocrUsedCount: 0, skipped: 0, errors: 0 };
+      return {
+        totalProcessed: 0, booksMatched: 0, booksCreated: 0,
+        imagesUpdated: 0, ocrUsedCount: 0, skipped: 0, errors: 0,
+        unmatchedTitles: [],
+      };
     }
 
     this.logger.log(`Found ${files.length} images in ${IMAGES_FOLDER}`);
 
-    // Title → bookId cache to avoid repeated DB hits
-    const titleCache = new Map<string, string | null>(); // normalized title → bookId | null
+    // Preload all existing books for in-memory fuzzy matching
+    const allBooks = await this.prisma.book.findMany({
+      where: { storeId: store.id },
+      select: { id: true, title: true, titleNormalized: true },
+    });
+
+    // Build lookup map: normalized → bookId
+    const bookMap = new Map<string, string>();
+    for (const b of allBooks) {
+      const key = b.titleNormalized ?? normalizeArabic(b.title);
+      bookMap.set(key, b.id);
+    }
+
+    // Per-run dedup: normalized → bookId (includes newly created)
+    const resolvedCache = new Map<string, string | null>();
 
     const result: SyncResult = {
-      totalProcessed: 0,
-      booksMatched: 0,
-      booksCreated: 0,
-      imagesUpdated: 0,
-      ocrUsedCount: 0,
-      skipped: 0,
-      errors: 0,
+      totalProcessed: 0, booksMatched: 0, booksCreated: 0,
+      imagesUpdated: 0, ocrUsedCount: 0, skipped: 0, errors: 0,
+      unmatchedTitles: [],
     };
 
-    // Process in batches
     for (let i = 0; i < files.length; i += BATCH_SIZE) {
       const batch = files.slice(i, i + BATCH_SIZE);
       const processed = await Promise.all(
-        batch.map((f) => this.processImage(f, store.id, titleCache)),
+        batch.map((f) => this.processImage(f, store.id, bookMap, resolvedCache, allowCreate)),
       );
 
       for (const p of processed) {
@@ -87,14 +118,21 @@ export class ImageSyncService {
         if (p.ocrUsed) result.ocrUsedCount++;
         if (p.action === 'updated') { result.booksMatched++; result.imagesUpdated++; }
         else if (p.action === 'created') { result.booksCreated++; result.imagesUpdated++; }
-        else if (p.action === 'skipped') result.skipped++;
+        else if (p.action === 'skipped') {
+          result.skipped++;
+          if (p.reason === 'no match' && p.finalTitle) {
+            result.unmatchedTitles.push(p.finalTitle);
+          }
+        }
         else if (p.action === 'error') result.errors++;
       }
 
-      this.logger.log(`Batch ${Math.floor(i / BATCH_SIZE) + 1} done — ${result.imagesUpdated} updated so far`);
+      this.logger.log(
+        `Batch ${Math.floor(i / BATCH_SIZE) + 1} done — ${result.imagesUpdated} updated so far`,
+      );
     }
 
-    this.logger.log(`Sync complete: ${JSON.stringify(result)}`);
+    this.logger.log(`Sync complete: ${JSON.stringify({ ...result, unmatchedTitles: result.unmatchedTitles.length })}`);
     return result;
   }
 
@@ -103,7 +141,9 @@ export class ImageSyncService {
   private async processImage(
     file: ImageFile,
     storeId: string,
-    titleCache: Map<string, string | null>,
+    bookMap: Map<string, string>,
+    resolvedCache: Map<string, string | null>,
+    allowCreate: boolean,
   ): Promise<ProcessedResult> {
     try {
       // STEP A — extract from filename
@@ -125,31 +165,30 @@ export class ImageSyncService {
         return { filename: file.filename, finalTitle: '', ocrUsed, action: 'skipped', reason: 'empty title' };
       }
 
-      const normalized = normalizeArabic(finalTitle);
-
-      // STEP C — copy image to static folder
+      // STEP C — copy image to static folder (do this before DB ops)
       const destFilename = this.safeFilename(file.filename);
       const destPath = path.join(STATIC_FOLDER, destFilename);
       fs.copyFileSync(file.fullPath, destPath);
       const publicUrl = `/covers/${destFilename}`;
 
-      // STEP D — find or create book
-      const bookId = await this.resolveBook(normalized, finalTitle, storeId, titleCache);
+      // STEP D — fuzzy resolve book
+      const resolved = await this.resolveBook(finalTitle, storeId, bookMap, resolvedCache, allowCreate);
 
-      if (bookId) {
-        // Check if book already has a valid image
-        const book = await this.prisma.book.findUnique({ where: { id: bookId }, select: { imageUrl: true } });
-        if (book?.imageUrl && !book.imageUrl.startsWith('/covers/')) {
-          // Has external image, skip unless it's a local one we'd prefer to override
-          // We DO override external images with local photos (local is always better)
-        }
-
-        await this.prisma.book.update({ where: { id: bookId }, data: { imageUrl: publicUrl } });
-
-        return { filename: file.filename, finalTitle, ocrUsed, action: 'updated' };
+      if (!resolved) {
+        return { filename: file.filename, finalTitle, ocrUsed, action: 'skipped', reason: 'no match' };
       }
 
-      return { filename: file.filename, finalTitle, ocrUsed, action: 'skipped', reason: 'book not found' };
+      await this.prisma.book.update({ where: { id: resolved.bookId }, data: { imageUrl: publicUrl } });
+
+      // If newly created, register in bookMap for subsequent images
+      const normKey = normalizeArabic(finalTitle);
+      if (!bookMap.has(normKey)) bookMap.set(normKey, resolved.bookId);
+
+      return {
+        filename: file.filename, finalTitle, ocrUsed,
+        matchStrategy: resolved.strategy,
+        action: resolved.created ? 'created' : 'updated',
+      };
 
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -158,65 +197,164 @@ export class ImageSyncService {
     }
   }
 
-  // ── Title resolution ───────────────────────────────────
+  // ── Fuzzy book resolution ─────────────────────────────
 
-  /**
-   * Look up by normalized title (contains match) or create a minimal book.
-   * Returns bookId.
-   */
   private async resolveBook(
-    normalized: string,
     rawTitle: string,
     storeId: string,
+    bookMap: Map<string, string>,
     cache: Map<string, string | null>,
-  ): Promise<string | null> {
-    if (cache.has(normalized)) return cache.get(normalized)!;
+    allowCreate: boolean,
+  ): Promise<{ bookId: string; strategy: MatchStrategy; created: boolean } | null> {
+    const normalized = normalizeArabic(rawTitle);
+    const denoised = this.removeNoiseWords(normalized);
 
-    // Try to find existing book
+    // ── Strategy A: exact normalized match ───────────────
+    const exactId = bookMap.get(normalized);
+    if (exactId) return { bookId: exactId, strategy: 'exact', created: false };
+
+    // ── Strategy B: denoised match ───────────────────────
+    if (denoised !== normalized) {
+      const denoisedId = bookMap.get(denoised);
+      if (denoisedId) return { bookId: denoisedId, strategy: 'denoised', created: false };
+    }
+
+    // ── Strategy C: partial contains (in-memory scan) ────
+    const partialId = this.partialMatch(normalized, bookMap) ??
+                      this.partialMatch(denoised, bookMap);
+    if (partialId) return { bookId: partialId, strategy: 'partial', created: false };
+
+    // ── Strategy D: first 2–3 words match ────────────────
+    const firstWordsId = this.firstWordsMatch(normalized, bookMap);
+    if (firstWordsId) return { bookId: firstWordsId, strategy: 'firstWords', created: false };
+
+    // ── Strategy E: DB-level contains fallback ────────────
+    if (!cache.has(normalized)) {
+      const dbMatch = await this.dbContainsSearch(normalized, denoised, storeId);
+      cache.set(normalized, dbMatch);
+      if (dbMatch) {
+        bookMap.set(normalized, dbMatch); // warm the in-memory map
+        return { bookId: dbMatch, strategy: 'partial', created: false };
+      }
+    } else if (cache.get(normalized)) {
+      return { bookId: cache.get(normalized)!, strategy: 'partial', created: false };
+    }
+
+    // ── Strategy F: create book if allowed ───────────────
+    if (!allowCreate) return null;
+
+    const newBook = await this.createMinimalBook(rawTitle, normalized, storeId);
+    bookMap.set(normalized, newBook.id);
+    cache.set(normalized, newBook.id);
+    return { bookId: newBook.id, strategy: 'created', created: true };
+  }
+
+  // ── Matching helpers ──────────────────────────────────
+
+  /**
+   * Check if any book's normalized title contains the query, or query contains book title.
+   */
+  private partialMatch(query: string, bookMap: Map<string, string>): string | null {
+    if (query.length < 3) return null;
+    for (const [key, id] of bookMap) {
+      if (key.includes(query) || query.includes(key)) return id;
+    }
+    return null;
+  }
+
+  /**
+   * Match on first 2–3 significant words (min 2 chars each).
+   */
+  private firstWordsMatch(normalized: string, bookMap: Map<string, string>): string | null {
+    const words = normalized.split(' ').filter((w) => w.length >= 2);
+    if (words.length < 2) return null;
+
+    const prefix2 = words.slice(0, 2).join(' ');
+    const prefix3 = words.length >= 3 ? words.slice(0, 3).join(' ') : null;
+
+    for (const [key, id] of bookMap) {
+      if (prefix3 && key.includes(prefix3)) return id;
+      if (key.startsWith(prefix2) || key.includes(prefix2)) return id;
+    }
+    return null;
+  }
+
+  private async dbContainsSearch(
+    normalized: string,
+    denoised: string,
+    storeId: string,
+  ): Promise<string | null> {
+    const words = denoised.split(' ').filter((w) => w.length >= 3);
+    if (!words.length) return null;
+
     const match = await this.prisma.book.findFirst({
       where: {
         storeId,
         OR: [
           { titleNormalized: { contains: normalized } },
-          { titleNormalized: normalized },
-          { title: { contains: rawTitle } },
+          { titleNormalized: { contains: denoised } },
+          // word-level: at least the first significant word
+          ...(words[0] ? [{ titleNormalized: { contains: words[0] } }] : []),
         ],
       },
       select: { id: true },
     });
 
-    if (match) {
-      cache.set(normalized, match.id);
-      return match.id;
-    }
-
-    cache.set(normalized, null);
-    return null;
+    return match?.id ?? null;
   }
 
-  // ── Filename extraction ────────────────────────────────
+  // ── Minimal book creation ─────────────────────────────
+
+  private async createMinimalBook(rawTitle: string, normalized: string, storeId: string) {
+    // Ensure "غير مصنف" category exists
+    const category = await this.prisma.category.upsert({
+      where: { name: 'غير مصنف' },
+      create: { name: 'غير مصنف' },
+      update: {},
+    });
+
+    // Ensure "غير معروف" author exists
+    const author = await this.prisma.author.upsert({
+      where: { name: 'غير معروف' },
+      create: { name: 'غير معروف' },
+      update: {},
+    });
+
+    return this.prisma.book.create({
+      data: {
+        title: rawTitle,
+        titleNormalized: normalized,
+        storeId,
+        categoryId: category.id,
+        authorId: author.id,
+      },
+    });
+  }
+
+  // ── Title cleaning ────────────────────────────────────
 
   private extractFromFilename(filename: string): { title: string; isWeak: boolean } {
     const noExt = path.parse(filename).name;
-
-    // Replace separators with space
     let title = noExt.replace(/[_\-]+/g, ' ').trim();
-
-    // Strip diacritics, normalize Arabic chars
     title = this.normalizeTitleText(title);
-
     const isWeak = title.length < 3 || WEAK_PATTERN.test(title.replace(/\s/g, ''));
-
     return { title, isWeak };
   }
 
+  /** Strip tashkeel + basic Arabic char normalization (no noise removal — keep for stored title) */
   private normalizeTitleText(text: string): string {
     return text
-      .replace(/[\u064B-\u065F\u0670]/g, '')   // strip tashkeel
+      .replace(/[\u064B-\u065F\u0670]/g, '')
       .replace(/[أإآ]/g, 'ا')
       .replace(/ى/g, 'ي')
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  /** Remove noise words from a normalized title for matching only */
+  private removeNoiseWords(normalized: string): string {
+    const words = normalized.split(' ').filter((w) => !NOISE_WORDS.has(w));
+    return words.join(' ').trim();
   }
 
   // ── OCR ────────────────────────────────────────────────
@@ -224,51 +362,38 @@ export class ImageSyncService {
   private async runOcr(imagePath: string): Promise<string | null> {
     try {
       const worker = await createWorker('ara', 1, {
-        logger: () => undefined, // silence progress logs
+        logger: () => undefined,
       });
-
       const { data } = await worker.recognize(imagePath);
       await worker.terminate();
-
-      const text = data.text ?? '';
-      const bestLine = this.extractBestLine(text);
+      const bestLine = this.extractBestLine(data.text ?? '');
       return bestLine ? this.normalizeTitleText(bestLine) : null;
     } catch {
       return null;
     }
   }
 
-  /**
-   * Pick the "most prominent" line — longest Arabic line as proxy for title.
-   */
   private extractBestLine(rawText: string): string | null {
-    const arabicLineRe = /[\u0600-\u06FF]/;
+    const arabicRe = /[\u0600-\u06FF]/;
     const lines = rawText
       .split('\n')
       .map((l) => l.trim())
-      .filter((l) => l.length >= 3 && arabicLineRe.test(l));
-
+      .filter((l) => l.length >= 3 && arabicRe.test(l));
     if (!lines.length) return null;
-
-    // Take the longest line (titles tend to be the largest text → most characters recognized)
     lines.sort((a, b) => b.length - a.length);
     return lines[0];
   }
 
-  // ── Helpers ────────────────────────────────────────────
+  // ── File helpers ──────────────────────────────────────
 
   private scanFolder(folder: string): ImageFile[] {
     if (!fs.existsSync(folder)) {
       this.logger.warn(`Images folder not found: ${folder}`);
       return [];
     }
-
     return fs
       .readdirSync(folder)
-      .filter((f) => {
-        const ext = path.extname(f).toLowerCase();
-        return SUPPORTED_EXT.has(ext);
-      })
+      .filter((f) => SUPPORTED_EXT.has(path.extname(f).toLowerCase()))
       .map((f) => ({
         fullPath: path.join(folder, f),
         filename: f,
