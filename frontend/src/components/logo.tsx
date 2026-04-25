@@ -12,6 +12,8 @@
  * - <LogoShamsa /> full medallion, for large sizes (hero, print)
  */
 
+import { useId } from "react";
+
 type LogoProps = {
   className?: string;
   /** Light-palette variant for use on dark backgrounds. */
@@ -23,6 +25,9 @@ type LogoProps = {
  * Dark green disc + gold ring + 8-point Rub al-Hizb star + ب
  * ──────────────────────────────────────────────────────────── */
 export function LogoMark({ className = "", onDark = false }: LogoProps) {
+  const uid = useId().replace(/[:]/g, "");
+  const discId = `lm-disc-${uid}`;
+  const goldId = `lm-gold-${uid}`;
   const discFrom = onDark ? "#32604A" : "#1F3A2E";
   const discTo = onDark ? "#1A3025" : "#122318";
   const goldFrom = onDark ? "#F2D690" : "#E8C574";
@@ -37,19 +42,19 @@ export function LogoMark({ className = "", onDark = false }: LogoProps) {
       aria-label="مكتبة البيان"
     >
       <defs>
-        <radialGradient id="lm-disc" cx="50%" cy="30%" r="80%">
+        <radialGradient id={discId} cx="50%" cy="30%" r="80%">
           <stop offset="0%" stopColor={discFrom} />
           <stop offset="100%" stopColor={discTo} />
         </radialGradient>
-        <linearGradient id="lm-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id={goldId} x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor={goldFrom} />
           <stop offset="100%" stopColor={goldTo} />
         </linearGradient>
       </defs>
 
       {/* Disc + gold rings */}
-      <circle cx="100" cy="100" r="94" fill="url(#lm-disc)" />
-      <circle cx="100" cy="100" r="91" fill="none" stroke="url(#lm-gold)" strokeWidth="3" />
+      <circle cx="100" cy="100" r="94" fill={`url(#${discId})`} />
+      <circle cx="100" cy="100" r="91" fill="none" stroke={`url(#${goldId})`} strokeWidth="3" />
       <circle cx="100" cy="100" r="86" fill="none" stroke={goldFrom} strokeWidth="0.75" opacity="0.55" />
 
       {/* 8-point Rub al-Hizb star */}
@@ -57,7 +62,7 @@ export function LogoMark({ className = "", onDark = false }: LogoProps) {
         <polygon points="54,54 146,54 146,146 54,146" />
         <polygon points="100,35 165,100 100,165 35,100" />
       </g>
-      <g fill="none" stroke="url(#lm-gold)" strokeWidth="2.25" strokeLinejoin="round">
+      <g fill="none" stroke={`url(#${goldId})`} strokeWidth="2.25" strokeLinejoin="round">
         <polygon points="54,54 146,54 146,146 54,146" />
         <polygon points="100,35 165,100 100,165 35,100" />
       </g>
@@ -68,7 +73,7 @@ export function LogoMark({ className = "", onDark = false }: LogoProps) {
         <path d="M 128 96 L 128 82" />
         <path d="M 72 96 L 72 82" />
       </g>
-      <circle cx="100" cy="138" r="4.5" fill="url(#lm-gold)" />
+      <circle cx="100" cy="138" r="4.5" fill={`url(#${goldId})`} />
     </svg>
   );
 }
@@ -78,6 +83,10 @@ export function LogoMark({ className = "", onDark = false }: LogoProps) {
  * Double gold ring + 12 pearls + cream panel + star + inner disc + ب
  * ──────────────────────────────────────────────────────────── */
 export function LogoShamsa({ className = "", onDark = false }: LogoProps) {
+  const uid = useId().replace(/[:]/g, "");
+  const discId = `ls-disc-${uid}`;
+  const goldId = `ls-gold-${uid}`;
+  const creamId = `ls-cream-${uid}`;
   const pearl = onDark ? "#F2D690" : "#E8C574";
   const goldHi = onDark ? "#F2D690" : "#F0D082";
   const goldMid = "#D4A84B";
@@ -95,25 +104,25 @@ export function LogoShamsa({ className = "", onDark = false }: LogoProps) {
       aria-label="مكتبة البيان"
     >
       <defs>
-        <radialGradient id="ls-disc" cx="50%" cy="30%" r="80%">
+        <radialGradient id={discId} cx="50%" cy="30%" r="80%">
           <stop offset="0%" stopColor="#32604A" />
           <stop offset="55%" stopColor="#1F3A2E" />
           <stop offset="100%" stopColor="#122318" />
         </radialGradient>
-        <linearGradient id="ls-gold" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id={goldId} x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor={goldHi} />
           <stop offset="50%" stopColor={goldMid} />
           <stop offset="100%" stopColor={goldLo} />
         </linearGradient>
-        <linearGradient id="ls-cream" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id={creamId} x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor={creamFrom} />
           <stop offset="100%" stopColor={creamTo} />
         </linearGradient>
       </defs>
 
       {/* Outer disc + double gold ring */}
-      <circle cx="170" cy="170" r="156" fill="url(#ls-disc)" />
-      <circle cx="170" cy="170" r="153" fill="none" stroke="url(#ls-gold)" strokeWidth="1.5" />
+      <circle cx="170" cy="170" r="156" fill={`url(#${discId})`} />
+      <circle cx="170" cy="170" r="153" fill="none" stroke={`url(#${goldId})`} strokeWidth="1.5" />
       <circle cx="170" cy="170" r="148" fill="none" stroke={goldMid} strokeWidth="0.5" opacity="0.6" />
 
       {/* 12 pearls */}
@@ -134,8 +143,8 @@ export function LogoShamsa({ className = "", onDark = false }: LogoProps) {
 
       {/* Cream panel */}
       <circle cx="170" cy="170" r="130" fill="none" stroke={goldMid} strokeWidth="0.5" opacity="0.7" />
-      <circle cx="170" cy="170" r="124" fill="url(#ls-cream)" />
-      <circle cx="170" cy="170" r="124" fill="none" stroke="url(#ls-gold)" strokeWidth="1.25" />
+      <circle cx="170" cy="170" r="124" fill={`url(#${creamId})`} />
+      <circle cx="170" cy="170" r="124" fill="none" stroke={`url(#${goldId})`} strokeWidth="1.25" />
 
       {/* 8-point Rub al-Hizb star */}
       <g fill={pearl} fillOpacity="0.14">
@@ -148,7 +157,7 @@ export function LogoShamsa({ className = "", onDark = false }: LogoProps) {
       </g>
 
       {/* Diamond-tip jewels */}
-      <g fill="url(#ls-gold)">
+      <g fill={`url(#${goldId})`}>
         <circle cx="170" cy="62" r="3.5" />
         <circle cx="278" cy="170" r="3.5" />
         <circle cx="170" cy="278" r="3.5" />
@@ -156,8 +165,8 @@ export function LogoShamsa({ className = "", onDark = false }: LogoProps) {
       </g>
 
       {/* Inner disc with letter */}
-      <circle cx="170" cy="170" r="50" fill="url(#ls-disc)" />
-      <circle cx="170" cy="170" r="50" fill="none" stroke="url(#ls-gold)" strokeWidth="1.5" />
+      <circle cx="170" cy="170" r="50" fill={`url(#${discId})`} />
+      <circle cx="170" cy="170" r="50" fill="none" stroke={`url(#${goldId})`} strokeWidth="1.5" />
       <circle cx="170" cy="170" r="45" fill="none" stroke={goldMid} strokeWidth="0.5" opacity="0.6" />
 
       {/* Letter ب */}
@@ -166,7 +175,7 @@ export function LogoShamsa({ className = "", onDark = false }: LogoProps) {
         <path d="M 198 166 L 198 152" />
         <path d="M 142 166 L 142 152" />
       </g>
-      <circle cx="170" cy="208" r="3.8" fill="url(#ls-gold)" />
+      <circle cx="170" cy="208" r="3.8" fill={`url(#${goldId})`} />
     </svg>
   );
 }
