@@ -21,6 +21,14 @@ enum RequestStatus {
   done
 }
 
+enum OrderStatus {
+  pending
+  confirmed
+  shipped
+  delivered
+  cancelled
+}
+
 // ================= CORE =================
 
 model Store {
@@ -34,6 +42,7 @@ model Store {
   books       Book[]
   inventories Inventory[]
   requests    Request[]
+  orders      Order[]
 }
 
 // ================= BOOK =================
@@ -45,6 +54,7 @@ model Book {
 
   description String?
   year        Int?
+  price       Decimal? @db.Decimal(10, 2)
 
   authorId    String?
   publisherId String?
@@ -65,8 +75,9 @@ model Book {
   publisher Publisher? @relation(fields: [publisherId], references: [id])
   country   Country?   @relation(fields: [countryId], references: [id])
 
-  inventory Inventory?
-  subjects  BookOnSubject[]
+  inventory  Inventory?
+  subjects   BookOnSubject[]
+  orderItems OrderItem[]
 
   @@index([storeId, title])
   @@index([titleNormalized])
@@ -163,7 +174,7 @@ model BookOnSubject {
   @@id([bookId, subjectId])
 }
 
-// ================= REQUEST =================
+// ================= REQUEST (lead) =================
 
 model Request {
   id      String @id @default(uuid())
@@ -179,10 +190,63 @@ model Request {
 
   status RequestStatus
 
+  // Link to the order created from this lead (when converted)
+  convertedOrderId String? @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  store           Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  convertedOrder  Order? @relation(fields: [convertedOrderId], references: [id], onDelete: SetNull)
 
   @@index([storeId, status])
+}
+
+// ================= ORDER =================
+
+model Order {
+  id      String @id @default(uuid())
+  storeId String
+
+  // Customer snapshot (denormalized — orders survive even if customer info changes elsewhere)
+  firstName String
+  lastName  String
+  phone     String
+  wilaya    String
+  address   String
+
+  status OrderStatus @default(pending)
+
+  // Money — denormalized totals so historical orders aren't affected by price changes
+  subtotal     Decimal @db.Decimal(10, 2) @default(0)
+  shippingCost Decimal @db.Decimal(10, 2) @default(0)
+  total        Decimal @db.Decimal(10, 2) @default(0)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items OrderItem[]
+  request Request?
+
+  @@index([storeId, status])
+  @@index([storeId, createdAt])
+}
+
+model OrderItem {
+  id      String @id @default(uuid())
+  orderId String
+  bookId  String
+
+  // Snapshot fields so item rows don't break if a book is renamed/deleted
+  bookTitle String
+  unitPrice Decimal @db.Decimal(10, 2)
+  quantity  Int
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  book  Book  @relation(fields: [bookId], references: [id])
+
+  @@index([orderId])
 }

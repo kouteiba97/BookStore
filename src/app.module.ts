@@ -9,6 +9,7 @@ import { ImportModule } from './modules/import/import.module';
 import { ImagesModule } from './modules/images/images.module';
 import { CleanModule } from './modules/clean/clean.module';
 import { ImageSyncModule } from './modules/image-sync/image-sync.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ImageSyncModule } from './modules/image-sync/image-sync.module';
     ImagesModule,
     CleanModule,
     ImageSyncModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
