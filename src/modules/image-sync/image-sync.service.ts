@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { normalizeArabic } from '../../common/utils/normalize-arabic';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -59,7 +60,10 @@ export interface SyncResult {
 export class ImageSyncService {
   private readonly logger = new Logger(ImageSyncService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
 
   // ── Public ────────────────────────────────────────────
 
@@ -165,11 +169,8 @@ export class ImageSyncService {
         return { filename: file.filename, finalTitle: '', ocrUsed, action: 'skipped', reason: 'empty title' };
       }
 
-      // STEP C — copy image to static folder (do this before DB ops)
-      const destFilename = this.safeFilename(file.filename);
-      const destPath = path.join(STATIC_FOLDER, destFilename);
-      fs.copyFileSync(file.fullPath, destPath);
-      const publicUrl = `/covers/${destFilename}`;
+      // STEP C — publish the cover (R2 when configured, else local disk)
+      const publicUrl = await this.publishCover(file);
 
       // STEP D — fuzzy resolve book
       const resolved = await this.resolveBook(finalTitle, storeId, bookMap, resolvedCache, allowCreate);
@@ -410,6 +411,36 @@ export class ImageSyncService {
   private ensureStaticFolder(): void {
     if (!fs.existsSync(STATIC_FOLDER)) {
       fs.mkdirSync(STATIC_FOLDER, { recursive: true });
+    }
+  }
+
+  /**
+   * Publish a cover image and return the URL to store on the book.
+   * Prefers R2; falls back to the local /covers/ static folder when R2 is
+   * not configured (so local dev keeps working without an R2 account).
+   */
+  private async publishCover(file: ImageFile): Promise<string> {
+    const destFilename = this.safeFilename(file.filename);
+
+    if (this.storage.enabled) {
+      const body = fs.readFileSync(file.fullPath);
+      return this.storage.upload(`covers/${destFilename}`, body, this.contentType(file.ext));
+    }
+
+    const destPath = path.join(STATIC_FOLDER, destFilename);
+    fs.copyFileSync(file.fullPath, destPath);
+    return `/covers/${destFilename}`;
+  }
+
+  private contentType(ext: string): string {
+    switch (ext.toLowerCase()) {
+      case '.png':
+        return 'image/png';
+      case '.jpg':
+      case '.jpeg':
+        return 'image/jpeg';
+      default:
+        return 'application/octet-stream';
     }
   }
 
