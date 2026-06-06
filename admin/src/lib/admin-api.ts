@@ -9,6 +9,17 @@ export default adminApi;
 export const fetchStats = (days = 30) =>
   adminApi.get("/stats/overview", { params: { days } }).then((r) => r.data);
 
+// ── Uploads ──────────────────────────────────────────────
+
+/** Upload a cover photo to R2 (via the backend) and get its public URL. */
+export const uploadCover = (file: File) => {
+  const fd = new FormData();
+  fd.append("file", file);
+  return adminApi
+    .post("/uploads/cover", fd)
+    .then((r) => r.data as { url: string; key: string });
+};
+
 // ── Books ────────────────────────────────────────────────
 
 export const fetchAdminBooks = (params: {

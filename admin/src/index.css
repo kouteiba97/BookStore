@@ -1,0 +1,200 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ── Amiri — elegant Arabic serif for headings & brand ── */
+@font-face {
+  font-family: "Amiri";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUpkJY.woff2") format("woff2");
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+@font-face {
+  font-family: "Amiri";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/amiri/v27/J7acnpd8CGxBHp2VkZY4xJ9CGyAa.woff2") format("woff2");
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC;
+}
+@font-face {
+  font-family: "Amiri";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUqkJA.woff2") format("woff2");
+  unicode-range: U+0000-024F, U+0300-036F, U+0400-052F, U+1E00-1EFF, U+2000-206F, U+20A0-20CF, U+2100-214F;
+}
+@font-face {
+  font-family: "Amiri";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/amiri/v27/J7acnpd8CGxBHp2VkZY4wJ9CGyAa.woff2") format("woff2");
+  unicode-range: U+0000-024F, U+0300-036F, U+0400-052F, U+1E00-1EFF, U+2000-206F, U+20A0-20CF, U+2100-214F;
+}
+
+/* ── Cairo — clean Arabic sans for body ── */
+@font-face {
+  font-family: "Cairo";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/cairo/v28/SLXgc1nY6HkvangtZmpcWmhzfH5lWWgcQyyS4J0.woff2") format("woff2");
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EFD-10EFF, U+1EE00-1EEFF;
+}
+@font-face {
+  font-family: "Cairo";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("https://fonts.gstatic.com/s/cairo/v28/SLXgc1nY6HkvangtZmpcWmhzfH5lWWgcQyyS4J0.woff2") format("woff2");
+  unicode-range: U+0000-024F, U+0300-036F, U+0400-052F, U+1E00-1EFF, U+2000-206F, U+20A0-20CF, U+2100-214F, U+2200-22FF;
+}
+
+@theme inline {
+    --font-sans: 'Cairo', sans-serif;
+    --font-heading: 'Amiri', serif;
+
+    --color-gold: var(--gold);
+    --color-gold-light: var(--gold-light);
+
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    /* ── Warm library palette ── */
+    --background: oklch(0.97 0.008 80);
+    --foreground: oklch(0.18 0.02 55);
+
+    --card: oklch(0.993 0.004 80);
+    --card-foreground: oklch(0.18 0.02 55);
+
+    --popover: oklch(0.993 0.004 80);
+    --popover-foreground: oklch(0.18 0.02 55);
+
+    --primary: oklch(0.30 0.06 155);
+    --primary-foreground: oklch(0.97 0.01 85);
+
+    --secondary: oklch(0.93 0.02 75);
+    --secondary-foreground: oklch(0.30 0.04 55);
+
+    --muted: oklch(0.94 0.01 78);
+    --muted-foreground: oklch(0.48 0.02 60);
+
+    --accent: oklch(0.94 0.02 78);
+    --accent-foreground: oklch(0.25 0.04 55);
+
+    --destructive: oklch(0.55 0.18 25);
+
+    --border: oklch(0.89 0.012 75);
+    --input: oklch(0.89 0.012 75);
+    --ring: oklch(0.68 0.10 75);
+
+    /* ── Gold & brown accents ── */
+    --gold: oklch(0.72 0.11 75);
+    --gold-light: oklch(0.92 0.04 78);
+
+    --chart-1: oklch(0.72 0.11 75);
+    --chart-2: oklch(0.45 0.06 55);
+    --chart-3: oklch(0.30 0.06 155);
+    --chart-4: oklch(0.55 0.04 60);
+    --chart-5: oklch(0.85 0.03 78);
+
+    --radius: 0.75rem;
+
+    --sidebar: oklch(0.96 0.01 80);
+    --sidebar-foreground: oklch(0.18 0.02 55);
+    --sidebar-primary: oklch(0.30 0.06 155);
+    --sidebar-primary-foreground: oklch(0.97 0.01 85);
+    --sidebar-accent: oklch(0.94 0.02 78);
+    --sidebar-accent-foreground: oklch(0.25 0.04 55);
+    --sidebar-border: oklch(0.89 0.012 75);
+    --sidebar-ring: oklch(0.68 0.10 75);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans scroll-smooth;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-image:
+      radial-gradient(circle at 0% 0%, oklch(0.95 0.025 75 / 0.6) 0, transparent 45%),
+      radial-gradient(circle at 100% 0%, oklch(0.94 0.03 155 / 0.35) 0, transparent 50%);
+    background-attachment: fixed;
+  }
+  ::selection {
+    background-color: oklch(0.72 0.11 75 / 0.35);
+    color: oklch(0.18 0.02 55);
+  }
+  /* Subtle scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.85 0.02 75 / 0.6);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: oklch(0.75 0.05 75 / 0.7); background-clip: padding-box; border: 2px solid transparent; }
+}
+
+@layer utilities {
+  .shadow-warm {
+    box-shadow: 0 1px 2px oklch(0.30 0.04 55 / 0.04), 0 8px 24px -8px oklch(0.30 0.04 55 / 0.10);
+  }
+  .shadow-warm-lg {
+    box-shadow: 0 2px 4px oklch(0.30 0.04 55 / 0.05), 0 16px 40px -12px oklch(0.30 0.04 55 / 0.18);
+  }
+  .bg-paper {
+    background-color: var(--card);
+    background-image:
+      radial-gradient(circle at 1px 1px, oklch(0.30 0.04 55 / 0.025) 1px, transparent 0);
+    background-size: 18px 18px;
+  }
+}

@@ -5,6 +5,7 @@ import BookCard from "@/components/book-card";
 import { BookGridSkeleton } from "@/components/book-card-skeleton";
 import OrderModal from "@/components/order-modal";
 import { fetchBook, fetchRecommendations } from "@/lib/queries";
+import type { Book } from "@/lib/types";
 
 // ── Status config ────────────────────────────────────────
 
@@ -89,7 +90,7 @@ function TrustBadge({ children }: { children: React.ReactNode }) {
 
 // ── Order CTA button ─────────────────────────────────────
 
-function OrderButton({ book }: { book: NonNullable<ReturnType<typeof useQuery<typeof book>>["data"]> }) {
+function OrderButton({ book }: { book: Book }) {
   return (
     <OrderModal
       book={book}
@@ -110,8 +111,6 @@ function OrderButton({ book }: { book: NonNullable<ReturnType<typeof useQuery<ty
 }
 
 // ── Page ─────────────────────────────────────────────────
-
-import type { Book } from "@/lib/types";
 
 export default function BookPage() {
   const { id } = useParams<{ id: string }>();

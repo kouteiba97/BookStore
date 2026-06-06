@@ -24,9 +24,9 @@ const REQUEST_STATUS_LABELS: Record<string, string> = {
 };
 
 const RANGES = [
-  { days: 7, label: "٧ أيام" },
-  { days: 30, label: "٣٠ يوم" },
-  { days: 90, label: "٩٠ يوم" },
+  { days: 7, label: "7 أيام" },
+  { days: 30, label: "30 يوم" },
+  { days: 90, label: "90 يوم" },
 ];
 
 export default function OverviewPage() {

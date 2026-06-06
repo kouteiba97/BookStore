@@ -370,7 +370,7 @@ function BookFormModal({
           {form.hasInventory && (
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Field label="الحالة" required>
-                <select className={selectClass} value={form.invStatus} onChange={(e) => setForm({ ...form, invStatus: e.target.value })}>
+                <select className={selectClass} value={form.invStatus} onChange={(e) => setForm({ ...form, invStatus: e.target.value as InventoryStatus })}>
                   <option value="available">متوفر</option>
                   <option value="on_request">حسب الطلب</option>
                   <option value="rare">نادر</option>

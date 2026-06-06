@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   cancelOrder,
@@ -49,7 +49,6 @@ interface DraftItem {
 
 export default function OrderDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const qc = useQueryClient();
   const toast = useToast();
 

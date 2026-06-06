@@ -49,6 +49,12 @@ const Icon = {
       <path d="M21 8v13H3V8" /><path d="M1 3h22v5H1z" /><path d="M10 12h4" />
     </svg>
   ),
+  quickAdd: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <circle cx="12" cy="13" r="3.5" /><path d="M12 10v6M9 13h6" />
+    </svg>
+  ),
   chevron: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
       <path d="m9 6 6 6-6 6" />
@@ -76,6 +82,7 @@ const NAV: NavItem[] = [
   { to: "/admin/orders", label: "الطلبات", icon: Icon.orders },
   { to: "/admin/requests", label: "طلبات العملاء", icon: Icon.requests },
   { to: "/admin/books", label: "الكتب", icon: Icon.books },
+  { to: "/admin/quick-add", label: "إضافة سريعة", icon: Icon.quickAdd },
   { to: "/admin/catalog/categories", label: "التصنيفات", icon: Icon.catalog },
   { to: "/admin/academic", label: "الأكاديمي", icon: Icon.academic },
   { to: "/admin/inventory", label: "المخزون", icon: Icon.inventory },
@@ -86,6 +93,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/orders": "إدارة الطلبات",
   "/admin/requests": "طلبات العملاء",
   "/admin/books": "إدارة الكتب",
+  "/admin/quick-add": "إضافة سريعة",
   "/admin/catalog/categories": "التصنيفات",
   "/admin/catalog/authors": "المؤلفون",
   "/admin/catalog/publishers": "دور النشر",
