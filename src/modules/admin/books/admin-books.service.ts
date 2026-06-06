@@ -86,7 +86,10 @@ export class AdminBooksService {
 
   async create(dto: UpsertBookDto) {
     const storeId = await this.storeResolver.getStoreId();
-    await this.assertCategory(dto.categoryId);
+    const categoryId = await this.resolveCategoryId(dto.categoryId, dto.categoryName);
+    const authorId = await this.resolveOptionalRef('author', dto.authorId, dto.authorName);
+    const publisherId = await this.resolveOptionalRef('publisher', dto.publisherId, dto.publisherName);
+    const countryId = await this.resolveOptionalRef('country', dto.countryId, dto.countryName);
 
     const book = await this.prisma.book.create({
       data: {
@@ -97,10 +100,10 @@ export class AdminBooksService {
         year: dto.year ?? null,
         price: dto.price ?? null,
         imageUrl: dto.imageUrl ?? null,
-        categoryId: dto.categoryId,
-        authorId: dto.authorId ?? null,
-        publisherId: dto.publisherId ?? null,
-        countryId: dto.countryId ?? null,
+        categoryId,
+        authorId,
+        publisherId,
+        countryId,
         ...(dto.inventory
           ? {
               inventory: {
@@ -133,7 +136,10 @@ export class AdminBooksService {
     });
     if (!existing) throw new NotFoundException('Book not found');
 
-    await this.assertCategory(dto.categoryId);
+    const categoryId = await this.resolveCategoryId(dto.categoryId, dto.categoryName);
+    const authorId = await this.resolveOptionalRef('author', dto.authorId, dto.authorName);
+    const publisherId = await this.resolveOptionalRef('publisher', dto.publisherId, dto.publisherName);
+    const countryId = await this.resolveOptionalRef('country', dto.countryId, dto.countryName);
 
     return this.prisma.$transaction(async (tx) => {
       await tx.book.update({
@@ -145,10 +151,10 @@ export class AdminBooksService {
           year: dto.year ?? null,
           price: dto.price ?? null,
           imageUrl: dto.imageUrl ?? null,
-          categoryId: dto.categoryId,
-          authorId: dto.authorId ?? null,
-          publisherId: dto.publisherId ?? null,
-          countryId: dto.countryId ?? null,
+          categoryId,
+          authorId,
+          publisherId,
+          countryId,
         },
       });
 
@@ -212,10 +218,59 @@ export class AdminBooksService {
     return { ok: true };
   }
 
-  private async assertCategory(categoryId: string) {
-    const exists = await this.prisma.category.findUnique({
-      where: { id: categoryId },
+  /**
+   * Returns a valid category id. Priority: validated id → find-or-create by name
+   * → fall back to the shared "غير مصنف" (Uncategorized) category.
+   */
+  private async resolveCategoryId(
+    categoryId?: string | null,
+    categoryName?: string | null,
+  ): Promise<string> {
+    if (categoryId) {
+      const exists = await this.prisma.category.findUnique({
+        where: { id: categoryId },
+      });
+      if (!exists) throw new BadRequestException('Invalid categoryId');
+      return categoryId;
+    }
+
+    const name = categoryName?.trim();
+    if (name) {
+      const row = await this.prisma.category.upsert({
+        where: { name },
+        create: { name },
+        update: {},
+      });
+      return row.id;
+    }
+
+    const fallback = await this.prisma.category.upsert({
+      where: { name: 'غير مصنف' },
+      create: { name: 'غير مصنف' },
+      update: {},
     });
-    if (!exists) throw new BadRequestException('Invalid categoryId');
+    return fallback.id;
+  }
+
+  /**
+   * Resolve an optional author/publisher/country reference. Priority:
+   * given id → find-or-create by name → null. Uses upsert so a typed name is
+   * created automatically (and is race-safe via the unique `name` constraint).
+   */
+  private async resolveOptionalRef(
+    model: 'author' | 'publisher' | 'country',
+    id?: string | null,
+    name?: string | null,
+  ): Promise<string | null> {
+    if (id) return id;
+    const trimmed = name?.trim();
+    if (!trimmed) return null;
+
+    const row = await (this.prisma[model] as any).upsert({
+      where: { name: trimmed },
+      create: { name: trimmed },
+      update: {},
+    });
+    return row.id as string;
   }
 }

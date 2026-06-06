@@ -26,9 +26,17 @@ export class UpsertBookDto {
   @IsNotEmpty()
   title: string;
 
+  // For each reference (category/author/publisher/country) the form may send
+  // either an existing *Id OR a free-text *Name. When only a name is given, the
+  // service finds-or-creates the row by name. Category additionally falls back
+  // to "غير مصنف" when nothing is provided.
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  categoryId: string;
+  categoryId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  categoryName?: string | null;
 
   @IsOptional()
   @IsString()
@@ -36,11 +44,23 @@ export class UpsertBookDto {
 
   @IsOptional()
   @IsString()
+  authorName?: string | null;
+
+  @IsOptional()
+  @IsString()
   publisherId?: string | null;
 
   @IsOptional()
   @IsString()
+  publisherName?: string | null;
+
+  @IsOptional()
+  @IsString()
   countryId?: string | null;
+
+  @IsOptional()
+  @IsString()
+  countryName?: string | null;
 
   @IsOptional()
   @IsString()

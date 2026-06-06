@@ -11,6 +11,7 @@ import { OrdersController } from './orders/orders.controller';
 import { OrdersService } from './orders/orders.service';
 import { InventoryController } from './inventory/inventory.controller';
 import { InventoryService } from './inventory/inventory.service';
+import { UploadsController } from './uploads/uploads.controller';
 import { StoreResolver } from './store-resolver.service';
 
 @Module({
@@ -21,6 +22,7 @@ import { StoreResolver } from './store-resolver.service';
     AdminAcademicController,
     OrdersController,
     InventoryController,
+    UploadsController,
   ],
   providers: [
     StoreResolver,
