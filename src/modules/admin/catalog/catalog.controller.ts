@@ -7,9 +7,11 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { CatalogService, CatalogResource } from './catalog.service';
 import { UpsertCatalogDto } from './dto/upsert-catalog.dto';
+import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
 
 const allowed: CatalogResource[] = [
   'categories',
@@ -25,6 +27,7 @@ function assertResource(resource: string): CatalogResource {
   return resource as CatalogResource;
 }
 
+@UseGuards(AdminAuthGuard)
 @Controller('v1/admin/catalog')
 export class CatalogController {
   constructor(private readonly service: CatalogService) {}

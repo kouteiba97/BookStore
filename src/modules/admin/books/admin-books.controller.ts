@@ -7,10 +7,13 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { AdminBooksService } from './admin-books.service';
 import { UpsertBookDto } from './dto/upsert-book.dto';
+import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
 
+@UseGuards(AdminAuthGuard)
 @Controller('v1/admin/books')
 export class AdminBooksController {
   constructor(private readonly service: AdminBooksService) {}

@@ -35,13 +35,18 @@ Admin back office (`src/modules/admin/`, mounted at `/api/v1/admin/*`):
 Shared infra:
 - `src/modules/storage/` — `StorageService` wraps Cloudflare R2 (S3 SDK). Global module; `enabled` is false unless all `R2_*` env vars are set, then falls back to local disk. Env loaded via `@nestjs/config`.
 
-> Admin routes are **NOT authenticated** in code — gate `/admin/*` and `/api/v1/admin/*` behind a reverse proxy in production.
+Auth & hardening:
+- `auth/` (`src/modules/admin/auth/`) — `POST /api/v1/admin/auth/login` exchanges the shared `ADMIN_PASSWORD` (env) for a 30-day JWT (`JWT_SECRET`). `AdminAuthGuard` (`src/common/guards/`) protects ALL admin controllers plus the operational endpoints (`import`, `images/fill`, `image-sync`, `clean`, and requests list/status). Public: catalog reads, academic reads, request **create**.
+- Global rate limit 300 req/min/IP (`@nestjs/throttler`); login 10/min; public request create 5/min. `helmet` + env-driven CORS (`CORS_ORIGINS`) in `main.ts`. Health probe at `GET /api/v1/health`.
+- ⚠️ `AdminModule` must stay **before** the public modules in `app.module.ts` imports — its literal routes (`v1/admin/books`) must register before the `v1/:storeSlug/...` wildcards or admin GETs 404.
 
 ## Frontend pages (`frontend/src/pages/`)
 
 Public: `home.tsx`, `search.tsx`, `book.tsx`, `academic/{fields,years,subjects,subject-books}.tsx`
 
-Admin (separate app — `admin/src/pages/admin/`, served at `/admin`): `overview`, `orders`, `order-detail`, `books`, `quick-add` (mobile book entry), `catalog`, `academic`, `inventory`, `requests`. Admin shared components live in `admin/src/components/admin/`, API in `admin/src/lib/admin-api.ts`.
+Admin (separate app — `admin/src/pages/admin/`, served at `/admin`): `overview`, `orders`, `order-detail`, `books`, `quick-add` (mobile book entry), `catalog`, `academic`, `inventory`, `requests`. Login at `/admin/login` (`admin/src/pages/login.tsx`); token helpers + axios interceptors in `admin/src/lib/auth.ts`. Admin shared components live in `admin/src/components/admin/`, API in `admin/src/lib/admin-api.ts`.
+
+Frontend env (Vite): `VITE_STORE_SLUG` (default `elbayan`), `VITE_WHATSAPP_NUMBER` (storefront), `VITE_PUBLIC_SITE_URL` (admin's "view store" link). Store identity script: `scripts/setup-store.ts`.
 
 ## Frontend shared
 

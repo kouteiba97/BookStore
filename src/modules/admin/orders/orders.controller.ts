@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import {
@@ -14,7 +15,9 @@ import {
   UpdateOrderStatusDto,
   UpsertOrderDto,
 } from './dto/order.dto';
+import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
 
+@UseGuards(AdminAuthGuard)
 @Controller('v1/admin/orders')
 export class OrdersController {
   constructor(private readonly service: OrdersService) {}

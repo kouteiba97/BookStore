@@ -1,6 +1,8 @@
-import { Controller, Post, Param, Query } from '@nestjs/common';
+import { Controller, Post, Param, Query, UseGuards } from '@nestjs/common';
 import { ImageSyncService } from './image-sync.service';
+import { AdminAuthGuard } from '../../common/guards/admin-auth.guard';
 
+@UseGuards(AdminAuthGuard)
 @Controller('v1/:storeSlug/image-sync')
 export class ImageSyncController {
   constructor(private readonly imageSyncService: ImageSyncService) {}

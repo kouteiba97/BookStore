@@ -6,8 +6,10 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { AdminAcademicService } from './admin-academic.service';
+import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
 
 class NameDto {
   name: string;
@@ -23,6 +25,7 @@ class SubjectDto extends NameDto {
   yearId: string;
 }
 
+@UseGuards(AdminAuthGuard)
 @Controller('v1/admin/academic')
 export class AdminAcademicController {
   constructor(private readonly service: AdminAcademicService) {}

@@ -3,14 +3,17 @@ import {
   Post,
   Param,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImportService } from './import.service';
+import { AdminAuthGuard } from '../../common/guards/admin-auth.guard';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
+@UseGuards(AdminAuthGuard)
 @Controller('v1/:storeSlug/import')
 export class ImportController {
   constructor(private readonly importService: ImportService) {}

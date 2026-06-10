@@ -4,12 +4,14 @@ import {
   Post,
   ServiceUnavailableException,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
 import { StorageService } from '../../storage/storage.service';
+import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8 MB — phone photos
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
@@ -19,6 +21,7 @@ const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
  * R2 server-side (no presigned URL / no bucket CORS needed) and return the
  * public URL to store on the book.
  */
+@UseGuards(AdminAuthGuard)
 @Controller('v1/admin/uploads')
 export class UploadsController {
   constructor(private readonly storage: StorageService) {}
