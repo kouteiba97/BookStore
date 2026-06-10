@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const STORE_SLUG = "test-store";
+// Overridable per environment; must match the store row's slug in the DB.
+const STORE_SLUG = import.meta.env.VITE_STORE_SLUG ?? "elbayan";
 
 const api = axios.create({
   baseURL: `/api/v1/${STORE_SLUG}`,

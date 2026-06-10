@@ -12,7 +12,8 @@ import type { Book } from "@/lib/types";
 
 // ── Constants ────────────────────────────────────────────
 
-const WHATSAPP_NUMBER = "213XXXXXXXXX";
+// International format without "+". Overridable per environment.
+const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER ?? "213777887762";
 
 // ── Order Form ───────────────────────────────────────────
 
