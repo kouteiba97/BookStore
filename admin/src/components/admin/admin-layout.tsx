@@ -1,7 +1,11 @@
 import { useEffect, useState, type ReactElement } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LogoMark } from "@/components/logo";
+import { clearToken } from "@/lib/auth";
 import { ToastProvider } from "./toaster";
+
+// Where "عرض المتجر" points — the public storefront (separate app/origin).
+const PUBLIC_SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL ?? "http://localhost:5173/";
 
 interface NavItem {
   to: string;
@@ -254,8 +258,10 @@ function Sidebar({
             {!collapsed && <span>طي القائمة</span>}
           </button>
         )}
-        <Link
-          to="/"
+        <a
+          href={PUBLIC_SITE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
           className={`mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground ${
             collapsed ? "justify-center" : ""
           }`}
@@ -263,9 +269,32 @@ function Sidebar({
         >
           {Icon.external}
           {!collapsed && <span>عرض المتجر</span>}
-        </Link>
+        </a>
+        <LogoutButton collapsed={collapsed} />
       </div>
     </div>
+  );
+}
+
+function LogoutButton({ collapsed }: { collapsed: boolean }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => {
+        clearToken();
+        navigate("/admin/login", { replace: true });
+      }}
+      className={`mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 ${
+        collapsed ? "justify-center" : ""
+      }`}
+      title="تسجيل الخروج"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <path d="m16 17 5-5-5-5M21 12H9" />
+      </svg>
+      {!collapsed && <span>تسجيل الخروج</span>}
+    </button>
   );
 }
 

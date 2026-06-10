@@ -1,8 +1,15 @@
 import axios from "axios";
+import { attachAuth } from "./auth";
 
 const adminApi = axios.create({ baseURL: "/api/v1/admin" });
+attachAuth(adminApi);
 
 export default adminApi;
+
+// ── Auth ─────────────────────────────────────────────────
+
+export const login = (password: string) =>
+  adminApi.post("/auth/login", { password }).then((r) => r.data as { token: string });
 
 // ── Stats ────────────────────────────────────────────────
 
