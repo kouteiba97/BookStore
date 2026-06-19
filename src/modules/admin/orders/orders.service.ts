@@ -11,26 +11,11 @@ import {
   OrderItemInputDto,
   UpsertOrderDto,
 } from './dto/order.dto';
+import { OrderStatus, canTransition, computeOrderTotals } from './order-rules';
 
 const orderInclude = {
   items: { include: { book: { select: { id: true, title: true, imageUrl: true } } } },
   request: { select: { id: true } },
-};
-
-type OrderStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled';
-
-// Status state machine — keeps the operator from making nonsensical jumps
-const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending: ['confirmed', 'cancelled'],
-  confirmed: ['shipped', 'cancelled'],
-  shipped: ['delivered', 'cancelled'],
-  delivered: [],
-  cancelled: [],
 };
 
 @Injectable()
@@ -109,7 +94,7 @@ export class OrdersService {
   async create(dto: UpsertOrderDto) {
     const storeId = await this.storeResolver.getStoreId();
     const items = await this.resolveItems(dto.items);
-    const totals = this.computeTotals(items, dto.shippingCost ?? 0);
+    const totals = computeOrderTotals(items, dto.shippingCost ?? 0);
 
     return this.prisma.order.create({
       data: {
@@ -151,7 +136,7 @@ export class OrdersService {
     }
 
     const items = await this.resolveItems(dto.items);
-    const totals = this.computeTotals(items, dto.shippingCost ?? 0);
+    const totals = computeOrderTotals(items, dto.shippingCost ?? 0);
 
     return this.prisma.$transaction(async (tx) => {
       // Replace items wholesale — simplest correct strategy for edits
@@ -192,8 +177,7 @@ export class OrdersService {
     });
     if (!order) throw new NotFoundException('Order not found');
 
-    const allowed = TRANSITIONS[order.status as OrderStatus];
-    if (order.status !== target && !allowed.includes(target)) {
+    if (!canTransition(order.status as OrderStatus, target)) {
       throw new BadRequestException(
         `Cannot transition order from ${order.status} to ${target}`,
       );
@@ -238,7 +222,7 @@ export class OrdersService {
     }
 
     const items = await this.resolveItems(dto.items);
-    const totals = this.computeTotals(items, dto.shippingCost ?? 0);
+    const totals = computeOrderTotals(items, dto.shippingCost ?? 0);
 
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -304,21 +288,5 @@ export class OrdersService {
         quantity: it.quantity,
       };
     });
-  }
-
-  private computeTotals(
-    items: { unitPrice: number; quantity: number }[],
-    shipping: number,
-  ) {
-    const subtotal = items.reduce(
-      (s, it) => s + it.unitPrice * it.quantity,
-      0,
-    );
-    const shippingCost = Math.max(0, shipping);
-    return {
-      subtotal,
-      shippingCost,
-      total: subtotal + shippingCost,
-    };
   }
 }

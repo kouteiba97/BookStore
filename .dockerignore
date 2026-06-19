@@ -1,0 +1,17 @@
+node_modules
+dist
+coverage
+.git
+.github
+.claude
+.env
+.env.*
+!.env.example
+*.log
+npm-debug.log*
+frontend
+admin
+docs
+public/covers
+.vscode
+.idea

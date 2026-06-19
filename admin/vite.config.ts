@@ -4,9 +4,11 @@ import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 
 // The admin app is served under "/admin" (path-based behind a reverse proxy,
-// e.g. bayan.com/admin — or a subdomain that also serves it at /admin).
+// e.g. bayan.com/admin). When deploying to a dedicated host that serves the
+// build at its domain root (e.g. a Render static site), set VITE_BASE_PATH=/
+// so asset URLs resolve.
 export default defineConfig({
-  base: "/admin/",
+  base: process.env.VITE_BASE_PATH || "/admin/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {

@@ -1,7 +1,11 @@
 import axios from "axios";
 import { attachAuth } from "./auth";
 
-const adminApi = axios.create({ baseURL: "/api/v1/admin" });
+// Absolute API origin in production (e.g. https://bookstore-api.onrender.com).
+// Empty in dev so requests stay relative and go through the Vite proxy.
+const API_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+
+const adminApi = axios.create({ baseURL: `${API_URL}/api/v1/admin` });
 attachAuth(adminApi);
 
 export default adminApi;

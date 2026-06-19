@@ -1,0 +1,76 @@
+# Render Blueprint — deploys all three pieces of BookStore.
+# Import via Render dashboard → "New" → "Blueprint" and point at this repo.
+# Secrets (sync: false) are entered once in the dashboard; JWT_SECRET is
+# auto-generated. After the first deploy, seed the store row once:
+#   render shell bookstore-api  →  npm run prisma:seed
+services:
+  # ── NestJS API (Docker) ──────────────────────────────────────────────────
+  - type: web
+    name: bookstore-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: DATABASE_URL          # Neon pooled connection string
+        sync: false
+      - key: DIRECT_URL            # Neon direct connection (for migrations)
+        sync: false
+      - key: JWT_SECRET            # auto-generated, never shown
+        generateValue: true
+      - key: ADMIN_PASSWORD        # shared admin login
+        sync: false
+      - key: STORE_SLUG
+        sync: false
+      - key: WHATSAPP_NUMBER
+        sync: false
+      - key: CORS_ORIGINS          # storefront + admin origins (comma-separated)
+        sync: false
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_PUBLIC_BASE_URL
+        sync: false
+
+  # ── Public storefront (static SPA) ───────────────────────────────────────
+  - type: web
+    name: bookstore-storefront
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL          # https://bookstore-api.onrender.com
+        sync: false
+      - key: VITE_STORE_SLUG
+        sync: false
+      - key: VITE_WHATSAPP_NUMBER
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # ── Admin dashboard (static SPA, served at /admin) ───────────────────────
+  - type: web
+    name: bookstore-admin
+    runtime: static
+    rootDir: admin
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL          # https://bookstore-api.onrender.com
+        sync: false
+      - key: VITE_BASE_PATH        # "/" for a dedicated subdomain on Render
+        value: /
+      - key: VITE_PUBLIC_SITE_URL  # link back to the storefront
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

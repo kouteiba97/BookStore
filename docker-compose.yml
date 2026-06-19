@@ -1,0 +1,40 @@
+# Reproducible local/staging stack: Postgres + the NestJS API.
+# For production, prefer a managed Postgres (Neon/Supabase) and set DATABASE_URL
+# to it instead of the bundled `db` service.
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: books
+      POSTGRES_PASSWORD: books
+      POSTGRES_DB: books
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U books"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://books:books@db:5432/books
+      PORT: 3000
+      # Override the rest via a .env file or your orchestrator's secrets:
+      # STORE_SLUG, WHATSAPP_NUMBER, ADMIN_PASSWORD, JWT_SECRET,
+      # CORS_ORIGINS, R2_* …
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
