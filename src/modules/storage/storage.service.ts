@@ -21,12 +21,15 @@ export class StorageService {
   readonly enabled: boolean;
 
   constructor(private readonly config: ConfigService) {
-    const accountId = config.get<string>('R2_ACCOUNT_ID');
-    const accessKeyId = config.get<string>('R2_ACCESS_KEY_ID');
-    const secretAccessKey = config.get<string>('R2_SECRET_ACCESS_KEY');
-    this.bucket = config.get<string>('R2_BUCKET') ?? '';
-    // Strip any trailing slash so we can join with "/" cleanly later.
-    this.publicBaseUrl = (config.get<string>('R2_PUBLIC_BASE_URL') ?? '').replace(/\/+$/, '');
+    // Trim every value: env vars pasted through dashboards often carry a stray
+    // trailing newline/space, and a bad char in the access key breaks the AWS
+    // SigV4 Authorization header (ERR_INVALID_CHAR) at request time.
+    const accountId = config.get<string>('R2_ACCOUNT_ID')?.trim();
+    const accessKeyId = config.get<string>('R2_ACCESS_KEY_ID')?.trim();
+    const secretAccessKey = config.get<string>('R2_SECRET_ACCESS_KEY')?.trim();
+    this.bucket = (config.get<string>('R2_BUCKET') ?? '').trim();
+    // Strip trailing whitespace and any trailing slash so we join with "/" cleanly.
+    this.publicBaseUrl = (config.get<string>('R2_PUBLIC_BASE_URL') ?? '').trim().replace(/\/+$/, '');
 
     this.enabled = Boolean(
       accountId && accessKeyId && secretAccessKey && this.bucket && this.publicBaseUrl,
