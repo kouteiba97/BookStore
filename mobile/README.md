@@ -49,6 +49,19 @@ flutter build apk --release       # Android release build
 flutter build ipa                 # iOS (requires macOS/Xcode)
 ```
 
+## Android release signing
+
+Both apps are signed with **one shared upload key** (alias `elbayan`, 30-year validity):
+
+- Keystore: `<app>/android/app/upload-keystore.jks` *(gitignored)*
+- Credentials: `<app>/android/key.properties` *(gitignored)*
+- `flutter build apk --release` / `appbundle` picks them up automatically; machines
+  without `key.properties` (CI, fresh clones) fall back to the debug key.
+
+> ⚠️ **Back up the keystore + key.properties somewhere safe** (password manager /
+> offline drive). If you lose them you cannot update the app on Google Play —
+> you'd have to publish a brand-new listing. They are intentionally NOT in git.
+
 ## Notes
 - Free-tier API sleeps after ~15 min idle; the first request can take ~50 s. HTTP timeouts are set to 75 s and error views offer retry.
 - Design tokens live in each app's `lib/theme.dart` (duplicated by convention, like the web apps duplicate `lib/`).
