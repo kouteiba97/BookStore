@@ -10,6 +10,7 @@ Islamic / academic bookstore platform. NestJS backend + React (Vite) frontend, P
   - `admin/` — **admin dashboard**, its own Vite app/build, served under base `/admin/`. Dev `http://localhost:5175/admin/`. Deploy independently (subdomain or `/admin` path). Shares a few files with the public app by duplication (`lib/queries.ts`, `lib/types.ts`, `lib/api.ts`, `components/logo.tsx`).
   - Both are React + Vite + TS + Tailwind (Base UI / shadcn-style primitives) + TanStack Query, and both proxy `/api` → backend.
 - **DB**: Prisma schema at `prisma/schema.prisma`, migrations under `prisma/migrations/`.
+- **Mobile (Flutter, `mobile/`)**: two apps mirroring the two web apps — `mobile/store_app` (customer storefront) and `mobile/admin_app` (back office: JWT login, orders/requests workflows, Quick-Add with camera→R2 cover upload). Same palette/fonts/logo, Arabic RTL, same API. Defaults point at the production Render API; override with `--dart-define=API_URL=...`. See [mobile/README.md](mobile/README.md).
 
 ## Backend modules (`src/modules/`)
 
