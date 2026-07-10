@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../api.dart';
 import '../models.dart';
+import '../sheets.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'book_detail.dart';
@@ -86,25 +87,89 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<Widget> _latest(List<Book> books) {
-    if (books.isEmpty) return [const SliverToBoxAdapter(child: EmptyView('لا توجد كتب بعد'))];
     return [
-      const SliverToBoxAdapter(child: SectionTitle('أحدث الكتب')),
-      SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        sliver: SliverGrid(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 0.62),
-          delegate: SliverChildBuilderDelegate(
-            (context, i) => BookCard(
-              book: books[i],
-              onTap: () => Navigator.of(context)
-                  .push(MaterialPageRoute(builder: (_) => BookDetailScreen(bookId: books[i].id, initial: books[i]))),
+      SliverToBoxAdapter(
+        child: SectionTitle('أحدث الإضافات',
+            trailing: const Text('جديدنا في المكتبة',
+                style: TextStyle(fontSize: 12, color: AppColors.mutedForeground))),
+      ),
+      if (books.isEmpty)
+        SliverToBoxAdapter(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 44),
+            decoration: BoxDecoration(
+              color: AppColors.card.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border, width: 1.4),
             ),
-            childCount: books.length,
+            child: const Center(
+                child: Text('لا توجد كتب لعرضها حاليًا',
+                    style: TextStyle(fontSize: 13, color: AppColors.mutedForeground))),
+          ),
+        )
+      else
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverGrid(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 0.62),
+            delegate: SliverChildBuilderDelegate(
+              (context, i) => BookCard(
+                book: books[i],
+                onTap: () => Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => BookDetailScreen(bookId: books[i].id, initial: books[i]))),
+              ),
+              childCount: books.length,
+            ),
           ),
         ),
-      ),
+      const SliverToBoxAdapter(child: _RequestCta()),
     ];
+  }
+}
+
+/// "Didn't find the book you're looking for?" banner — mirrors the web home CTA.
+class _RequestCta extends StatelessWidget {
+  const _RequestCta();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [Color(0xFF2C5443), Color(0xFF1F3A2E), Color(0xFF122318)],
+        ),
+      ),
+      child: Column(
+        children: [
+          Text('لم تجد الكتاب الذي تبحث عنه؟',
+              textAlign: TextAlign.center,
+              style: heading(size: 22, color: const Color(0xFFE8C574))),
+          const SizedBox(height: 6),
+          const Text('أرسل لنا طلبك وسنوفّره لك في أقرب وقت',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Color(0xFFCBC5B4))),
+          const SizedBox(height: 18),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDCA54C),
+              foregroundColor: const Color(0xFF2B2113),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            onPressed: () => showRequestSheet(context),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('اطلب كتابك الآن'),
+          ),
+        ],
+      ),
+    );
   }
 }
 

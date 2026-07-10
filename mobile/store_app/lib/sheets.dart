@@ -23,11 +23,13 @@ Future<void> showOrderSheet(BuildContext context, Book book) =>
 
 /// Book-request lead — mirrors request-dialog.tsx: the lead is saved
 /// server-side (POST /requests), then WhatsApp opens with the returned URL.
-Future<void> showRequestSheet(BuildContext context, {String? bookId, required String bookName}) =>
+/// With no [bookName] (the home-page banner), the form asks for the title.
+Future<void> showRequestSheet(BuildContext context, {String? bookId, String? bookName}) =>
     _showFormSheet(context,
-        title: 'اطلب توفير «$bookName»',
+        title: bookName == null ? 'اطلب كتابك الآن' : 'اطلب توفير «$bookName»',
         submitLabel: 'إرسال الطلب',
-        needsAddress: true, onSubmit: (form) async {
+        needsAddress: true,
+        askBookName: bookName == null, onSubmit: (form) async {
       final whatsappUrl = await Api.createRequest(
         firstName: form.firstName,
         lastName: form.lastName,
@@ -35,7 +37,7 @@ Future<void> showRequestSheet(BuildContext context, {String? bookId, required St
         wilaya: form.wilaya,
         address: form.address,
         bookId: bookId,
-        bookName: bookName,
+        bookName: bookName ?? form.bookName,
       );
       if (whatsappUrl != null) {
         await launchUrl(Uri.parse(whatsappUrl), mode: LaunchMode.externalApplication);
@@ -44,7 +46,7 @@ Future<void> showRequestSheet(BuildContext context, {String? bookId, required St
     });
 
 class _FormData {
-  String firstName = '', lastName = '', phone = '', wilaya = '', address = '';
+  String firstName = '', lastName = '', phone = '', wilaya = '', address = '', bookName = '';
 }
 
 Future<void> _showFormSheet(
@@ -52,6 +54,7 @@ Future<void> _showFormSheet(
   required String title,
   required String submitLabel,
   bool needsAddress = false,
+  bool askBookName = false,
   required Future<String?> Function(_FormData) onSubmit,
 }) {
   final form = _FormData();
@@ -82,6 +85,10 @@ Future<void> _showFormSheet(
                 const SizedBox(height: 16),
                 Text(title, textAlign: TextAlign.center, style: heading(size: 19)),
                 const SizedBox(height: 16),
+                if (askBookName) ...[
+                  _field('اسم الكتاب المطلوب', (v) => form.bookName = v),
+                  const SizedBox(height: 10),
+                ],
                 Row(children: [
                   Expanded(child: _field('الاسم', (v) => form.firstName = v)),
                   const SizedBox(width: 10),
