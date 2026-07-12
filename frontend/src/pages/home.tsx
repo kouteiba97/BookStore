@@ -59,7 +59,11 @@ export default function HomePage() {
         <div className="pointer-events-none absolute -bottom-32 left-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
         <div className="relative">
           <LogoShamsa className="mx-auto h-32 w-32 drop-shadow-[0_8px_24px_rgba(31,58,46,0.18)] sm:h-40 sm:w-40" />
-          <span className="mt-7 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold-light/50 px-3.5 py-1 text-xs font-semibold text-[oklch(0.38_0.08_75)]">
+          {/* Store name under the logo so visitors know who we are */}
+          <h2 className="mt-4 font-heading text-2xl font-bold tracking-tight text-primary sm:text-3xl">
+            مكتبة البيان
+          </h2>
+          <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold-light/50 px-3.5 py-1 text-xs font-semibold text-[oklch(0.38_0.08_75)]">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
             مكتبة شرعية متخصصة
           </span>
