@@ -39,6 +39,8 @@ export class InventoryService {
         inventory: true,
         category: { select: { id: true, name: true } },
         author: { select: { id: true, name: true } },
+        // Carry the academic links so the client can edit them from the stock view.
+        subjects: { include: { subject: { select: { id: true, name: true } } } },
       },
       orderBy: { title: 'asc' },
     });

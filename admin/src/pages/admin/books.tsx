@@ -1,13 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createBook,
   deleteBook,
+  fetchAcademicTree,
   fetchAdminBooks,
   fetchCatalog,
   updateBook,
 } from "@/lib/admin-api";
-import type { AdminBook, CatalogItem, InventoryStatus } from "@/lib/admin-types";
+import type {
+  AcademicField,
+  AdminBook,
+  CatalogItem,
+  InventoryStatus,
+} from "@/lib/admin-types";
 import {
   Button,
   ConfirmDialog,
@@ -266,11 +272,56 @@ function BookFormModal({
     enabled: open,
   });
 
+  const { data: tree = [] } = useQuery<AcademicField[]>({
+    queryKey: ["academic-tree"],
+    queryFn: () => fetchAcademicTree(),
+    enabled: open,
+  });
+
   const [form, setForm] = useState(() => buildForm(editing));
+  const [fieldId, setFieldId] = useState("");
+  const [yearId, setYearId] = useState("");
 
   useEffect(() => {
-    if (open) setForm(buildForm(editing));
+    if (open) {
+      setForm(buildForm(editing));
+      setFieldId("");
+      setYearId("");
+    }
   }, [open, editing]);
+
+  // Preselect the speciality/year of the book's first linked subject (edit mode).
+  useEffect(() => {
+    if (!open || fieldId || tree.length === 0) return;
+    const first = form.subjectIds[0];
+    if (!first) return;
+    for (const f of tree)
+      for (const y of f.years)
+        if (y.subjects.some((s) => s.id === first)) {
+          setFieldId(f.id);
+          setYearId(y.id);
+          return;
+        }
+  }, [open, tree, form.subjectIds, fieldId]);
+
+  const selectedField = tree.find((x) => x.id === fieldId);
+  const years = selectedField?.years ?? [];
+  const selectedYear = years.find((y) => y.id === yearId);
+  const subjects = selectedYear?.subjects ?? [];
+  const subjectNames = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const f of tree)
+      for (const y of f.years) for (const s of y.subjects) m.set(s.id, s.name);
+    return m;
+  }, [tree]);
+
+  const toggleSubject = (id: string) =>
+    setForm((p) => ({
+      ...p,
+      subjectIds: p.subjectIds.includes(id)
+        ? p.subjectIds.filter((s) => s !== id)
+        : [...p.subjectIds, id],
+    }));
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -290,6 +341,8 @@ function BookFormModal({
               stock: form.invStock !== "" ? Number(form.invStock) : null,
             }
           : null,
+        // Replaces the linked-subjects set; unchecking clears them.
+        subjectIds: form.academicOn ? form.subjectIds : [],
       };
       return editing ? updateBook(editing.id, payload) : createBook(payload);
     },
@@ -383,6 +436,96 @@ function BookFormModal({
           )}
         </div>
 
+        {/* Academic linking — speciality → year → subjects */}
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+          <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold">
+            <input
+              type="checkbox"
+              checked={form.academicOn}
+              onChange={(e) => setForm({ ...form, academicOn: e.target.checked })}
+              className="h-4 w-4 rounded"
+            />
+            كتاب أكاديمي (ربطه بمادة دراسية)
+          </label>
+
+          {form.academicOn && (
+            <div className="mt-3 space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="التخصّص">
+                  <select
+                    className={selectClass}
+                    value={fieldId}
+                    onChange={(e) => { setFieldId(e.target.value); setYearId(""); }}
+                  >
+                    <option value="">اختر التخصّص...</option>
+                    {tree.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="السنة">
+                  <select
+                    className={selectClass}
+                    value={yearId}
+                    disabled={!fieldId}
+                    onChange={(e) => setYearId(e.target.value)}
+                  >
+                    <option value="">اختر السنة...</option>
+                    {years.map((y) => <option key={y.id} value={y.id}>{y.name}</option>)}
+                  </select>
+                </Field>
+              </div>
+
+              {selectedYear && (
+                <div>
+                  <p className="mb-1.5 text-xs font-semibold text-muted-foreground">المواد (اختر واحدة أو أكثر)</p>
+                  {subjects.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">لا توجد مواد في هذه السنة.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {subjects.map((s) => {
+                        const on = form.subjectIds.includes(s.id);
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => toggleSubject(s.id)}
+                            className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors ${
+                              on
+                                ? "bg-primary text-primary-foreground ring-primary"
+                                : "bg-background text-muted-foreground ring-border hover:bg-muted"
+                            }`}
+                          >
+                            {s.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {form.subjectIds.length > 0 && (
+                <div className="rounded-lg bg-muted/30 p-2.5">
+                  <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground">
+                    المواد المختارة ({form.subjectIds.length})
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {form.subjectIds.map((id) => (
+                      <span key={id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
+                        {subjectNames.get(id) ?? "…"}
+                        <button type="button" onClick={() => toggleSubject(id)} aria-label="إزالة">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3 w-3">
+                            <path d="M18 6 6 18M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="flex justify-end gap-2 border-t border-border/60 pt-4">
           <Button variant="ghost" onClick={onClose}>إلغاء</Button>
           <Button onClick={() => mutation.mutate()} disabled={!isValid || mutation.isPending}>
@@ -410,5 +553,7 @@ function buildForm(editing: AdminBook | null) {
     invStock: editing?.inventory?.stock !== null && editing?.inventory?.stock !== undefined
       ? String(editing.inventory.stock)
       : "",
+    academicOn: Boolean(editing?.subjects?.length),
+    subjectIds: editing?.subjects?.map((s) => s.subject.id) ?? [],
   };
 }
