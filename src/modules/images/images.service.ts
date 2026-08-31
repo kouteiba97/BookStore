@@ -55,14 +55,26 @@ export class ImagesService {
   private async assignMissingImages(storeId: string): Promise<FillResult> {
     const books = await this.prisma.book.findMany({
       where: { storeId, imageUrl: null },
-      select: { id: true, title: true, author: { select: { name: true } } },
+      select: {
+        id: true,
+        title: true,
+        // Cover lookup keys off the primary author only.
+        authors: {
+          select: { author: { select: { name: true } } },
+          orderBy: { position: 'asc' },
+          take: 1,
+        },
+      },
       take: BATCH_SIZE,
     });
 
     const result: FillResult = { processed: books.length, updated: 0, failed: 0 };
 
     for (const book of books) {
-      const imageUrl = await this.getBookImage(book.title, book.author?.name);
+      const imageUrl = await this.getBookImage(
+        book.title,
+        book.authors[0]?.author?.name,
+      );
 
       if (imageUrl) {
         await this.prisma.book.update({

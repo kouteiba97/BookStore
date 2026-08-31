@@ -28,6 +28,17 @@ export const fetchYears = (fieldId: string) =>
 export const fetchSubjects = (yearId: string) =>
   api.get<Subject[]>(`/years/${yearId}/subjects`).then((r) => r.data);
 
+/**
+ * Books for a whole speciality — aggregated across its years and subjects, plus
+ * anything attached directly to the speciality itself.
+ */
+export const fetchFieldBooks = (fieldId: string) =>
+  api.get<Book[]>(`/fields/${fieldId}/books`).then((r) => r.data);
+
+/** Books for a study year, aggregated across its subjects. */
+export const fetchYearBooks = (yearId: string) =>
+  api.get<Book[]>(`/years/${yearId}/books`).then((r) => r.data);
+
 export const fetchSubjectBooks = (subjectId: string) =>
   api.get<Book[]>(`/subjects/${subjectId}/books`).then((r) => r.data);
 

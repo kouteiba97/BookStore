@@ -82,9 +82,9 @@ export class CatalogService {
         resource === 'categories'
           ? { categoryId: id }
           : resource === 'authors'
-            ? { authorId: id }
+            ? { authors: { some: { authorId: id } } }
             : resource === 'publishers'
-              ? { publisherId: id }
+              ? { publishers: { some: { publisherId: id } } }
               : { countryId: id },
     });
 

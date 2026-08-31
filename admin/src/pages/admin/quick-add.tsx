@@ -28,12 +28,17 @@ const EMPTY = {
   year: "",
   price: "",
   description: "",
+  notes: "",
   invOn: false,
   invStatus: "available" as InventoryStatus,
   invStock: "",
   academicOn: false,
+  // Browsing position in the academic tree (not saved directly).
   fieldId: "",
   yearId: "",
+  // What the book actually gets linked to — any depth, any combination.
+  fieldIds: [] as string[],
+  yearIds: [] as string[],
   subjectIds: [] as string[],
 };
 
@@ -92,12 +97,18 @@ export default function QuickAddPage() {
   }
 
   function toggleSubject(id: string) {
-    set(
-      "subjectIds",
-      f.subjectIds.includes(id)
-        ? f.subjectIds.filter((s) => s !== id)
-        : [...f.subjectIds, id],
-    );
+    toggleLink("subjectIds", id);
+  }
+
+  /** Attach / detach the book at any depth of the academic tree. */
+  function toggleLink(key: "fieldIds" | "yearIds" | "subjectIds", id: string) {
+    setF((p) => {
+      const current = p[key];
+      const next = current.includes(id)
+        ? current.filter((x) => x !== id)
+        : [...current, id];
+      return { ...p, [key]: next };
+    });
   }
 
   const save = useMutation({
@@ -118,6 +129,7 @@ export default function QuickAddPage() {
         year: f.year ? Number(f.year) : null,
         price: f.price ? Number(f.price) : null,
         description: f.description.trim() || null,
+        notes: f.notes.trim() || null,
         imageUrl,
         inventory: f.invOn
           ? {
@@ -125,6 +137,8 @@ export default function QuickAddPage() {
               stock: f.invStock !== "" ? Number(f.invStock) : null,
             }
           : null,
+        fieldIds: f.academicOn ? f.fieldIds : [],
+        yearIds: f.academicOn ? f.yearIds : [],
         subjectIds: f.academicOn ? f.subjectIds : [],
       });
     },
@@ -213,7 +227,7 @@ export default function QuickAddPage() {
           />
         </Field>
 
-        <Field label="المؤلف" hint="اكتب الاسم — يُضاف تلقائيًا إن لم يكن موجودًا">
+        <Field label="المؤلف" hint="اكتب الاسم — يُضاف تلقائيًا إن لم يكن موجودًا. لإضافة عدة مؤلفين استعمل صفحة «الكتب».">
           <CatalogCombo
             resource="authors"
             value={f.author}
@@ -231,7 +245,7 @@ export default function QuickAddPage() {
               placeholder="دار النشر"
             />
           </Field>
-          <Field label="الدولة" hint="تُضاف تلقائيًا">
+          <Field label="بلد النشر" hint="تُضاف تلقائيًا">
             <CatalogCombo
               resource="countries"
               value={f.country}
@@ -263,12 +277,27 @@ export default function QuickAddPage() {
           </Field>
         </div>
 
-        <Field label="الوصف">
+        <Field
+          label="نبذة عن الكتاب"
+          hint="تعريف بمضمون الكتاب، يظهر للزبون في صفحة الكتاب."
+        >
           <textarea
             className={textareaClass}
             value={f.description}
             onChange={(e) => set("description", e.target.value)}
-            placeholder="نبذة عن الكتاب (اختياري)"
+            placeholder="تعريف مختصر بموضوع الكتاب (اختياري)"
+          />
+        </Field>
+
+        <Field
+          label="معلومات إضافية"
+          hint="تفاصيل لا يوضّحها العنوان: الطبعة، عدد الأجزاء، التجليد، حالة النسخة..."
+        >
+          <textarea
+            className={textareaClass}
+            value={f.notes}
+            onChange={(e) => set("notes", e.target.value)}
+            placeholder="مثال: الطبعة الثانية، 4 أجزاء، تجليد فني (اختياري)"
           />
         </Field>
       </Surface>
@@ -297,7 +326,7 @@ export default function QuickAddPage() {
                 ))}
               </select>
             </Field>
-            <Field label="الكمية" hint="اتركها فارغة إذا غير معلومة">
+            <Field label="الكمية" hint="اتركها فارغة إذا كانت غير معروفة">
               <input
                 type="number"
                 inputMode="numeric"
@@ -320,13 +349,13 @@ export default function QuickAddPage() {
             onChange={(e) => set("academicOn", e.target.checked)}
             className="h-4 w-4 rounded"
           />
-          كتاب أكاديمي (ربطه بمادة دراسية)
+          كتاب أكاديمي (ربطه بالتخصصات الدراسية)
         </label>
 
         {f.academicOn && (
           <div className="mt-3 space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="التخصّص">
+              <Field label="التخصص">
                 <select
                   className={selectClass}
                   value={f.fieldId}
@@ -334,7 +363,7 @@ export default function QuickAddPage() {
                     setF((p) => ({ ...p, fieldId: e.target.value, yearId: "" }))
                   }
                 >
-                  <option value="">اختر التخصّص...</option>
+                  <option value="">اختر التخصص...</option>
                   {tree.map((x) => (
                     <option key={x.id} value={x.id}>{x.name}</option>
                   ))}
@@ -355,13 +384,34 @@ export default function QuickAddPage() {
               </Field>
             </div>
 
+            {selectedField && (
+              <QuickLinkToggle
+                checked={f.fieldIds.includes(selectedField.id)}
+                onChange={() => toggleLink("fieldIds", selectedField.id)}
+                title={`ربط الكتاب بتخصص «${selectedField.name}» كاملًا`}
+                hint="يظهر لكل طلبة هذا التخصص مهما كانت السنة أو المادة."
+              />
+            )}
+
+            {selectedYear && (
+              <QuickLinkToggle
+                checked={f.yearIds.includes(selectedYear.id)}
+                onChange={() => toggleLink("yearIds", selectedYear.id)}
+                title={`ربط الكتاب بسنة «${selectedYear.name}» كاملة`}
+                hint="يظهر لكل طلبة هذه السنة مهما كانت المادة."
+              />
+            )}
+
             {selectedYear && (
               <div>
                 <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
                   المواد (اختر واحدة أو أكثر)
                 </p>
                 {subjects.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">لا توجد مواد في هذه السنة.</p>
+                  <p className="rounded-lg bg-amber-500/10 px-2.5 py-2 text-xs leading-relaxed text-amber-800">
+                    لا توجد مواد مسجّلة في هذه السنة. يمكنك ربط الكتاب بالسنة أو
+                    بالتخصص من الخيارات أعلاه.
+                  </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {subjects.map((s) => {
@@ -424,5 +474,41 @@ export default function QuickAddPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Compact labelled checkbox for the speciality / year attach options. */
+function QuickLinkToggle({
+  checked,
+  onChange,
+  title,
+  hint,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <label
+      className={`flex cursor-pointer items-start gap-2 rounded-lg border p-2.5 transition-colors ${
+        checked
+          ? "border-primary/40 bg-primary/5"
+          : "border-border/60 bg-background/60 hover:bg-muted/40"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="mt-0.5 h-4 w-4 shrink-0 rounded"
+      />
+      <span className="min-w-0">
+        <span className="block text-xs font-semibold">{title}</span>
+        <span className="mt-0.5 block text-[11px] text-muted-foreground">
+          {hint}
+        </span>
+      </span>
+    </label>
   );
 }

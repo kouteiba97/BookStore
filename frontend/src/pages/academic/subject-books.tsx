@@ -31,11 +31,11 @@ export default function SubjectBooksPage() {
 
       {books.length === 0 && (
         <div className="flex flex-col items-center gap-4 py-16">
-          <p className="text-muted-foreground">لا توجد كتب حاليا لهذه المادة</p>
+          <p className="text-muted-foreground">لا توجد كتب حاليًا لهذه المادة</p>
           <RequestDialog
             trigger={
               <span className="cursor-pointer text-primary underline underline-offset-4">
-                اطلب كتاب لهذه المادة
+                اطلب كتابًا لهذه المادة
               </span>
             }
           />

@@ -327,7 +327,7 @@ export class ImageSyncService {
         titleNormalized: normalized,
         storeId,
         categoryId: category.id,
-        authorId: author.id,
+        authors: { create: [{ authorId: author.id, position: 0 }] },
       },
     });
   }

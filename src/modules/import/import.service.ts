@@ -214,10 +214,14 @@ export class ImportService {
           titleNormalized,
           year,
           storeId,
-          authorId,
           categoryId,
-          publisherId,
           imageUrl,
+          // A CSV row carries a single author/publisher; it becomes the
+          // primary entry (position 0) of the book's list.
+          authors: { create: [{ authorId, position: 0 }] },
+          ...(publisherId
+            ? { publishers: { create: [{ publisherId, position: 0 }] } }
+            : {}),
         },
       });
 
@@ -284,13 +288,22 @@ export class ImportService {
   private async loadExistingBooks(storeId: string): Promise<Set<string>> {
     const books = await this.prisma.book.findMany({
       where: { storeId },
-      select: { titleNormalized: true, authorId: true },
+      select: {
+        titleNormalized: true,
+        authors: {
+          select: { authorId: true },
+          orderBy: { position: 'asc' },
+          take: 1,
+        },
+      },
     });
 
     const set = new Set<string>();
     for (const book of books) {
-      if (book.titleNormalized && book.authorId) {
-        set.add(this.dedupeKey(storeId, book.titleNormalized, book.authorId));
+      // Dedupe on (title, primary author) exactly as before.
+      const primaryAuthorId = book.authors[0]?.authorId;
+      if (book.titleNormalized && primaryAuthorId) {
+        set.add(this.dedupeKey(storeId, book.titleNormalized, primaryAuthorId));
       }
     }
     return set;

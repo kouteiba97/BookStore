@@ -18,12 +18,28 @@ export class AcademicController {
     return this.academicService.getYears(storeSlug, fieldId);
   }
 
+  @Get('fields/:fieldId/books')
+  getBooksByField(
+    @Param('storeSlug') storeSlug: string,
+    @Param('fieldId') fieldId: string,
+  ) {
+    return this.academicService.getBooksByField(storeSlug, fieldId);
+  }
+
   @Get('years/:yearId/subjects')
   getSubjects(
     @Param('storeSlug') storeSlug: string,
     @Param('yearId') yearId: string,
   ) {
     return this.academicService.getSubjects(storeSlug, yearId);
+  }
+
+  @Get('years/:yearId/books')
+  getBooksByYear(
+    @Param('storeSlug') storeSlug: string,
+    @Param('yearId') yearId: string,
+  ) {
+    return this.academicService.getBooksByYear(storeSlug, yearId);
   }
 
   @Get('subjects/:subjectId/books')

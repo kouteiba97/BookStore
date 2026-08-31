@@ -52,14 +52,19 @@ model Book {
   title           String
   titleNormalized String?
 
+  /// Public blurb about the work itself, shown to shoppers on the book page
+  /// under "عن الكتاب". Prose, free-form, may be empty.
   description String?
-  year        Int?
-  price       Decimal? @db.Decimal(10, 2)
 
-  authorId    String?
-  publisherId String?
-  countryId   String?
+  /// Concrete cataloguing detail the title cannot carry — edition, number of
+  /// volumes, binding, printing, condition, series. Shown on the book page
+  /// under "معلومات إضافية".
+  notes String?
 
+  year  Int?
+  price Decimal? @db.Decimal(10, 2)
+
+  countryId  String?
   categoryId String
   storeId    String
 
@@ -69,14 +74,21 @@ model Book {
   updatedAt DateTime @updatedAt
 
   // relations
-  store     Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  category  Category   @relation(fields: [categoryId], references: [id])
-  author    Author?    @relation(fields: [authorId], references: [id])
-  publisher Publisher? @relation(fields: [publisherId], references: [id])
-  country   Country?   @relation(fields: [countryId], references: [id])
+  store    Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id])
+  country  Country? @relation(fields: [countryId], references: [id])
+
+  // A book may be written by several authors and issued by several publishers.
+  authors    BookAuthor[]
+  publishers BookPublisher[]
+
+  // Academic placement. A book may be attached at any depth: to a whole
+  // speciality, to a study year, or to an individual subject.
+  fields   BookOnField[]
+  years    BookOnYear[]
+  subjects BookOnSubject[]
 
   inventory  Inventory?
-  subjects   BookOnSubject[]
   orderItems OrderItem[]
 
   @@index([storeId, title])
@@ -89,14 +101,43 @@ model Author {
   id   String @id @default(uuid())
   name String @unique
 
-  books Book[]
+  books BookAuthor[]
 }
 
 model Publisher {
   id   String @id @default(uuid())
   name String @unique
 
-  books Book[]
+  books BookPublisher[]
+}
+
+/// Join row linking a book to one of its authors. `position` drives display
+/// order; position 0 is treated as the primary author.
+model BookAuthor {
+  bookId   String
+  authorId String
+  position Int    @default(0)
+
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  author Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, authorId])
+  @@index([authorId])
+  @@index([bookId, position])
+}
+
+/// Join row linking a book to one of its publishers (co-editions, reprints).
+model BookPublisher {
+  bookId      String
+  publisherId String
+  position    Int    @default(0)
+
+  book      Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  publisher Publisher @relation(fields: [publisherId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, publisherId])
+  @@index([publisherId])
+  @@index([bookId, position])
 }
 
 model Country {
@@ -117,8 +158,8 @@ model Category {
 // ================= INVENTORY =================
 
 model Inventory {
-  id      String          @id @default(uuid())
-  bookId  String          @unique
+  id      String @id @default(uuid())
+  bookId  String @unique
   storeId String
 
   stock  Int?
@@ -140,6 +181,7 @@ model Field {
   name String @unique
 
   years AcademicYear[]
+  books BookOnField[]
 }
 
 model AcademicYear {
@@ -147,8 +189,9 @@ model AcademicYear {
   name    String
   fieldId String
 
-  field    Field     @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  field    Field        @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   subjects Subject[]
+  books    BookOnYear[]
 
   @@index([fieldId])
 }
@@ -164,6 +207,32 @@ model Subject {
   @@index([yearId])
 }
 
+/// A book attached to a whole speciality (e.g. every Sharia student needs it),
+/// without being tied to a particular year or subject.
+model BookOnField {
+  bookId  String
+  fieldId String
+
+  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  field Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, fieldId])
+  @@index([fieldId])
+}
+
+/// A book attached to a whole study year of a speciality.
+model BookOnYear {
+  bookId String
+  yearId String
+
+  book Book         @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  year AcademicYear @relation(fields: [yearId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, yearId])
+  @@index([yearId])
+}
+
+/// A book attached to one specific subject.
 model BookOnSubject {
   bookId    String
   subjectId String
@@ -172,6 +241,7 @@ model BookOnSubject {
   subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   @@id([bookId, subjectId])
+  @@index([subjectId])
 }
 
 // ================= REQUEST (lead) =================
@@ -196,8 +266,8 @@ model Request {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  store           Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  convertedOrder  Order? @relation(fields: [convertedOrderId], references: [id], onDelete: SetNull)
+  store          Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  convertedOrder Order? @relation(fields: [convertedOrderId], references: [id], onDelete: SetNull)
 
   @@index([storeId, status])
 }
@@ -218,17 +288,17 @@ model Order {
   status OrderStatus @default(pending)
 
   // Money — denormalized totals so historical orders aren't affected by price changes
-  subtotal     Decimal @db.Decimal(10, 2) @default(0)
-  shippingCost Decimal @db.Decimal(10, 2) @default(0)
-  total        Decimal @db.Decimal(10, 2) @default(0)
+  subtotal     Decimal @default(0) @db.Decimal(10, 2)
+  shippingCost Decimal @default(0) @db.Decimal(10, 2)
+  total        Decimal @default(0) @db.Decimal(10, 2)
 
   notes String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  store Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  items OrderItem[]
+  store   Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items   OrderItem[]
   request Request?
 
   @@index([storeId, status])

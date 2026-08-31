@@ -151,9 +151,22 @@ export default function BookPage() {
   const status = book.inventory ? statusConfig[book.inventory.status] : null;
   const palette = palettes[(book.title.charCodeAt(0) ?? 0) % palettes.length];
 
+  // A book may have several authors and several publishers; label and join
+  // them rather than showing only the first.
+  const authorNames = (book.authors ?? []).map((a) => a.name);
+  const publisherNames = (book.publishers ?? []).map((pub) => pub.name);
+
   const metaRows: { label: string; value: string; condition: boolean }[] = [
-    { label: "المؤلف", value: book.author?.name ?? "", condition: !!book.author },
-    { label: "دار النشر", value: book.publisher?.name ?? "", condition: !!book.publisher },
+    {
+      label: authorNames.length > 1 ? "المؤلفون" : "المؤلف",
+      value: authorNames.join("، "),
+      condition: authorNames.length > 0,
+    },
+    {
+      label: publisherNames.length > 1 ? "دور النشر" : "دار النشر",
+      value: publisherNames.join("، "),
+      condition: publisherNames.length > 0,
+    },
     { label: "سنة النشر", value: book.year?.toString() ?? "", condition: !!book.year },
     { label: "التصنيف", value: book.category?.name ?? "", condition: !!book.category },
   ];
@@ -218,14 +231,16 @@ export default function BookPage() {
             {book.title}
           </h1>
 
-          {/* Author */}
-          {book.author && (
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 shrink-0 text-primary/60">
+          {/* Authors */}
+          {authorNames.length > 0 && (
+            <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/60">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <span className="font-medium text-foreground">{book.author.name}</span>
+              <span className="font-medium text-foreground">
+                {authorNames.join("، ")}
+              </span>
             </div>
           )}
 
@@ -256,7 +271,7 @@ export default function BookPage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 shrink-0 text-primary/60">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
-              توصيل متوفر إلى جميع 58 ولاية
+              توصيل متوفر إلى جميع الولايات الـ58
             </p>
           </div>
         </div>
@@ -276,14 +291,29 @@ export default function BookPage() {
         </section>
       )}
 
-      {/* ── Description ── */}
+      {/* ── Description: what the book is about ── */}
       {book.description && (
         <section>
           <div className="mb-4 flex items-center gap-3">
             <span className="h-5 w-1 rounded-full bg-primary" />
             <h2 className="font-heading text-lg font-bold">عن الكتاب</h2>
           </div>
-          <p className="leading-loose text-foreground/85">{book.description}</p>
+          <p className="whitespace-pre-line leading-loose text-foreground/85">
+            {book.description}
+          </p>
+        </section>
+      )}
+
+      {/* ── Additional information the title cannot carry ── */}
+      {book.notes && (
+        <section>
+          <div className="mb-4 flex items-center gap-3">
+            <span className="h-5 w-1 rounded-full bg-gold" />
+            <h2 className="font-heading text-lg font-bold">معلومات إضافية</h2>
+          </div>
+          <p className="whitespace-pre-line leading-loose text-foreground/85">
+            {book.notes}
+          </p>
         </section>
       )}
 

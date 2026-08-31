@@ -13,7 +13,12 @@ import type {
   AdminBook,
   CatalogItem,
   InventoryStatus,
+  UpsertBookPayload,
 } from "@/lib/admin-types";
+import {
+  MultiRefSelect,
+  type RefEntry,
+} from "@/components/admin/multi-ref-select";
 import {
   Button,
   ConfirmDialog,
@@ -170,7 +175,11 @@ export default function BooksAdminPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="truncate font-semibold">{b.title}</p>
-                          <p className="truncate text-xs text-muted-foreground">{b.author?.name ?? "—"}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {b.authors?.length
+                              ? b.authors.map((a) => a.name).join("، ")
+                              : "—"}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -290,48 +299,86 @@ function BookFormModal({
     }
   }, [open, editing]);
 
-  // Preselect the speciality/year of the book's first linked subject (edit mode).
+  // In edit mode, open the browser on whatever the book is already attached to,
+  // at whichever depth that link sits.
   useEffect(() => {
     if (!open || fieldId || tree.length === 0) return;
-    const first = form.subjectIds[0];
-    if (!first) return;
-    for (const f of tree)
-      for (const y of f.years)
-        if (y.subjects.some((s) => s.id === first)) {
-          setFieldId(f.id);
-          setYearId(y.id);
-          return;
-        }
-  }, [open, tree, form.subjectIds, fieldId]);
+
+    const linkedField = form.fieldIds[0];
+    if (linkedField) {
+      setFieldId(linkedField);
+      return;
+    }
+
+    const linkedYear = form.yearIds[0];
+    if (linkedYear) {
+      const f = tree.find((x) => x.years.some((y) => y.id === linkedYear));
+      if (f) {
+        setFieldId(f.id);
+        setYearId(linkedYear);
+        return;
+      }
+    }
+
+    const linkedSubject = form.subjectIds[0];
+    if (linkedSubject) {
+      for (const f of tree)
+        for (const y of f.years)
+          if (y.subjects.some((sub) => sub.id === linkedSubject)) {
+            setFieldId(f.id);
+            setYearId(y.id);
+            return;
+          }
+    }
+  }, [open, tree, form.fieldIds, form.yearIds, form.subjectIds, fieldId]);
 
   const selectedField = tree.find((x) => x.id === fieldId);
   const years = selectedField?.years ?? [];
   const selectedYear = years.find((y) => y.id === yearId);
   const subjects = selectedYear?.subjects ?? [];
-  const subjectNames = useMemo(() => {
+
+  // id → readable label, for the summary of everything currently linked.
+  const linkLabels = useMemo(() => {
     const m = new Map<string, string>();
-    for (const f of tree)
-      for (const y of f.years) for (const s of y.subjects) m.set(s.id, s.name);
+    for (const f of tree) {
+      m.set(f.id, `${f.name} (كل التخصص)`);
+      for (const y of f.years) {
+        m.set(y.id, `${f.name} — ${y.name} (كل السنة)`);
+        for (const sub of y.subjects) m.set(sub.id, `${y.name} — ${sub.name}`);
+      }
+    }
     return m;
   }, [tree]);
 
-  const toggleSubject = (id: string) =>
-    setForm((p) => ({
-      ...p,
-      subjectIds: p.subjectIds.includes(id)
-        ? p.subjectIds.filter((s) => s !== id)
-        : [...p.subjectIds, id],
-    }));
+  type LinkKey = "fieldIds" | "yearIds" | "subjectIds";
+  const toggleLink = (key: LinkKey, id: string) =>
+    setForm((prev) => {
+      const current = prev[key];
+      const next = current.includes(id)
+        ? current.filter((x) => x !== id)
+        : [...current, id];
+      return { ...prev, [key]: next };
+    });
+
+  const allLinks: { key: LinkKey; id: string }[] = [
+    ...form.fieldIds.map((id) => ({ key: "fieldIds" as LinkKey, id })),
+    ...form.yearIds.map((id) => ({ key: "yearIds" as LinkKey, id })),
+    ...form.subjectIds.map((id) => ({ key: "subjectIds" as LinkKey, id })),
+  ];
 
   const mutation = useMutation({
     mutationFn: () => {
-      const payload = {
+      const payload: UpsertBookPayload = {
         title: form.title.trim(),
         categoryId: form.categoryId,
-        authorId: form.authorId || null,
-        publisherId: form.publisherId || null,
+        // Names are sent in the chosen order. Author/publisher names are unique,
+        // so the backend reuses existing rows and creates only genuinely new
+        // ones, while preserving this order.
+        authorNames: form.authors.map((a) => a.name),
+        publisherNames: form.publishers.map((pub) => pub.name),
         countryId: form.countryId || null,
-        description: form.description || null,
+        description: form.description.trim() || null,
+        notes: form.notes.trim() || null,
         year: form.year ? Number(form.year) : null,
         price: form.price ? Number(form.price) : null,
         imageUrl: form.imageUrl || null,
@@ -341,7 +388,9 @@ function BookFormModal({
               stock: form.invStock !== "" ? Number(form.invStock) : null,
             }
           : null,
-        // Replaces the linked-subjects set; unchecking clears them.
+        // These replace the stored sets; clearing the toggle clears the links.
+        fieldIds: form.academicOn ? form.fieldIds : [],
+        yearIds: form.academicOn ? form.yearIds : [],
         subjectIds: form.academicOn ? form.subjectIds : [],
       };
       return editing ? updateBook(editing.id, payload) : createBook(payload);
@@ -354,7 +403,11 @@ function BookFormModal({
       toast.error(err?.response?.data?.message || "تعذّر الحفظ"),
   });
 
-  const isValid = form.title.trim() && form.categoryId;
+  // Guards the failure this form used to allow silently: ticking "academic",
+  // choosing a speciality, then saving with nothing actually linked.
+  const academicIncomplete = form.academicOn && allLinks.length === 0;
+  const isValid =
+    Boolean(form.title.trim() && form.categoryId) && !academicIncomplete;
 
   return (
     <Modal
@@ -365,48 +418,119 @@ function BookFormModal({
     >
       <div className="space-y-4">
         <Field label="العنوان" required>
-          <input className={inputClass} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+          <input
+            className={inputClass}
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
         </Field>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="التصنيف" required>
-            <select className={selectClass} value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
-              <option value="">اختر تصنيف...</option>
-              {categories?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            <select
+              className={selectClass}
+              value={form.categoryId}
+              onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+            >
+              <option value="">اختر تصنيفًا...</option>
+              {categories?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
           </Field>
-          <Field label="المؤلف">
-            <select className={selectClass} value={form.authorId} onChange={(e) => setForm({ ...form, authorId: e.target.value })}>
+          <Field label="بلد النشر">
+            <select
+              className={selectClass}
+              value={form.countryId}
+              onChange={(e) => setForm({ ...form, countryId: e.target.value })}
+            >
               <option value="">—</option>
-              {authors?.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+              {countries?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
             </select>
           </Field>
-          <Field label="دار النشر">
-            <select className={selectClass} value={form.publisherId} onChange={(e) => setForm({ ...form, publisherId: e.target.value })}>
-              <option value="">—</option>
-              {publishers?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </Field>
-          <Field label="الدولة">
-            <select className={selectClass} value={form.countryId} onChange={(e) => setForm({ ...form, countryId: e.target.value })}>
-              <option value="">—</option>
-              {countries?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </Field>
-          <Field label="السنة">
-            <input type="number" className={inputClass} value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
+          <Field label="سنة النشر">
+            <input
+              type="number"
+              className={inputClass}
+              value={form.year}
+              onChange={(e) => setForm({ ...form, year: e.target.value })}
+            />
           </Field>
           <Field label="السعر (د.ج)">
-            <input type="number" min={0} step="0.01" className={inputClass} value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              className={inputClass}
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+            />
           </Field>
         </div>
 
-        <Field label="رابط الصورة">
-          <input className={inputClass} dir="ltr" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
+        <Field
+          label="المؤلفون"
+          hint="يمكن إضافة أكثر من مؤلف. الأول في القائمة هو المؤلف الرئيسي."
+        >
+          <MultiRefSelect
+            options={authors}
+            value={form.authors}
+            onChange={(next) => setForm({ ...form, authors: next })}
+            pickLabel="اختر مؤلفًا من القائمة..."
+            newPlaceholder="أو اكتب اسم مؤلف جديد"
+            emptyLabel="لم تتم إضافة أي مؤلف بعد."
+          />
         </Field>
 
-        <Field label="الوصف">
-          <textarea className={textareaClass} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <Field
+          label="دور النشر"
+          hint="يمكن إضافة أكثر من دار نشر عند وجود طبعة مشتركة."
+        >
+          <MultiRefSelect
+            options={publishers}
+            value={form.publishers}
+            onChange={(next) => setForm({ ...form, publishers: next })}
+            pickLabel="اختر دار نشر من القائمة..."
+            newPlaceholder="أو اكتب اسم دار نشر جديدة"
+            emptyLabel="لم تتم إضافة أي دار نشر بعد."
+          />
+        </Field>
+
+        <Field label="رابط صورة الغلاف">
+          <input
+            className={inputClass}
+            dir="ltr"
+            value={form.imageUrl}
+            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+          />
+        </Field>
+
+        <Field
+          label="نبذة عن الكتاب"
+          hint="تعريف بمضمون الكتاب، يظهر للزبون في صفحة الكتاب تحت عنوان «عن الكتاب»."
+        >
+          <textarea
+            className={textareaClass}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </Field>
+
+        <Field
+          label="معلومات إضافية"
+          hint="تفاصيل لا يوضّحها العنوان: رقم الطبعة، عدد الأجزاء، نوع التجليد، حالة النسخة، اسم السلسلة..."
+        >
+          <textarea
+            className={textareaClass}
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          />
         </Field>
 
         {/* Inventory toggle */}
@@ -415,86 +539,147 @@ function BookFormModal({
             <input
               type="checkbox"
               checked={form.hasInventory}
-              onChange={(e) => setForm({ ...form, hasInventory: e.target.checked })}
+              onChange={(e) =>
+                setForm({ ...form, hasInventory: e.target.checked })
+              }
               className="h-4 w-4 rounded"
             />
-            تتبع المخزون
+            تتبّع المخزون
           </label>
           {form.hasInventory && (
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <Field label="الحالة" required>
-                <select className={selectClass} value={form.invStatus} onChange={(e) => setForm({ ...form, invStatus: e.target.value as InventoryStatus })}>
+                <select
+                  className={selectClass}
+                  value={form.invStatus}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      invStatus: e.target.value as InventoryStatus,
+                    })
+                  }
+                >
                   <option value="available">متوفر</option>
                   <option value="on_request">حسب الطلب</option>
                   <option value="rare">نادر</option>
                 </select>
               </Field>
-              <Field label="الكمية" hint="اتركه فارغًا إذا غير معلوم">
-                <input type="number" min={0} className={inputClass} value={form.invStock} onChange={(e) => setForm({ ...form, invStock: e.target.value })} />
+              <Field label="الكمية" hint="اتركها فارغة إذا كانت غير معروفة.">
+                <input
+                  type="number"
+                  min={0}
+                  className={inputClass}
+                  value={form.invStock}
+                  onChange={(e) =>
+                    setForm({ ...form, invStock: e.target.value })
+                  }
+                />
               </Field>
             </div>
           )}
         </div>
 
-        {/* Academic linking — speciality → year → subjects */}
+        {/* Academic placement — speciality, year, or subject */}
         <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
           <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold">
             <input
               type="checkbox"
               checked={form.academicOn}
-              onChange={(e) => setForm({ ...form, academicOn: e.target.checked })}
+              onChange={(e) =>
+                setForm({ ...form, academicOn: e.target.checked })
+              }
               className="h-4 w-4 rounded"
             />
-            كتاب أكاديمي (ربطه بمادة دراسية)
+            كتاب أكاديمي (ربطه بالتخصصات الدراسية)
           </label>
 
           {form.academicOn && (
             <div className="mt-3 space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="التخصّص">
-                  <select
-                    className={selectClass}
-                    value={fieldId}
-                    onChange={(e) => { setFieldId(e.target.value); setYearId(""); }}
-                  >
-                    <option value="">اختر التخصّص...</option>
-                    {tree.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
-                  </select>
-                </Field>
+              <p className="rounded-lg bg-background/60 px-2.5 py-2 text-xs leading-relaxed text-muted-foreground">
+                يمكنك ربط الكتاب بتخصص كامل، أو بسنة كاملة، أو بمواد محدّدة.
+                الكتاب يظهر في قسم «الكتب الأكاديمية» عند أي مستوى تختاره.
+              </p>
+
+              <Field label="التخصص">
+                <select
+                  className={selectClass}
+                  value={fieldId}
+                  onChange={(e) => {
+                    setFieldId(e.target.value);
+                    setYearId("");
+                  }}
+                >
+                  <option value="">اختر التخصص...</option>
+                  {tree.map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              {selectedField && (
+                <LinkToggle
+                  checked={form.fieldIds.includes(selectedField.id)}
+                  onChange={() => toggleLink("fieldIds", selectedField.id)}
+                  title={`ربط الكتاب بتخصص «${selectedField.name}» كاملًا`}
+                  hint="يظهر لكل طلبة هذا التخصص مهما كانت السنة أو المادة."
+                />
+              )}
+
+              {selectedField && (
                 <Field label="السنة">
                   <select
                     className={selectClass}
                     value={yearId}
-                    disabled={!fieldId}
                     onChange={(e) => setYearId(e.target.value)}
                   >
                     <option value="">اختر السنة...</option>
-                    {years.map((y) => <option key={y.id} value={y.id}>{y.name}</option>)}
+                    {years.map((y) => (
+                      <option key={y.id} value={y.id}>
+                        {y.name}
+                      </option>
+                    ))}
                   </select>
                 </Field>
-              </div>
+              )}
+
+              {selectedYear && (
+                <LinkToggle
+                  checked={form.yearIds.includes(selectedYear.id)}
+                  onChange={() => toggleLink("yearIds", selectedYear.id)}
+                  title={`ربط الكتاب بسنة «${selectedYear.name}» كاملة`}
+                  hint="يظهر لكل طلبة هذه السنة مهما كانت المادة."
+                />
+              )}
 
               {selectedYear && (
                 <div>
-                  <p className="mb-1.5 text-xs font-semibold text-muted-foreground">المواد (اختر واحدة أو أكثر)</p>
+                  <p className="mb-1.5 text-xs font-semibold text-muted-foreground">
+                    المواد (اختر واحدة أو أكثر)
+                  </p>
                   {subjects.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">لا توجد مواد في هذه السنة.</p>
+                    <p className="rounded-lg bg-amber-500/10 px-2.5 py-2 text-xs leading-relaxed text-amber-800">
+                      لا توجد مواد مسجّلة في هذه السنة. يمكنك ربط الكتاب بالسنة
+                      أو بالتخصص من الخيارات أعلاه، أو إضافة المواد أولًا من
+                      صفحة «الأقسام الأكاديمية».
+                    </p>
                   ) : (
                     <div className="flex flex-wrap gap-2">
-                      {subjects.map((s) => {
-                        const on = form.subjectIds.includes(s.id);
+                      {subjects.map((sub) => {
+                        const on = form.subjectIds.includes(sub.id);
                         return (
                           <button
-                            key={s.id}
+                            key={sub.id}
                             type="button"
-                            onClick={() => toggleSubject(s.id)}
+                            onClick={() => toggleLink("subjectIds", sub.id)}
                             className={`rounded-full px-3 py-1.5 text-xs font-medium ring-1 transition-colors ${
                               on
                                 ? "bg-primary text-primary-foreground ring-primary"
                                 : "bg-background text-muted-foreground ring-border hover:bg-muted"
                             }`}
                           >
-                            {s.name}
+                            {sub.name}
                           </button>
                         );
                       })}
@@ -503,17 +688,30 @@ function BookFormModal({
                 </div>
               )}
 
-              {form.subjectIds.length > 0 && (
+              {allLinks.length > 0 && (
                 <div className="rounded-lg bg-muted/30 p-2.5">
                   <p className="mb-1.5 text-[11px] font-semibold text-muted-foreground">
-                    المواد المختارة ({form.subjectIds.length})
+                    الارتباطات المختارة ({allLinks.length})
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {form.subjectIds.map((id) => (
-                      <span key={id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
-                        {subjectNames.get(id) ?? "…"}
-                        <button type="button" onClick={() => toggleSubject(id)} aria-label="إزالة">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3 w-3">
+                    {allLinks.map(({ key, id }) => (
+                      <span
+                        key={`${key}-${id}`}
+                        className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary"
+                      >
+                        {linkLabels.get(id) ?? "..."}
+                        <button
+                          type="button"
+                          onClick={() => toggleLink(key, id)}
+                          aria-label="إزالة"
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            className="h-3 w-3"
+                          >
                             <path d="M18 6 6 18M6 6l12 12" />
                           </svg>
                         </button>
@@ -522,13 +720,25 @@ function BookFormModal({
                   </div>
                 </div>
               )}
+
+              {academicIncomplete && (
+                <p className="rounded-lg bg-rose-500/10 px-2.5 py-2 text-xs font-medium text-rose-700">
+                  اخترت أن الكتاب أكاديمي دون ربطه بأي تخصص أو سنة أو مادة. اختر
+                  ارتباطًا واحدًا على الأقل، أو ألغِ خيار «كتاب أكاديمي».
+                </p>
+              )}
             </div>
           )}
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border/60 pt-4">
-          <Button variant="ghost" onClick={onClose}>إلغاء</Button>
-          <Button onClick={() => mutation.mutate()} disabled={!isValid || mutation.isPending}>
+          <Button variant="ghost" onClick={onClose}>
+            إلغاء
+          </Button>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={!isValid || mutation.isPending}
+          >
             {mutation.isPending ? "جاري الحفظ..." : "حفظ"}
           </Button>
         </div>
@@ -537,23 +747,71 @@ function BookFormModal({
   );
 }
 
+/** A labelled checkbox row used for the speciality/year "attach whole" options. */
+function LinkToggle({
+  checked,
+  onChange,
+  title,
+  hint,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  title: string;
+  hint: string;
+}) {
+  return (
+    <label
+      className={`flex cursor-pointer items-start gap-2 rounded-lg border p-2.5 transition-colors ${
+        checked
+          ? "border-primary/40 bg-primary/5"
+          : "border-border/60 bg-background/60 hover:bg-muted/40"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+        className="mt-0.5 h-4 w-4 shrink-0 rounded"
+      />
+      <span className="min-w-0">
+        <span className="block text-xs font-semibold">{title}</span>
+        <span className="mt-0.5 block text-[11px] text-muted-foreground">
+          {hint}
+        </span>
+      </span>
+    </label>
+  );
+}
+
 function buildForm(editing: AdminBook | null) {
+  const toEntries = (list?: { id: string; name: string }[]): RefEntry[] =>
+    (list ?? []).map((r) => ({ id: r.id, name: r.name }));
+
+  const fieldIds = editing?.fields?.map((f) => f.id) ?? [];
+  const yearIds = editing?.years?.map((y) => y.id) ?? [];
+  const subjectIds = editing?.subjects?.map((sub) => sub.id) ?? [];
+
   return {
     title: editing?.title ?? "",
     categoryId: editing?.categoryId ?? "",
-    authorId: editing?.authorId ?? "",
-    publisherId: editing?.publisherId ?? "",
+    authors: toEntries(editing?.authors),
+    publishers: toEntries(editing?.publishers),
     countryId: editing?.countryId ?? "",
     description: editing?.description ?? "",
+    notes: editing?.notes ?? "",
     year: editing?.year ? String(editing.year) : "",
     price: editing?.price ? String(editing.price) : "",
     imageUrl: editing?.imageUrl ?? "",
     hasInventory: Boolean(editing?.inventory),
     invStatus: editing?.inventory?.status ?? "available",
-    invStock: editing?.inventory?.stock !== null && editing?.inventory?.stock !== undefined
-      ? String(editing.inventory.stock)
-      : "",
-    academicOn: Boolean(editing?.subjects?.length),
-    subjectIds: editing?.subjects?.map((s) => s.subject.id) ?? [],
+    invStock:
+      editing?.inventory?.stock !== null &&
+      editing?.inventory?.stock !== undefined
+        ? String(editing.inventory.stock)
+        : "",
+    academicOn: fieldIds.length + yearIds.length + subjectIds.length > 0,
+    fieldIds,
+    yearIds,
+    subjectIds,
   };
 }

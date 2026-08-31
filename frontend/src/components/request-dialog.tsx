@@ -98,7 +98,7 @@ export default function RequestDialog({
         render={
           trigger ?? (
             <span className="inline-flex h-9 cursor-pointer items-center justify-center rounded-lg border border-gold/30 bg-gold-light/40 px-5 text-sm font-medium text-foreground transition-colors hover:bg-gold-light/70">
-              اطلب كتاب
+              اطلب كتابًا
             </span>
           )
         }
@@ -111,7 +111,7 @@ export default function RequestDialog({
         {success ? (
           <div className="py-8 text-center">
             <p className="text-lg font-semibold text-primary">تم إرسال طلبك بنجاح ✓</p>
-            <p className="mt-2 text-sm text-muted-foreground">سنتواصل معك قريبا</p>
+            <p className="mt-2 text-sm text-muted-foreground">سنتواصل معك قريبًا</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>

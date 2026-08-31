@@ -252,7 +252,7 @@ function Sidebar({
             className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground ${
               collapsed ? "justify-center" : ""
             }`}
-            title={collapsed ? "توسيع" : "طي القائمة"}
+            title={collapsed ? "توسيع القائمة" : "طي القائمة"}
           >
             <span>{Icon.panelToggle}</span>
             {!collapsed && <span>طي القائمة</span>}

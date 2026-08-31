@@ -144,10 +144,7 @@ export class CleanService {
         if (!aliasAuthor || aliasAuthor.id === canonicalAuthor.id) continue;
 
         // Re-point all books to canonical author
-        await this.prisma.book.updateMany({
-          where: { authorId: aliasAuthor.id },
-          data: { authorId: canonicalAuthor.id },
-        });
+        await this.repointAuthor(aliasAuthor.id, canonicalAuthor.id);
 
         await this.prisma.author.delete({ where: { id: aliasAuthor.id } });
         report.authorsDeduped++;
@@ -164,10 +161,7 @@ export class CleanService {
 
       if (seen.has(key)) {
         const keepId = seen.get(key)!;
-        await this.prisma.book.updateMany({
-          where: { authorId: author.id },
-          data: { authorId: keepId },
-        });
+        await this.repointAuthor(author.id, keepId);
         await this.prisma.author.delete({ where: { id: author.id } });
         report.authorsDeduped++;
       } else {
@@ -196,10 +190,7 @@ export class CleanService {
         const aliasPub = await this.prisma.publisher.findUnique({ where: { name: alias } });
         if (!aliasPub || aliasPub.id === canonicalPub.id) continue;
 
-        await this.prisma.book.updateMany({
-          where: { publisherId: aliasPub.id },
-          data: { publisherId: canonicalPub.id },
-        });
+        await this.repointPublisher(aliasPub.id, canonicalPub.id);
         await this.prisma.publisher.delete({ where: { id: aliasPub.id } });
         report.publishersDeduped++;
       }
@@ -215,10 +206,7 @@ export class CleanService {
 
       if (seen.has(key)) {
         const keepId = seen.get(key)!;
-        await this.prisma.book.updateMany({
-          where: { publisherId: pub.id },
-          data: { publisherId: keepId },
-        });
+        await this.repointPublisher(pub.id, keepId);
         await this.prisma.publisher.delete({ where: { id: pub.id } });
         report.publishersDeduped++;
       } else {
@@ -290,11 +278,67 @@ export class CleanService {
     }
   }
 
+  // ── Re-point helpers ─────────────────────────────────
+
+  /**
+   * Move every book link from one author to another, then let the caller delete
+   * the now-orphaned author. A book already linked to BOTH would collide on the
+   * (bookId, authorId) primary key, so those rows are dropped instead of moved.
+   */
+  private async repointAuthor(fromId: string, toId: string): Promise<void> {
+    const alreadyOnTarget = await this.prisma.bookAuthor.findMany({
+      where: { authorId: toId },
+      select: { bookId: true },
+    });
+    const bookIds = alreadyOnTarget.map((r) => r.bookId);
+
+    if (bookIds.length) {
+      await this.prisma.bookAuthor.deleteMany({
+        where: { authorId: fromId, bookId: { in: bookIds } },
+      });
+    }
+
+    await this.prisma.bookAuthor.updateMany({
+      where: { authorId: fromId },
+      data: { authorId: toId },
+    });
+  }
+
+  /** Publisher equivalent of {@link repointAuthor}. */
+  private async repointPublisher(fromId: string, toId: string): Promise<void> {
+    const alreadyOnTarget = await this.prisma.bookPublisher.findMany({
+      where: { publisherId: toId },
+      select: { bookId: true },
+    });
+    const bookIds = alreadyOnTarget.map((r) => r.bookId);
+
+    if (bookIds.length) {
+      await this.prisma.bookPublisher.deleteMany({
+        where: { publisherId: fromId, bookId: { in: bookIds } },
+      });
+    }
+
+    await this.prisma.bookPublisher.updateMany({
+      where: { publisherId: fromId },
+      data: { publisherId: toId },
+    });
+  }
+
   // ── 5. Remove duplicate books ────────────────────────
 
   private async removeDuplicateBooks(report: CleanReport): Promise<void> {
     const books = await this.prisma.book.findMany({
-      select: { id: true, titleNormalized: true, authorId: true, storeId: true, createdAt: true },
+      select: {
+        id: true,
+        titleNormalized: true,
+        storeId: true,
+        createdAt: true,
+        authors: {
+          select: { authorId: true },
+          orderBy: { position: 'asc' },
+          take: 1,
+        },
+      },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -302,7 +346,9 @@ export class CleanService {
 
     for (const book of books) {
       if (!book.titleNormalized) continue;
-      const key = `${book.storeId}::${book.titleNormalized}::${book.authorId ?? 'null'}`;
+      // Books are still deduped on (store, title, primary author).
+      const primaryAuthorId = book.authors[0]?.authorId ?? 'null';
+      const key = `${book.storeId}::${book.titleNormalized}::${primaryAuthorId}`;
 
       if (seen.has(key)) {
         // Delete duplicate (keep the older one)

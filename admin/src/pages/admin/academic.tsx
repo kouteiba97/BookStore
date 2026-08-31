@@ -72,7 +72,7 @@ export default function AcademicAdminPage() {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3.5 w-3.5">
             <path d="M12 5v14M5 12h14" />
           </svg>
-          تخصّص جديد
+          تخصص جديد
         </Button>
       </div>
 
@@ -82,9 +82,9 @@ export default function AcademicAdminPage() {
         </div>
       ) : fields.length === 0 ? (
         <EmptyState
-          title="لا توجد تخصّصات"
-          description="ابدأ بإضافة تخصّص أكاديمي."
-          action={<Button onClick={() => setMode({ kind: "create-field" })}>إضافة تخصّص</Button>}
+          title="لا توجد تخصصات"
+          description="ابدأ بإضافة تخصص أكاديمي."
+          action={<Button onClick={() => setMode({ kind: "create-field" })}>إضافة تخصص</Button>}
         />
       ) : (
         <div className="space-y-3">
@@ -275,8 +275,8 @@ function NameModal({
   if (!mode) return null;
 
   const titles: Record<Mode["kind"], string> = {
-    "create-field": "تخصّص جديد",
-    "edit-field": "تعديل التخصّص",
+    "create-field": "تخصص جديد",
+    "edit-field": "تعديل التخصص",
     "create-year": `سنة جديدة في "${mode.kind === "create-year" ? mode.fieldName : ""}"`,
     "edit-year": "تعديل السنة",
     "create-subject": `مادة جديدة في "${mode.kind === "create-subject" ? mode.yearName : ""}"`,

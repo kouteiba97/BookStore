@@ -180,7 +180,7 @@ export default function AdminRequestsPage() {
                           </svg>
                         </a>
                         <Button size="sm" variant="secondary" onClick={() => setConvertTarget(req)} disabled={req.status === "done"}>
-                          {req.status === "done" ? "تم التحويل" : "تحويل لطلب"}
+                          {req.status === "done" ? "تم التحويل" : "تحويل إلى طلب"}
                         </Button>
                       </div>
                     </td>
@@ -215,7 +215,7 @@ export default function AdminRequestsPage() {
                     {STATUS_ORDER.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
                   </select>
                   <Button size="sm" variant="secondary" onClick={() => setConvertTarget(req)} disabled={req.status === "done"}>
-                    {req.status === "done" ? "تم التحويل" : "تحويل لطلب"}
+                    {req.status === "done" ? "تم التحويل" : "تحويل إلى طلب"}
                   </Button>
                 </div>
               </Surface>

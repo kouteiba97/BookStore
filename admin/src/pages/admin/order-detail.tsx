@@ -271,7 +271,7 @@ export default function OrderDetailPage() {
         title="إلغاء الطلب؟"
         message="لن يتم احتساب هذا الطلب في الإيرادات. لا يمكن التراجع بسهولة."
         confirmLabel="إلغاء الطلب"
-        cancelLabel="عدول"
+        cancelLabel="تراجع"
         variant="danger"
         onConfirm={() => cancelMutation.mutate()}
       />

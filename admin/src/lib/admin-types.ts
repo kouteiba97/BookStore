@@ -8,27 +8,44 @@ export type OrderStatus =
 export type RequestStatus = "pending" | "contacted" | "done";
 export type InventoryStatus = "available" | "on_request" | "rare";
 
+export interface NamedRef {
+  id: string;
+  name: string;
+}
+
 export interface AdminBook {
   id: string;
   title: string;
+  /** Public blurb about the work, shown to shoppers under "عن الكتاب". */
   description: string | null;
+  /** Extra cataloguing detail the title cannot carry (edition, volumes, binding…). */
+  notes: string | null;
   year: number | null;
   price: string | null;
   imageUrl: string | null;
   categoryId: string;
-  authorId: string | null;
-  publisherId: string | null;
   countryId: string | null;
-  category: { id: string; name: string } | null;
-  author: { id: string; name: string } | null;
-  publisher: { id: string; name: string } | null;
-  country: { id: string; name: string } | null;
+  category: NamedRef | null;
+  country: NamedRef | null;
+
+  /** Every author / publisher, in display order (index 0 is primary). */
+  authors: NamedRef[];
+  publishers: NamedRef[];
+  /** Primary entries — convenient for single-line table cells. */
+  author: NamedRef | null;
+  publisher: NamedRef | null;
+
   inventory: {
     id: string;
     stock: number | null;
     status: InventoryStatus;
   } | null;
-  subjects?: { subject: { id: string; name: string } }[];
+
+  /** Academic placement. A book may sit at any depth, or several at once. */
+  fields?: NamedRef[];
+  years?: (NamedRef & { fieldId: string })[];
+  subjects?: (NamedRef & { yearId: string })[];
+
   createdAt: string;
 }
 
@@ -82,6 +99,28 @@ export interface AcademicSubject {
   name: string;
   yearId: string;
   _count?: { books: number };
+}
+
+/** Payload shape for creating/updating a book from the admin form. */
+export interface UpsertBookPayload {
+  title: string;
+  categoryId?: string | null;
+  categoryName?: string | null;
+  authorIds?: string[];
+  authorNames?: string[];
+  publisherIds?: string[];
+  publisherNames?: string[];
+  countryId?: string | null;
+  countryName?: string | null;
+  description?: string | null;
+  notes?: string | null;
+  year?: number | null;
+  price?: number | null;
+  imageUrl?: string | null;
+  inventory?: { status: InventoryStatus; stock?: number | null } | null;
+  fieldIds?: string[];
+  yearIds?: string[];
+  subjectIds?: string[];
 }
 
 export interface StatsOverview {

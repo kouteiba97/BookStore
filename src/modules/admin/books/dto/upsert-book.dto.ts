@@ -26,10 +26,9 @@ export class UpsertBookDto {
   @IsNotEmpty()
   title: string;
 
-  // For each reference (category/author/publisher/country) the form may send
-  // either an existing *Id OR a free-text *Name. When only a name is given, the
-  // service finds-or-creates the row by name. Category additionally falls back
-  // to "غير مصنف" when nothing is provided.
+  // Category stays single-valued. The form may send either an existing id OR a
+  // free-text name; when only a name is given the service finds-or-creates it,
+  // falling back to "غير مصنف" when neither is provided.
   @IsOptional()
   @IsString()
   categoryId?: string | null;
@@ -38,6 +37,33 @@ export class UpsertBookDto {
   @IsString()
   categoryName?: string | null;
 
+  // ── Authors (many) ────────────────────────────────────────────────
+  // Order is meaningful: index 0 is the primary author. Ids and names are
+  // merged, ids first; names are found-or-created by the service.
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  authorIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  authorNames?: string[];
+
+  // ── Publishers (many) ─────────────────────────────────────────────
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  publisherIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  publisherNames?: string[];
+
+  // ── Deprecated singular aliases ───────────────────────────────────
+  // Kept so existing clients (the Flutter apps, Quick Add, CSV import) keep
+  // working unchanged. The service folds these into the arrays above.
   @IsOptional()
   @IsString()
   authorId?: string | null;
@@ -62,9 +88,16 @@ export class UpsertBookDto {
   @IsString()
   countryName?: string | null;
 
+  /// Public blurb about the work, shown under "عن الكتاب".
   @IsOptional()
   @IsString()
   description?: string | null;
+
+  /// Concrete extra detail the title cannot carry (edition, volumes, binding,
+  /// condition…), shown under "معلومات إضافية".
+  @IsOptional()
+  @IsString()
+  notes?: string | null;
 
   @IsOptional()
   @IsInt()
@@ -83,7 +116,21 @@ export class UpsertBookDto {
   @IsOptional()
   inventory?: InventoryDto | null;
 
+  // ── Academic placement ────────────────────────────────────────────
+  // A book may be attached at any depth. Attaching it to a speciality alone
+  // is valid and is what makes it show up under that speciality.
   @IsOptional()
   @IsArray()
+  @IsString({ each: true })
+  fieldIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  yearIds?: string[];
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   subjectIds?: string[];
 }

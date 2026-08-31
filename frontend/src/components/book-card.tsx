@@ -51,10 +51,11 @@ export default function BookCard({ book }: { book: Book }) {
   const status = book.inventory ? statusConfig[book.inventory.status] : null;
   const palette = getPalette(book.title);
 
-  const meta = [
-    book.publisher?.name,
-    book.year?.toString(),
-  ]
+  // Cards are tight: join every author / publisher and let CSS truncate.
+  const authorLine = (book.authors ?? []).map((a) => a.name).join("، ");
+  const publisherLine = (book.publishers ?? []).map((pub) => pub.name).join("، ");
+
+  const meta = [publisherLine || null, book.year?.toString()]
     .filter(Boolean)
     .join(" • ");
 
@@ -107,13 +108,15 @@ export default function BookCard({ book }: { book: Book }) {
 
         {/* Author + Price row */}
         <div className="flex items-center justify-between gap-2">
-          {book.author && (
+          {authorLine && (
             <div className="flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3 shrink-0 text-muted-foreground/50">
                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <span className="truncate">{book.author.name}</span>
+              <span className="truncate" title={authorLine}>
+                {authorLine}
+              </span>
             </div>
           )}
           {book.price != null && (

@@ -1,13 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { normalizeArabic } from '../../common/utils/normalize-arabic';
-
-const bookInclude = {
-  inventory: true,
-  category: true,
-  author: true,
-  publisher: true,
-};
+import {
+  bookInclude,
+  serializeBook,
+  serializeBooks,
+} from '../../common/utils/book-serializer';
 
 @Injectable()
 export class BooksService {
@@ -28,10 +26,11 @@ export class BooksService {
   async findAll(storeSlug: string) {
     const store = await this.resolveStore(storeSlug);
 
-    return this.prisma.book.findMany({
+    const books = await this.prisma.book.findMany({
       where: { storeId: store.id },
-      include: bookInclude,
+      include: bookInclude as any,
     });
+    return serializeBooks(books);
   }
 
   async findOne(storeSlug: string, id: string) {
@@ -39,12 +38,12 @@ export class BooksService {
 
     const book = await this.prisma.book.findFirst({
       where: { id, storeId: store.id },
-      include: bookInclude,
+      include: bookInclude as any,
     });
 
     if (!book) throw new NotFoundException('Book not found');
 
-    return book;
+    return serializeBook(book);
   }
 
   async search(storeSlug: string, q: string) {
@@ -54,19 +53,33 @@ export class BooksService {
     const store = await this.resolveStore(storeSlug);
     const normalized = normalizeArabic(trimmed);
 
-    return this.prisma.book.findMany({
+    const books = await this.prisma.book.findMany({
       where: {
         storeId: store.id,
         OR: [
           { titleNormalized: { contains: normalized, mode: 'insensitive' } },
           { title: { contains: trimmed, mode: 'insensitive' } },
-          { author: { name: { contains: trimmed, mode: 'insensitive' } } },
-          { publisher: { name: { contains: trimmed, mode: 'insensitive' } } },
+          // Match against any author / publisher of the book.
+          {
+            authors: {
+              some: {
+                author: { name: { contains: trimmed, mode: 'insensitive' } },
+              },
+            },
+          },
+          {
+            publishers: {
+              some: {
+                publisher: { name: { contains: trimmed, mode: 'insensitive' } },
+              },
+            },
+          },
         ],
       },
-      include: bookInclude,
+      include: bookInclude as any,
       take: 20,
     });
+    return serializeBooks(books);
   }
 
   async autocomplete(storeSlug: string, q: string) {
@@ -132,26 +145,40 @@ export class BooksService {
 
     const book = await this.prisma.book.findFirst({
       where: { id: bookId, storeId: store.id },
-      select: { id: true, categoryId: true, authorId: true, publisherId: true },
+      select: {
+        id: true,
+        categoryId: true,
+        authors: { select: { authorId: true } },
+        publishers: { select: { publisherId: true } },
+      },
     });
 
     if (!book) throw new NotFoundException('Book not found');
 
-    const orConditions: object[] = [
-      { categoryId: book.categoryId },
-    ];
+    const authorIds = book.authors.map((a) => a.authorId);
+    const publisherIds = book.publishers.map((p) => p.publisherId);
 
-    if (book.authorId) orConditions.push({ authorId: book.authorId });
-    if (book.publisherId) orConditions.push({ publisherId: book.publisherId });
+    // Recommend anything sharing the category, or ANY author / publisher.
+    const orConditions: any[] = [{ categoryId: book.categoryId }];
 
-    return this.prisma.book.findMany({
+    if (authorIds.length) {
+      orConditions.push({ authors: { some: { authorId: { in: authorIds } } } });
+    }
+    if (publisherIds.length) {
+      orConditions.push({
+        publishers: { some: { publisherId: { in: publisherIds } } },
+      });
+    }
+
+    const books = await this.prisma.book.findMany({
       where: {
         storeId: store.id,
         id: { not: book.id },
         OR: orConditions,
       },
-      include: bookInclude,
+      include: bookInclude as any,
       take: 10,
     });
+    return serializeBooks(books);
   }
 }

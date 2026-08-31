@@ -38,14 +38,22 @@ export class InventoryService {
       include: {
         inventory: true,
         category: { select: { id: true, name: true } },
-        author: { select: { id: true, name: true } },
+        authors: {
+          select: { author: { select: { id: true, name: true } } },
+          orderBy: { position: 'asc' },
+        },
         // Carry the academic links so the client can edit them from the stock view.
         subjects: { include: { subject: { select: { id: true, name: true } } } },
       },
       orderBy: { title: 'asc' },
     });
 
-    return books;
+    // Flatten the author join rows, and keep a primary `author` so the stock
+    // table (which renders a single name per row) keeps working.
+    return books.map((book) => {
+      const authors = book.authors.map((r) => r.author);
+      return { ...book, authors, author: authors[0] ?? null };
+    });
   }
 
   async upsert(
