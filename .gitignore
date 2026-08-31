@@ -18,6 +18,9 @@ dist
 # Claude Code worktrees (ephemeral agent worktrees)
 .claude/worktrees/
 
+# Claude Code machine-local settings (permission cache; may embed local secrets)
+.claude/settings.local.json
+
 # Test coverage
 coverage
 
