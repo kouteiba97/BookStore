@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import WakingNotice from "@/components/waking-notice";
 import { useQuery } from "@tanstack/react-query";
 import SearchBox from "@/components/search-box";
 import BookCard from "@/components/book-card";
@@ -99,6 +100,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Cold-start notice: the free API instance sleeps between visits. */}
+      <WakingNotice loading={booksLoading || fieldsLoading} />
 
       {/* ── Academic ──
           Hidden until at least one speciality actually has books, so the
