@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import RequestDialog from "@/components/request-dialog";
 import { fetchFields } from "@/lib/queries";
 
 const fieldIcons: Record<string, string> = {
@@ -17,6 +18,11 @@ export default function FieldsPage() {
     queryKey: ["fields"],
     queryFn: fetchFields,
   });
+
+  // Until books are linked to the tree every speciality is a dead end, so show
+  // one honest message instead of a grid of empty drill-downs.
+  const totalBooks = fields.reduce((n, f) => n + (f.bookCount ?? 0), 0);
+  const nothingLinkedYet = !isLoading && fields.length > 0 && totalBooks === 0;
 
   return (
     <div className="flex flex-col gap-8">
@@ -47,6 +53,24 @@ export default function FieldsPage() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-20 animate-pulse rounded-2xl bg-muted/50" />
           ))}
+        </div>
+      ) : nothingLinkedYet ? (
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border/60 py-16 text-center">
+          <span className="text-3xl">🎓</span>
+          <div>
+            <p className="font-semibold">لم تُضَف الكتب الأكاديمية بعد</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              نحن بصدد ربط الكتب بالتخصصات والسنوات الدراسية. أخبرنا بالكتاب
+              الذي تحتاجه وسنوفّره لك.
+            </p>
+          </div>
+          <RequestDialog
+            trigger={
+              <span className="cursor-pointer rounded-lg border border-gold/30 bg-gold-light/40 px-5 py-2 text-sm font-medium transition-colors hover:bg-gold-light/70">
+                اطلب كتابًا دراسيًا
+              </span>
+            }
+          />
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -51,6 +51,8 @@ export default function HomePage() {
     queryFn: fetchFields,
   });
 
+  const academicHasBooks = fields.some((f) => (f.bookCount ?? 0) > 0);
+
   return (
     <div className="flex flex-col gap-14">
       {/* ── Hero ── */}
@@ -98,7 +100,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Academic ── */}
+      {/* ── Academic ──
+          Hidden until at least one speciality actually has books, so the
+          homepage never promotes a section that leads nowhere. */}
+      {academicHasBooks && (
       <section className="relative overflow-hidden rounded-3xl border border-gold/25 bg-gradient-to-br from-gold-light/40 via-card to-card p-6 sm:p-8">
         <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gold/10 blur-3xl" />
         <div className="relative">
@@ -146,6 +151,7 @@ export default function HomePage() {
           )}
         </div>
       </section>
+      )}
 
       {/* ── Latest Books ── */}
       <section>
