@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createBook, fetchAcademicTree, uploadCover } from "@/lib/admin-api";
+import CoverScanner from "@/components/admin/cover-scanner";
 import type { AcademicField, InventoryStatus } from "@/lib/admin-types";
 import {
   Button,
@@ -50,6 +51,14 @@ export default function QuickAddPage() {
   const [f, setF] = useState({ ...EMPTY });
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  /** Receives the rectified, cleaned-up cover from the scanner. */
+  function acceptScan(file: File) {
+    if (preview) URL.revokeObjectURL(preview);
+    setPhoto(file);
+    setPreview(URL.createObjectURL(file));
+  }
   const [savedCount, setSavedCount] = useState(0);
 
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) =>
@@ -178,12 +187,15 @@ export default function QuickAddPage() {
           <div className="flex flex-col items-center gap-3">
             <img
               src={preview}
-              alt="غلاف"
+              alt="غلاف الكتاب"
               className="max-h-64 rounded-lg object-contain shadow-warm"
             />
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm" onClick={() => fileRef.current?.click()}>
-                تغيير الصورة
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button variant="secondary" size="sm" onClick={() => setScannerOpen(true)}>
+                إعادة المسح
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>
+                صورة عادية
               </Button>
               <Button variant="ghost" size="sm" onClick={clearPhoto}>
                 إزالة
@@ -191,20 +203,35 @@ export default function QuickAddPage() {
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-10 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-10 w-10">
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
-            <span className="text-sm font-semibold">التقط صورة الغلاف أو اختر من المعرض</span>
-            <span className="text-xs">اختياري</span>
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-10 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10">
+                <path d="M3 8V6a2 2 0 0 1 2-2h2M17 4h2a2 2 0 0 1 2 2v2M21 16v2a2 2 0 0 1-2 2h-2M7 20H5a2 2 0 0 1-2-2v-2" />
+                <rect x="7.5" y="7.5" width="9" height="9" rx="1" />
+              </svg>
+              <span className="text-sm font-semibold">مسح غلاف الكتاب</span>
+              <span className="text-xs">اقتصاص وتعديل الميلان تلقائيًا</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="text-center text-xs text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+            >
+              أو التقط صورة عادية بدون مسح
+            </button>
+          </div>
         )}
       </Surface>
+
+      <CoverScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDone={acceptScan}
+      />
 
       {/* ── Core fields ── */}
       <Surface className="space-y-4 p-4">
