@@ -50,6 +50,8 @@ export const createRequest = (data: {
   address: string;
   bookId?: string;
   bookName: string;
+  /** Honeypot — always empty for real people; the API rejects any value. */
+  website?: string;
 }) => api.post("/requests", data).then((r) => r.data);
 
 export const fetchRequests = (params?: {

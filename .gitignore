@@ -27,3 +27,7 @@ coverage
 # Logs
 *.log
 npm-debug.log*
+
+# Generated at build time by frontend/scripts/generate-seo.mjs
+frontend/public/sitemap.xml
+frontend/public/robots.txt

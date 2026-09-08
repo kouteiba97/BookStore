@@ -130,7 +130,7 @@ export default function SearchPage() {
           <h2 className="font-heading text-2xl font-bold text-gold sm:text-3xl">
             لم تجد الكتاب الذي تبحث عنه؟
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gold/60">
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gold-light/90">
             أرسل لنا طلبك وسنوفّره لك في أقرب وقت
           </p>
           <div className="mt-6 flex items-center justify-center">

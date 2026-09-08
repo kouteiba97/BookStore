@@ -19,6 +19,8 @@ interface FormState {
   wilaya: string;
   address: string;
   bookName: string;
+  /** Honeypot — must stay empty. */
+  website: string;
 }
 
 type FormErrors = Partial<Record<keyof FormState, boolean>>;
@@ -30,6 +32,7 @@ const EMPTY: FormState = {
   wilaya: "",
   address: "",
   bookName: "",
+  website: "",
 };
 
 export default function RequestDialog({
@@ -86,6 +89,7 @@ export default function RequestDialog({
       phone: form.phone.trim(),
       wilaya: form.wilaya,
       address: form.address.trim(),
+      website: form.website,
     });
   };
 
@@ -114,7 +118,19 @@ export default function RequestDialog({
             <p className="mt-2 text-sm text-muted-foreground">سنتواصل معك قريبًا</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+          <form onSubmit={handleSubmit} className="relative flex flex-col gap-4" noValidate>
+      {/* Honeypot: invisible and unfocusable for people, irresistible to bots.
+          A non-empty value is rejected by the API. */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        value={form.website}
+        onChange={set("website")}
+        className="pointer-events-none absolute h-0 w-0 border-0 p-0 opacity-0"
+      />
             {/* Book name */}
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">

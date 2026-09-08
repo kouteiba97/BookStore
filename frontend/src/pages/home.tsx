@@ -71,7 +71,7 @@ export default function HomePage() {
             مكتبة شرعية متخصصة
           </span>
           <h1 className="mt-5 font-heading text-3xl font-bold leading-tight tracking-tight sm:text-5xl">
-            اكتشف كنوز <span className="text-gold">العلم الشرعي</span>
+            اكتشف كنوز <span className="text-gold-ink">العلم الشرعي</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
             آلاف الكتب في الفقه، الحديث، التفسير، العقيدة واللغة. ابحث، تصفّح، أو اطلب الكتاب الذي تحتاجه.
@@ -192,7 +192,7 @@ export default function HomePage() {
         <h2 className="font-heading text-2xl font-bold text-gold sm:text-3xl">
           لم تجد الكتاب الذي تبحث عنه؟
         </h2>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gold/60">
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-gold-light/90">
           أرسل لنا طلبك وسنوفّره لك في أقرب وقت
         </p>
         <div className="mt-6 flex items-center justify-center">

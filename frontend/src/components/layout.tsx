@@ -32,8 +32,8 @@ export default function Layout() {
                 to={link.to}
                 className={`rounded-lg px-3 py-1.5 transition-all ${
                   isActive(link.to)
-                    ? "bg-gold/15 font-semibold text-gold"
-                    : "text-gold/80 hover:bg-gold/10 hover:text-gold"
+                    ? "bg-gold/15 font-semibold text-gold-light"
+                    : "text-gold-light hover:bg-gold/10 hover:text-gold-light"
                 }`}
               >
                 {link.label}
@@ -49,32 +49,49 @@ export default function Layout() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="mt-12 border-t border-border/60 bg-[#1F3A2E] text-gold/70">
+      <footer className="mt-12 border-t border-border/60 bg-[#1F3A2E] text-gold-light">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3 sm:px-6">
           <div className="sm:col-span-2">
             <div className="flex items-center gap-2.5">
               <LogoMark onDark className="h-9 w-9 shrink-0" />
               <span className="font-heading text-lg font-bold text-gold">مكتبة البيان</span>
             </div>
-            <p className="mt-3 max-w-md text-sm leading-relaxed text-gold/55">
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-gold-light/90">
               مكتبة متخصصة في الكتب الشرعية والعلوم الإسلامية والمراجع الأكاديمية. نوفّر لك ما تحتاجه من مصادر موثوقة.
             </p>
           </div>
           <div>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gold/50">روابط</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gold-light/90">روابط</p>
             <ul className="flex flex-col gap-2 text-sm">
               {navLinks.map((l) => (
                 <li key={l.to}>
-                  <Link to={l.to} className="text-gold/70 transition-colors hover:text-gold">
+                  <Link to={l.to} className="text-gold-light transition-colors hover:text-white">
                     {l.label}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gold-light/90">
+              معلومات قانونية
+            </p>
+            <ul className="flex flex-col gap-2 text-sm">
+              <li>
+                <Link to="/privacy" className="text-gold-light transition-colors hover:text-white">
+                  سياسة الخصوصية
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-gold-light transition-colors hover:text-white">
+                  شروط الاستخدام
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
         <div className="border-t border-gold/10">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 text-xs text-gold/45 sm:px-6">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 text-xs text-gold-light/90 sm:px-6">
             <span>© {new Date().getFullYear()} مكتبة البيان</span>
             <span>جميع الحقوق محفوظة</span>
           </div>

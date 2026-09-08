@@ -51,6 +51,30 @@ services:
         sync: false
       - key: VITE_WHATSAPP_NUMBER
         sync: false
+    headers:
+      # Force HTTPS for a year, including subdomains. Render already redirects
+      # http -> https; this stops the browser attempting http at all.
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: Permissions-Policy
+        value: geolocation=(), microphone=(), camera=(), interest-cohort=()
+      # script-src 'self' is the part that matters: no injected or third-party
+      # script can run. img/connect stay scheme-broad so changing the image CDN
+      # or API hostname cannot silently break the shop.
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     routes:
       - type: rewrite
         source: /*
@@ -70,6 +94,30 @@ services:
         value: /
       - key: VITE_PUBLIC_SITE_URL  # link back to the storefront
         sync: false
+    headers:
+      # Force HTTPS for a year, including subdomains. Render already redirects
+      # http -> https; this stops the browser attempting http at all.
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: Permissions-Policy
+        value: geolocation=(), microphone=(), camera=(), interest-cohort=()
+      # script-src 'self' is the part that matters: no injected or third-party
+      # script can run. img/connect stay scheme-broad so changing the image CDN
+      # or API hostname cannot silently break the shop.
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     routes:
       - type: rewrite
         source: /*

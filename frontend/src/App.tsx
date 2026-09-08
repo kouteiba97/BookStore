@@ -9,6 +9,8 @@ import FieldsPage from "@/pages/academic/fields";
 import YearsPage from "@/pages/academic/years";
 import SubjectsPage from "@/pages/academic/subjects";
 import SubjectBooksPage from "@/pages/academic/subject-books";
+import { PrivacyPage, TermsPage } from "@/pages/legal";
+import NotFoundPage from "@/pages/not-found";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +44,10 @@ export default function App() {
             <Route path="academic/:fieldId" element={<YearsPage />} />
             <Route path="academic/years/:yearId" element={<SubjectsPage />} />
             <Route path="academic/subjects/:subjectId" element={<SubjectBooksPage />} />
+            <Route path="privacy" element={<PrivacyPage />} />
+            <Route path="terms" element={<TermsPage />} />
+            {/* Catch-all: the host rewrites unknown paths to index.html. */}
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

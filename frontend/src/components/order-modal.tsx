@@ -20,6 +20,8 @@ interface OrderFormState {
   phone: string;
   wilaya: string;
   address: string;
+  /** Honeypot — must stay empty. */
+  website: string;
 }
 
 type FormErrors = Partial<Record<keyof OrderFormState, boolean>>;
@@ -30,6 +32,7 @@ const EMPTY: OrderFormState = {
   phone: "",
   wilaya: "",
   address: "",
+  website: "",
 };
 
 function OrderForm({ book, onClose }: { book: Book; onClose: () => void }) {
@@ -83,6 +86,7 @@ function OrderForm({ book, onClose }: { book: Book; onClose: () => void }) {
       phone: form.phone.trim(),
       wilaya: form.wilaya,
       address: form.address.trim(),
+      website: form.website,
     });
   }
 
@@ -102,7 +106,20 @@ function OrderForm({ book, onClose }: { book: Book; onClose: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={handleSubmit} className="relative flex flex-col gap-4" noValidate>
+      {/* Honeypot: invisible and unfocusable for people, irresistible to bots.
+          A non-empty value is rejected by the API. */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        value={form.website}
+        onChange={set("website")}
+        className="pointer-events-none absolute h-0 w-0 border-0 p-0 opacity-0"
+      />
+
       {/* Name row */}
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-1.5">
