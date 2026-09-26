@@ -1,12 +1,13 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { LogoMark } from "@/components/logo";
+import { features } from "@/lib/features";
 
 export default function Layout() {
   const { pathname } = useLocation();
 
   const navLinks = [
     { to: "/", label: "الرئيسية" },
-    { to: "/academic", label: "الأكاديمي" },
+    ...(features.academic ? [{ to: "/academic", label: "الأكاديمي" }] : []),
     { to: "/search", label: "البحث" },
   ];
 

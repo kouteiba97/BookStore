@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactElement } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LogoMark } from "@/components/logo";
 import { clearToken } from "@/lib/auth";
+import { features } from "@/lib/features";
 import { ToastProvider } from "./toaster";
 
 // Where "عرض المتجر" points — the public storefront (separate app/origin).
@@ -88,7 +89,7 @@ const NAV: NavItem[] = [
   { to: "/admin/books", label: "الكتب", icon: Icon.books },
   { to: "/admin/quick-add", label: "إضافة سريعة", icon: Icon.quickAdd },
   { to: "/admin/catalog/categories", label: "التصنيفات", icon: Icon.catalog },
-  { to: "/admin/academic", label: "الأكاديمي", icon: Icon.academic },
+  ...(features.academic ? [{ to: "/admin/academic", label: "الأكاديمي", icon: Icon.academic }] : []),
   { to: "/admin/inventory", label: "المخزون", icon: Icon.inventory },
 ];
 

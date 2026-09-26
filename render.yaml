@@ -51,6 +51,8 @@ services:
         sync: false
       - key: VITE_WHATSAPP_NUMBER
         sync: false
+      - key: VITE_EDITION          # "basic" hides academic browse; "full" shows everything
+        value: basic
     headers:
       # Force HTTPS for a year, including subdomains. Render already redirects
       # http -> https; this stops the browser attempting http at all.
@@ -94,6 +96,8 @@ services:
         value: /
       - key: VITE_PUBLIC_SITE_URL  # link back to the storefront
         sync: false
+      - key: VITE_EDITION          # "basic" hides the academic screen; "full" shows everything
+        value: basic
     headers:
       # Force HTTPS for a year, including subdomains. Render already redirects
       # http -> https; this stops the browser attempting http at all.

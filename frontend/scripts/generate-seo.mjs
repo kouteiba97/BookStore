@@ -18,11 +18,13 @@ const publicDir = resolve(here, "../public");
 const SITE = (process.env.SITE_URL ?? "https://bookstore-storefront.onrender.com").replace(/\/$/, "");
 const API = (process.env.VITE_API_URL ?? "").replace(/\/$/, "");
 const SLUG = process.env.VITE_STORE_SLUG ?? "elbayan";
+// Mirrors src/lib/features.ts: the academic section only exists in the full edition.
+const ACADEMIC = (process.env.VITE_EDITION ?? "basic") === "full";
 
 const STATIC_ROUTES = [
   { path: "/", priority: "1.0", changefreq: "daily" },
   { path: "/search", priority: "0.5", changefreq: "weekly" },
-  { path: "/academic", priority: "0.8", changefreq: "weekly" },
+  ...(ACADEMIC ? [{ path: "/academic", priority: "0.8", changefreq: "weekly" }] : []),
   { path: "/privacy", priority: "0.3", changefreq: "yearly" },
   { path: "/terms", priority: "0.3", changefreq: "yearly" },
 ];

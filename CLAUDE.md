@@ -47,7 +47,13 @@ Public: `home.tsx`, `search.tsx`, `book.tsx`, `academic/{fields,years,subjects,s
 
 Admin (separate app — `admin/src/pages/admin/`, served at `/admin`): `overview`, `orders`, `order-detail`, `books`, `quick-add` (mobile book entry), `catalog`, `academic`, `inventory`, `requests`. Login at `/admin/login` (`admin/src/pages/login.tsx`); token helpers + axios interceptors in `admin/src/lib/auth.ts`. Admin shared components live in `admin/src/components/admin/`, API in `admin/src/lib/admin-api.ts`.
 
-Frontend env (Vite): `VITE_STORE_SLUG` (default `elbayan`), `VITE_WHATSAPP_NUMBER` (storefront), `VITE_PUBLIC_SITE_URL` (admin's "view store" link). Store identity script: `scripts/setup-store.ts`.
+**Editions** — one codebase, two products. `basic` (default) is the build for مكتبة البيان; `full` is the complete platform sold to other stores. Hidden features stay in code and DB, only the UI is gated:
+- Storefront: `VITE_EDITION` (`basic` | `full`), read in `frontend/src/lib/features.ts`. Basic hides the academic browse (nav link, home section, `/academic/*` routes → redirect home, sitemap entry). Set in `render.yaml`.
+- Web admin: same `VITE_EDITION`, read in `admin/src/lib/features.ts`. Basic hides the academic taxonomy screen (nav item; `/admin/academic` → redirect to `/admin`).
+- Mobile: `--dart-define=EDITION=full` (each app's `lib/edition.dart`). Basic hides the store app's academic tab and the admin app's academic screen, and reduces admin Quick-Add (new book only) to cover scanner + title + category + "save & scan next".
+- To demo/sell the full platform, deploy a second storefront/admin with `VITE_EDITION=full` and build APKs with `--dart-define=EDITION=full`.
+
+Frontend env (Vite): `VITE_EDITION` (default `basic`), `VITE_STORE_SLUG` (default `elbayan`), `VITE_WHATSAPP_NUMBER` (storefront), `VITE_PUBLIC_SITE_URL` (admin's "view store" link). Store identity script: `scripts/setup-store.ts`.
 
 ## Frontend shared
 

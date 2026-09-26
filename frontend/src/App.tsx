@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Layout from "@/components/layout";
 import HomePage from "@/pages/home";
@@ -11,6 +11,7 @@ import SubjectsPage from "@/pages/academic/subjects";
 import SubjectBooksPage from "@/pages/academic/subject-books";
 import { PrivacyPage, TermsPage } from "@/pages/legal";
 import NotFoundPage from "@/pages/not-found";
+import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,10 +41,17 @@ export default function App() {
             <Route index element={<HomePage />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="books/:id" element={<BookPage />} />
-            <Route path="academic" element={<FieldsPage />} />
-            <Route path="academic/:fieldId" element={<YearsPage />} />
-            <Route path="academic/years/:yearId" element={<SubjectsPage />} />
-            <Route path="academic/subjects/:subjectId" element={<SubjectBooksPage />} />
+            {features.academic ? (
+              <>
+                <Route path="academic" element={<FieldsPage />} />
+                <Route path="academic/:fieldId" element={<YearsPage />} />
+                <Route path="academic/years/:yearId" element={<SubjectsPage />} />
+                <Route path="academic/subjects/:subjectId" element={<SubjectBooksPage />} />
+              </>
+            ) : (
+              // Edition without academic browse: old links land on the home page.
+              <Route path="academic/*" element={<Navigate to="/" replace />} />
+            )}
             <Route path="privacy" element={<PrivacyPage />} />
             <Route path="terms" element={<TermsPage />} />
             {/* Catch-all: the host rewrites unknown paths to index.html. */}

@@ -18,7 +18,7 @@ const DESCRIPTION =
 function socialMeta(): Plugin {
   return {
     name: "social-meta",
-    transformIndexHtml() {
+    transformIndexHtml(_html, ctx) {
       return [
         // Security policy shipped in the document itself.
         //
@@ -27,15 +27,17 @@ function socialMeta(): Plugin {
         // protection travels with the build and cannot silently be missing.
         // `frame-ancestors` is deliberately absent: it is ignored in a meta
         // policy, so clickjacking cover comes from the header form only.
-        {
+        // Build only: the dev server injects an inline React-refresh preamble
+        // that script-src 'self' blocks, which leaves the page blank.
+        ...(ctx.server ? [] : [{
           tag: "meta",
           attrs: {
             "http-equiv": "Content-Security-Policy",
             content:
               "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; base-uri 'self'; form-action 'self'",
           },
-          injectTo: "head-prepend",
-        },
+          injectTo: "head-prepend" as const,
+        }]),
         { tag: "meta", attrs: { name: "referrer", content: "strict-origin-when-cross-origin" }, injectTo: "head" },
         { tag: "link", attrs: { rel: "canonical", href: SITE_URL + "/" }, injectTo: "head" },
         { tag: "meta", attrs: { property: "og:type", content: "website" }, injectTo: "head" },

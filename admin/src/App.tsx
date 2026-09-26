@@ -14,6 +14,7 @@ import QuickAddPage from "@/pages/admin/quick-add";
 import CatalogPage from "@/pages/admin/catalog";
 import AcademicAdminPage from "@/pages/admin/academic";
 import InventoryPage from "@/pages/admin/inventory";
+import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,7 +62,10 @@ export default function App() {
             <Route path="quick-add" element={<QuickAddPage />} />
             <Route path="catalog" element={<Navigate to="/admin/catalog/categories" replace />} />
             <Route path="catalog/:resource" element={<CatalogPage />} />
-            <Route path="academic" element={<AcademicAdminPage />} />
+            <Route
+              path="academic"
+              element={features.academic ? <AcademicAdminPage /> : <Navigate to="/admin" replace />}
+            />
             <Route path="inventory" element={<InventoryPage />} />
           </Route>
 

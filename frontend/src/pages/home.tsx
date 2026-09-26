@@ -7,6 +7,7 @@ import { BookGridSkeleton } from "@/components/book-card-skeleton";
 import RequestDialog from "@/components/request-dialog";
 import { LogoShamsa } from "@/components/logo";
 import { fetchBooks, fetchFields } from "@/lib/queries";
+import { features } from "@/lib/features";
 
 const categories = [
   { name: "فقه", icon: "⚖️", query: "فقه" },
@@ -50,9 +51,10 @@ export default function HomePage() {
   const { data: fields = [], isLoading: fieldsLoading } = useQuery({
     queryKey: ["fields"],
     queryFn: fetchFields,
+    enabled: features.academic,
   });
 
-  const academicHasBooks = fields.some((f) => (f.bookCount ?? 0) > 0);
+  const academicHasBooks = features.academic && fields.some((f) => (f.bookCount ?? 0) > 0);
 
   return (
     <div className="flex flex-col gap-14">
