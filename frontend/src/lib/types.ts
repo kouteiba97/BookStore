@@ -115,3 +115,9 @@ export interface RequestsResponse {
   requests: OrderRequest[];
   counts: StatusCount[];
 }
+
+export interface StoreCategory {
+  id: string;
+  name: string;
+  bookCount: number;
+}

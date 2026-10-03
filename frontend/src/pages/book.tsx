@@ -267,7 +267,7 @@ export default function BookPage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 shrink-0 text-primary/60">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
-              توصيل متوفر إلى جميع الولايات الـ58
+              توصيل متوفر إلى جميع الولايات الـ69
             </p>
           </div>
         </div>
@@ -316,7 +316,7 @@ export default function BookPage() {
       {/* ── Trust section ── */}
       <section className="rounded-xl border border-border/60 bg-card/60 px-5 py-5">
         <div className="grid gap-3 sm:grid-cols-3">
-          <TrustBadge>توصيل إلى 58 ولاية</TrustBadge>
+          <TrustBadge>توصيل إلى 69 ولاية</TrustBadge>
           <TrustBadge>الدفع عند الاستلام</TrustBadge>
           <TrustBadge>دعم واتساب</TrustBadge>
         </div>

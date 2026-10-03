@@ -33,14 +33,14 @@ export class BooksService {
    * (it shows 16); without it the whole catalogue is returned, as the mobile
    * store app and the sitemap expect, but in the slim card shape.
    */
-  async findAll(storeSlug: string, limit?: number) {
+  async findAll(storeSlug: string, limit?: number, categoryId?: string) {
     const store = await this.resolveStore(storeSlug);
 
     const take =
       limit && limit > 0 ? Math.min(Math.floor(limit), MAX_LIST_LIMIT) : undefined;
 
     const books = await this.prisma.book.findMany({
-      where: { storeId: store.id },
+      where: { storeId: store.id, ...(categoryId ? { categoryId } : {}) },
       include: bookCardInclude as any,
       orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
       ...(take ? { take } : {}),
@@ -89,12 +89,36 @@ export class BooksService {
               },
             },
           },
+          // "فقه" should find the books filed under the فقه category too.
+          { category: { name: { contains: trimmed, mode: 'insensitive' } } },
         ],
       },
       include: bookCardInclude as any,
-      take: 20,
+      take: 40,
     });
     return serializeBooks(books);
+  }
+
+  /**
+   * The categories this store actually has books in, with how many — what the
+   * home page offers to browse. Empty categories are never shown.
+   */
+  async categories(storeSlug: string) {
+    const store = await this.resolveStore(storeSlug);
+    const counts = await this.prisma.book.groupBy({
+      by: ['categoryId'],
+      where: { storeId: store.id },
+      _count: { _all: true },
+    });
+    if (!counts.length) return [];
+    const cats = await this.prisma.category.findMany({
+      where: { id: { in: counts.map((c) => c.categoryId) } },
+      select: { id: true, name: true },
+    });
+    const n = new Map(counts.map((c) => [c.categoryId, c._count._all]));
+    return cats
+      .map((c) => ({ ...c, bookCount: n.get(c.id) ?? 0 }))
+      .sort((a, b) => b.bookCount - a.bookCount || a.name.localeCompare(b.name, 'ar'));
   }
 
   async autocomplete(storeSlug: string, q: string) {

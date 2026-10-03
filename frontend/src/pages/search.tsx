@@ -4,24 +4,35 @@ import BookCard from "@/components/book-card";
 import { BookGridSkeleton } from "@/components/book-card-skeleton";
 import SearchBox from "@/components/search-box";
 import { RequestDialog } from "@/components/lazy-dialogs";
-import { searchBooks, fetchSuggestions } from "@/lib/queries";
+import { fetchBooks, searchBooks, fetchSuggestions } from "@/lib/queries";
 
 export default function SearchPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const q = params.get("q") ?? "";
+  // Browsing a category (from the home page) rather than a text search.
+  const categoryId = params.get("category") ?? "";
+  const categoryName = params.get("name") ?? "";
+  const inCategory = Boolean(categoryId);
+  const active = inCategory || q.length >= 2;
 
   const { data: books = [], isLoading } = useQuery({
-    queryKey: ["search", q],
-    queryFn: () => searchBooks(q),
-    enabled: q.length >= 2,
+    queryKey: inCategory ? ["category-books", categoryId] : ["search", q],
+    queryFn: () => (inCategory ? fetchBooks(100, categoryId) : searchBooks(q)),
+    enabled: active,
   });
 
   const { data: suggestions } = useQuery({
     queryKey: ["suggestions", q],
     queryFn: () => fetchSuggestions(q),
-    enabled: q.length >= 2,
+    enabled: !inCategory && q.length >= 2,
   });
+
+  // Back to wherever the visitor came from; home if they landed here directly.
+  const goBack = () => {
+    if ((window.history.state?.idx ?? 0) > 0) navigate(-1);
+    else navigate("/");
+  };
 
   const hasChips =
     (suggestions?.categories.length ?? 0) > 0 ||
@@ -29,11 +40,35 @@ export default function SearchPage() {
 
   return (
     <div className="flex flex-col gap-7">
+      <button
+        type="button"
+        onClick={goBack}
+        className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+        العودة
+      </button>
+
       <div className="mx-auto w-full max-w-2xl">
         <SearchBox size="large" />
       </div>
 
-      {q && (
+      {inCategory && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/60 px-4 py-3">
+          <h1 className="font-heading text-lg font-bold">
+            تصنيف: <span className="text-primary">{categoryName || "—"}</span>
+          </h1>
+          {books.length > 0 && (
+            <span className="rounded-full bg-gold-light/60 px-3 py-1 text-xs font-bold text-[oklch(0.38_0.08_75)] ring-1 ring-gold/25">
+              {books.length} كتاب
+            </span>
+          )}
+        </div>
+      )}
+
+      {!inCategory && q && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/60 px-4 py-3">
           <p className="text-sm text-muted-foreground">
             نتائج البحث عن:{" "}
@@ -65,7 +100,7 @@ export default function SearchPage() {
           {suggestions!.categories.map((cat) => (
             <button
               key={`c-${cat.id}`}
-              onClick={() => navigate(`/search?q=${encodeURIComponent(cat.name)}`)}
+              onClick={() => navigate(`/search?category=${encodeURIComponent(cat.id)}&name=${encodeURIComponent(cat.name)}`)}
               className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-card px-3 py-1.5 text-xs font-medium transition-all hover:-translate-y-0.5 hover:border-gold/50 hover:shadow-warm"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 text-primary">
@@ -79,7 +114,7 @@ export default function SearchPage() {
 
       {isLoading && <BookGridSkeleton count={8} />}
 
-      {!isLoading && q.length >= 2 && books.length === 0 && (
+      {!isLoading && active && books.length === 0 && (
         <div className="flex flex-col items-center gap-4 rounded-3xl border border-dashed border-border bg-card/50 py-16 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground/50">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8">
@@ -94,7 +129,7 @@ export default function SearchPage() {
             </p>
           </div>
           <RequestDialog
-            defaultBookName={q}
+            defaultBookName={inCategory ? "" : q}
             trigger={
               <button
                 type="button"
@@ -103,7 +138,7 @@ export default function SearchPage() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
-                اطلب «{q}»
+                {inCategory ? "اطلب كتابًا" : `اطلب «${q}»`}
               </button>
             }
           />
@@ -118,14 +153,14 @@ export default function SearchPage() {
         </div>
       )}
 
-      {!q && (
+      {!q && !inCategory && (
         <div className="rounded-3xl border border-dashed border-border bg-card/50 py-16 text-center text-sm text-muted-foreground">
           ابدأ بكتابة كلمة البحث في الأعلى
         </div>
       )}
 
       {/* ── CTA — Request Book ── */}
-      {!isLoading && q.length >= 2 && books.length > 0 && (
+      {!isLoading && active && books.length > 0 && (
         <section className="rounded-3xl border border-gold/25 bg-gradient-to-br from-[#1F3A2E] to-[#2A5A42] px-6 py-10 text-center sm:px-12">
           <h2 className="font-heading text-2xl font-bold text-gold sm:text-3xl">
             لم تجد الكتاب الذي تبحث عنه؟
@@ -135,7 +170,7 @@ export default function SearchPage() {
           </p>
           <div className="mt-6 flex items-center justify-center">
             <RequestDialog
-              defaultBookName={q}
+              defaultBookName={inCategory ? "" : q}
               trigger={
                 <button
                   type="button"

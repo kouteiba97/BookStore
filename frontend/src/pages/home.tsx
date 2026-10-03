@@ -6,19 +6,26 @@ import BookCard from "@/components/book-card";
 import { BookGridSkeleton } from "@/components/book-card-skeleton";
 import { RequestDialog } from "@/components/lazy-dialogs";
 import { LogoShamsa } from "@/components/logo";
-import { fetchBooks, fetchFields } from "@/lib/queries";
+import { fetchBooks, fetchCategories, fetchFields } from "@/lib/queries";
 import { features } from "@/lib/features";
 
-const categories = [
-  { name: "فقه", icon: "⚖️", query: "فقه" },
-  { name: "حديث", icon: "📜", query: "حديث" },
-  { name: "قرآن", icon: "📖", query: "قرآن" },
-  { name: "عقيدة", icon: "🕌", query: "عقيدة" },
-  { name: "تاريخ", icon: "🏛️", query: "تاريخ" },
-  { name: "لغة عربية", icon: "✍️", query: "لغة عربية" },
-  { name: "فلسفة", icon: "💡", query: "فلسفة" },
-  { name: "تزكية", icon: "🤲", query: "تزكية" },
-];
+/** Icon per category name; anything else gets a book. */
+const categoryIcons: Record<string, string> = {
+  "فقه": "⚖️",
+  "حديث": "📜",
+  "قرآن": "📖",
+  "تفسير": "📖",
+  "علوم القرآن": "📖",
+  "عقيدة": "🕌",
+  "تاريخ": "🏛️",
+  "سيرة": "🌙",
+  "لغة عربية": "✍️",
+  "أدب": "🖋️",
+  "فلسفة": "💡",
+  "تزكية": "🤲",
+  "أصول الفقه": "📐",
+  "دعوة": "🌍",
+};
 
 const fieldIcons: Record<string, string> = {
   "شريعة": "⚖️",
@@ -49,6 +56,12 @@ export default function HomePage() {
     queryFn: () => fetchBooks(16),
   });
 
+  // The store's real categories (only those with books), most stocked first.
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchCategories,
+  });
+
   const { data: fields = [], isLoading: fieldsLoading } = useQuery({
     queryKey: ["fields"],
     queryFn: fetchFields,
@@ -60,9 +73,13 @@ export default function HomePage() {
   return (
     <div className="flex flex-col gap-14">
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-paper px-6 py-12 text-center sm:px-12 sm:py-16">
-        <div className="pointer-events-none absolute -top-24 right-1/2 h-64 w-64 translate-x-1/2 rounded-full bg-gold/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 left-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+      {/* Not overflow-hidden: the search suggestions must be able to drop out
+          of the hero. Only the decorative glow is clipped. */}
+      <section className="relative z-10 rounded-3xl border border-border/60 bg-paper px-6 py-12 text-center sm:px-12 sm:py-16">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl">
+          <div className="absolute -top-24 right-1/2 h-64 w-64 translate-x-1/2 rounded-full bg-gold/15 blur-3xl" />
+          <div className="absolute -bottom-32 left-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+        </div>
         <div className="relative">
           <LogoShamsa className="mx-auto h-32 w-32 drop-shadow-[0_8px_24px_rgba(31,58,46,0.18)] sm:h-40 sm:w-40" />
           {/* Store name under the logo so visitors know who we are */}
@@ -86,26 +103,36 @@ export default function HomePage() {
       </section>
 
       {/* ── Categories ── */}
+      {(categoriesLoading || categories.length > 0) && (
       <section>
-        <SectionHeader title="تصفّح حسب التصنيف" hint={`${categories.length} تصنيف`} />
+        <SectionHeader
+          title="تصفّح حسب التصنيف"
+          hint={categories.length ? `${categories.length} تصنيف` : undefined}
+        />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {categories.map((cat) => (
+          {categoriesLoading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-[136px] animate-pulse rounded-2xl bg-muted/50" />
+              ))
+            : categories.map((cat) => (
             <Link
-              key={cat.name}
-              to={`/search?q=${encodeURIComponent(cat.query)}`}
+              key={cat.id}
+              to={`/search?category=${encodeURIComponent(cat.id)}&name=${encodeURIComponent(cat.name)}`}
               className="group flex flex-col items-center justify-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-7 text-center outline-none transition-all hover:-translate-y-1 hover:border-gold/45 hover:shadow-warm focus-visible:ring-2 focus-visible:ring-gold/60"
             >
               <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gold-light/60 text-3xl ring-1 ring-gold/15 transition-all group-hover:bg-gold-light group-hover:ring-gold/30">
-                {cat.icon}
+                {categoryIcons[cat.name] ?? "📚"}
               </span>
               <span className="text-sm font-bold">{cat.name}</span>
+              <span className="-mt-2 text-xs text-muted-foreground">{cat.bookCount} كتاب</span>
             </Link>
           ))}
         </div>
       </section>
+      )}
 
       {/* Cold-start notice: the free API instance sleeps between visits. */}
-      <WakingNotice loading={booksLoading || fieldsLoading} />
+      <WakingNotice loading={booksLoading || fieldsLoading || categoriesLoading} />
 
       {/* ── Academic ──
           Hidden until at least one speciality actually has books, so the

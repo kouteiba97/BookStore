@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { LogoMark } from "@/components/logo";
 import { features } from "@/lib/features";
+import StoreMap from "@/components/store-map";
 
 export default function Layout() {
   const { pathname } = useLocation();
@@ -51,8 +52,8 @@ export default function Layout() {
 
       {/* ── Footer ── */}
       <footer className="mt-12 border-t border-border/60 bg-[#1F3A2E] text-gold-light">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3 sm:px-6">
-          <div className="sm:col-span-2">
+        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.3fr_0.7fr_0.8fr_1.6fr]">
+          <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2.5">
               <LogoMark onDark className="h-9 w-9 shrink-0" />
               <span className="font-heading text-lg font-bold text-gold">مكتبة البيان</span>
@@ -89,6 +90,9 @@ export default function Layout() {
                 </Link>
               </li>
             </ul>
+          </div>
+          <div className="sm:col-span-2 lg:col-span-1">
+            <StoreMap />
           </div>
         </div>
         <div className="border-t border-gold/10">

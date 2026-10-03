@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
-// ── The 58 Algerian wilayas ──────────────────────────────
+// ── The 69 Algerian wilayas (58 + the 11 created in 2025, numbered 59–69
+//    by the Journal officiel) ─────────────────────────────
 
 export const WILAYAS: { code: number; name: string }[] = [
   { code: 1, name: "أدرار" },
@@ -61,6 +62,17 @@ export const WILAYAS: { code: number; name: string }[] = [
   { code: 56, name: "جانت" },
   { code: 57, name: "عين صالح" },
   { code: 58, name: "عين قزام" },
+  { code: 59, name: "أفلو" },
+  { code: 60, name: "بريكة" },
+  { code: 61, name: "القنطرة" },
+  { code: 62, name: "بئر العاتر" },
+  { code: 63, name: "العريشة" },
+  { code: 64, name: "قصر الشلالة" },
+  { code: 65, name: "عين وسارة" },
+  { code: 66, name: "مسعد" },
+  { code: 67, name: "قصر البخاري" },
+  { code: 68, name: "بوسعادة" },
+  { code: 69, name: "الأبيض سيدي الشيخ" },
 ];
 
 // ── Searchable wilaya combobox ───────────────────────────

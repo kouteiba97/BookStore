@@ -1,9 +1,15 @@
 import api from "./api";
-import type { Book, AutocompleteItem, Suggestions, Field, AcademicYear, Subject } from "./types";
+import type { Book, AutocompleteItem, Suggestions, Field, AcademicYear, Subject, StoreCategory } from "./types";
 
 /** Newest books as cards. Pass `limit` — the home page shows 16, not the catalogue. */
-export const fetchBooks = (limit?: number) =>
-  api.get<Book[]>("/books", { params: limit ? { limit } : undefined }).then((r) => r.data);
+export const fetchBooks = (limit?: number, categoryId?: string) =>
+  api
+    .get<Book[]>("/books", { params: { ...(limit ? { limit } : {}), ...(categoryId ? { categoryId } : {}) } })
+    .then((r) => r.data);
+
+/** Categories the store has books in, most stocked first. */
+export const fetchCategories = () =>
+  api.get<StoreCategory[]>("/categories").then((r) => r.data);
 
 export const fetchBook = (id: string) =>
   api.get<Book>(`/books/${id}`).then((r) => r.data);

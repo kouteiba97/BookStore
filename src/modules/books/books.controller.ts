@@ -30,8 +30,12 @@ export class BooksController {
   }
 
   @Get()
-  findAll(@Param('storeSlug') storeSlug: string, @Query('limit') limit?: string) {
-    return this.booksService.findAll(storeSlug, Number(limit) || undefined);
+  findAll(
+    @Param('storeSlug') storeSlug: string,
+    @Query('limit') limit?: string,
+    @Query('categoryId') categoryId?: string,
+  ) {
+    return this.booksService.findAll(storeSlug, Number(limit) || undefined, categoryId?.slice(0, 64) || undefined);
   }
 
   @Get(':id/recommendations')
@@ -45,5 +49,16 @@ export class BooksController {
   @Get(':id')
   findOne(@Param('storeSlug') storeSlug: string, @Param('id') id: string) {
     return this.booksService.findOne(storeSlug, id);
+  }
+}
+
+/** Categories this store has books in — what the storefront offers to browse. */
+@Controller('v1/:storeSlug/categories')
+export class StoreCategoriesController {
+  constructor(private readonly booksService: BooksService) {}
+
+  @Get()
+  list(@Param('storeSlug') storeSlug: string) {
+    return this.booksService.categories(storeSlug);
   }
 }

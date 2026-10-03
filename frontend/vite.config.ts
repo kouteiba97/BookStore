@@ -8,7 +8,7 @@ const SITE_URL = (process.env.SITE_URL ?? "https://bookstore-storefront.onrender
 
 const TITLE = "مكتبة البيان — كتب شرعية وعلوم إسلامية"
 const DESCRIPTION =
-  "مكتبة متخصصة في الكتب الشرعية والعلوم الإسلامية والمراجع الأكاديمية. توصيل إلى 58 ولاية والدفع عند الاستلام."
+  "مكتبة متخصصة في الكتب الشرعية والعلوم الإسلامية والمراجع الأكاديمية. توصيل إلى 69 ولاية والدفع عند الاستلام."
 
 /**
  * Injects the social-preview and canonical tags at build time, so the absolute
@@ -34,7 +34,7 @@ function socialMeta(): Plugin {
           attrs: {
             "http-equiv": "Content-Security-Policy",
             content:
-              "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; base-uri 'self'; form-action 'self'",
+              "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https:; frame-src https://www.google.com https://maps.google.com; base-uri 'self'; form-action 'self'",
           },
           injectTo: "head-prepend" as const,
         }]),
