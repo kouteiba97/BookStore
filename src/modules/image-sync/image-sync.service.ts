@@ -1,10 +1,12 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { normalizeArabic } from '../../common/utils/normalize-arabic';
+import { setBookCover } from '../../common/utils/book-cover';
 import * as fs from 'fs';
 import * as path from 'path';
-import { createWorker } from 'tesseract.js';
+import { createHash } from 'crypto';
+import { createWorker, type Worker } from 'tesseract.js';
 
 // ── Constants ─────────────────────────────────────────────
 
@@ -12,6 +14,8 @@ const IMAGES_FOLDER = path.join(process.cwd(), 'images');
 const STATIC_FOLDER = path.join(process.cwd(), 'public', 'covers');
 const BATCH_SIZE = 12;
 const SUPPORTED_EXT = new Set(['.jpg', '.jpeg', '.png']);
+/** Larger files are skipped: a cover never needs to be this big. */
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const WEAK_PATTERN = /^(img|image|photo|pic|dsc|cam|screenshot|p\d+|img_\d+|dscn?\d+|dcim\d*)$/i;
 
 // Noise words stripped before matching (but kept in stored title)
@@ -60,6 +64,18 @@ export interface SyncResult {
 export class ImageSyncService {
   private readonly logger = new Logger(ImageSyncService.name);
 
+  /**
+   * One OCR worker per run, created on first need. A worker loads the Arabic
+   * model (tens of MB); the old code started one per image, up to 12 at once,
+   * which is enough to exhaust a small server's memory.
+   */
+  private ocrWorker: Promise<Worker> | null = null;
+  /** OCR jobs run one at a time on the shared worker. */
+  private ocrQueue: Promise<unknown> = Promise.resolve();
+  /** Matching/creating books runs one at a time so two images never create the same book. */
+  private resolveQueue: Promise<unknown> = Promise.resolve();
+  private running = false;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
@@ -75,7 +91,19 @@ export class ImageSyncService {
 
     const store = await this.prisma.store.findUnique({ where: { slug: storeSlug } });
     if (!store) throw new NotFoundException(`Store not found: ${storeSlug}`);
+    if (this.running) throw new ConflictException('An image sync is already running');
 
+    this.running = true;
+    try {
+      return await this.runSync(store.id, allowCreate);
+    } finally {
+      this.running = false;
+      await this.stopOcr();
+    }
+  }
+
+  private async runSync(storeId: string, allowCreate: boolean): Promise<SyncResult> {
+    const store = { id: storeId };
     this.ensureStaticFolder();
 
     const files = this.scanFolder(IMAGES_FOLDER);
@@ -150,6 +178,10 @@ export class ImageSyncService {
     allowCreate: boolean,
   ): Promise<ProcessedResult> {
     try {
+      if (fs.statSync(file.fullPath).size > MAX_IMAGE_BYTES) {
+        return { filename: file.filename, finalTitle: '', ocrUsed: false, action: 'skipped', reason: 'file too large' };
+      }
+
       // STEP A — extract from filename
       const { title: filenameTitle, isWeak } = this.extractFromFilename(file.filename);
 
@@ -169,21 +201,21 @@ export class ImageSyncService {
         return { filename: file.filename, finalTitle: '', ocrUsed, action: 'skipped', reason: 'empty title' };
       }
 
-      // STEP C — publish the cover (R2 when configured, else local disk)
-      const publicUrl = await this.publishCover(file);
-
-      // STEP D — fuzzy resolve book
-      const resolved = await this.resolveBook(finalTitle, storeId, bookMap, resolvedCache, allowCreate);
+      // STEP C — fuzzy resolve the book first. Serialised: two images of a
+      // new title in the same batch must not both create it.
+      const resolved = await this.serial(() =>
+        this.resolveBook(finalTitle, storeId, bookMap, resolvedCache, allowCreate),
+      );
 
       if (!resolved) {
+        // Nothing is uploaded for an image no book will use.
         return { filename: file.filename, finalTitle, ocrUsed, action: 'skipped', reason: 'no match' };
       }
 
-      await this.prisma.book.update({ where: { id: resolved.bookId }, data: { imageUrl: publicUrl } });
-
-      // If newly created, register in bookMap for subsequent images
-      const normKey = normalizeArabic(finalTitle);
-      if (!bookMap.has(normKey)) bookMap.set(normKey, resolved.bookId);
+      // STEP D — publish the cover (R2 when configured, else local disk) and
+      // set it, keeping gallery picture 0 in step.
+      const publicUrl = await this.publishCover(file);
+      await setBookCover(this.prisma, resolved.bookId, publicUrl);
 
       return {
         filename: file.filename, finalTitle, ocrUsed,
@@ -285,8 +317,9 @@ export class ImageSyncService {
     denoised: string,
     storeId: string,
   ): Promise<string | null> {
-    const words = denoised.split(' ').filter((w) => w.length >= 3);
-    if (!words.length) return null;
+    // Whole-phrase containment only. Matching on a single word ("الله",
+    // "تفسير") attached covers to unrelated books and overwrote good ones.
+    if (denoised.length < 4) return null;
 
     const match = await this.prisma.book.findFirst({
       where: {
@@ -294,8 +327,6 @@ export class ImageSyncService {
         OR: [
           { titleNormalized: { contains: normalized } },
           { titleNormalized: { contains: denoised } },
-          // word-level: at least the first significant word
-          ...(words[0] ? [{ titleNormalized: { contains: words[0] } }] : []),
         ],
       },
       select: { id: true },
@@ -366,18 +397,38 @@ export class ImageSyncService {
 
   // ── OCR ────────────────────────────────────────────────
 
-  private async runOcr(imagePath: string): Promise<string | null> {
+  private runOcr(imagePath: string): Promise<string | null> {
+    const job = this.ocrQueue.then(async () => {
+      try {
+        this.ocrWorker ??= createWorker('ara', 1, { logger: () => undefined });
+        const worker = await this.ocrWorker;
+        const { data } = await worker.recognize(imagePath);
+        const bestLine = this.extractBestLine(data.text ?? '');
+        return bestLine ? this.normalizeTitleText(bestLine) : null;
+      } catch {
+        return null;
+      }
+    });
+    this.ocrQueue = job;
+    return job;
+  }
+
+  private async stopOcr(): Promise<void> {
+    const pending = this.ocrWorker;
+    this.ocrWorker = null;
+    if (!pending) return;
     try {
-      const worker = await createWorker('ara', 1, {
-        logger: () => undefined,
-      });
-      const { data } = await worker.recognize(imagePath);
-      await worker.terminate();
-      const bestLine = this.extractBestLine(data.text ?? '');
-      return bestLine ? this.normalizeTitleText(bestLine) : null;
+      await (await pending).terminate();
     } catch {
-      return null;
+      /* already gone */
     }
+  }
+
+  /** Run `fn` after every previously queued call has finished. */
+  private serial<T>(fn: () => Promise<T>): Promise<T> {
+    const job = this.resolveQueue.then(fn, fn);
+    this.resolveQueue = job.catch(() => undefined);
+    return job;
   }
 
   private extractBestLine(rawText: string): string | null {
@@ -420,10 +471,13 @@ export class ImageSyncService {
    * not configured (so local dev keeps working without an R2 account).
    */
   private async publishCover(file: ImageFile): Promise<string> {
-    const destFilename = this.safeFilename(file.filename);
+    const body = fs.readFileSync(file.fullPath);
+    // Named by content: the same picture is stored once, and two different
+    // photos that happen to share a file name no longer overwrite each other.
+    const hash = createHash('sha256').update(body).digest('hex').slice(0, 24);
+    const destFilename = `sync-${hash}${file.ext}`;
 
     if (this.storage.enabled) {
-      const body = fs.readFileSync(file.fullPath);
       return this.storage.upload(`covers/${destFilename}`, body, this.contentType(file.ext));
     }
 
@@ -442,13 +496,5 @@ export class ImageSyncService {
       default:
         return 'application/octet-stream';
     }
-  }
-
-  private safeFilename(original: string): string {
-    const ext = path.extname(original);
-    const base = path.basename(original, ext)
-      .replace(/[^\w\u0600-\u06FF\-\.]/g, '_')
-      .slice(0, 80);
-    return `${base}${ext}`;
   }
 }

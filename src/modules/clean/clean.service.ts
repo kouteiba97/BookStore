@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { setBookCover } from '../../common/utils/book-cover';
 import { PrismaService } from '../../prisma/prisma.service';
 import { normalizeArabic } from '../../common/utils/normalize-arabic';
 
@@ -90,13 +91,19 @@ function normalizeSpaces(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
-async function isImageUrlValid(url: string): Promise<boolean> {
+/**
+ * True only when the server positively says the image is gone (404/410).
+ * A timeout, a network blip or a host that refuses HEAD is NOT proof — the old
+ * check treated all of those as "invalid" and erased good covers.
+ */
+async function isImageDefinitelyGone(url: string): Promise<boolean> {
+  if (!/^https?:\/\//i.test(url)) return false; // local /covers/… paths are not checked
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(url, { method: 'HEAD', signal: controller.signal });
     clearTimeout(timeout);
-    return res.ok;
+    return res.status === 404 || res.status === 410;
   } catch {
     return false;
   }
@@ -104,11 +111,22 @@ async function isImageUrlValid(url: string): Promise<boolean> {
 
 // ── Service ────────────────────────────────────────────
 
+/**
+ * Data clean-up for ONE store.
+ *
+ * Authors, publishers and categories are shared reference tables, so merging
+ * their spelling variants necessarily affects every store using them; the
+ * book-level steps (titles, duplicates, images) touch only this store's books.
+ */
 @Injectable()
 export class CleanService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async cleanDatabase(): Promise<CleanReport> {
+  async cleanDatabase(storeSlug: string): Promise<CleanReport> {
+    const store = await this.prisma.store.findUnique({ where: { slug: storeSlug } });
+    if (!store) throw new NotFoundException('Store not found');
+    const storeId = store.id;
+
     const report: CleanReport = {
       booksUpdated: 0,
       duplicatesRemoved: 0,
@@ -121,9 +139,9 @@ export class CleanService {
     await this.dedupeAuthors(report);
     await this.dedupePublishers(report);
     await this.normalizeCategories(report);
-    await this.cleanBooks(report);
-    await this.removeDuplicateBooks(report);
-    await this.validateImages(report);
+    await this.cleanBooks(storeId, report);
+    await this.removeDuplicateBooks(storeId, report);
+    await this.validateImages(storeId, report);
 
     return report;
   }
@@ -224,16 +242,16 @@ export class CleanService {
   // ── 3. Normalize categories ──────────────────────────
 
   private async normalizeCategories(report: CleanReport): Promise<void> {
-    // Ensure all canonical categories exist
+    // Canonical categories are created only when a variant actually needs
+    // merging into one — never added to a catalogue the owner has curated.
     const canonicalMap = new Map<string, string>(); // name → id
-    for (const name of CANONICAL_CATEGORIES) {
-      const cat = await this.prisma.category.upsert({
-        where: { name },
-        create: { name },
-        update: {},
-      });
-      canonicalMap.set(name, cat.id);
-    }
+    const canonicalId = async (name: string) => {
+      if (!canonicalMap.has(name)) {
+        const cat = await this.prisma.category.upsert({ where: { name }, create: { name }, update: {} });
+        canonicalMap.set(name, cat.id);
+      }
+      return canonicalMap.get(name)!;
+    };
 
     const allCategories = await this.prisma.category.findMany();
 
@@ -244,7 +262,7 @@ export class CleanService {
       const targetName = CATEGORY_MAP[cat.name] ?? CATEGORY_MAP[normalizeArabic(cat.name)];
       if (!targetName) continue;
 
-      const targetId = canonicalMap.get(targetName)!;
+      const targetId = await canonicalId(targetName);
 
       await this.prisma.book.updateMany({
         where: { categoryId: cat.id },
@@ -259,8 +277,9 @@ export class CleanService {
 
   // ── 4. Clean books (titles + titleNormalized) ────────
 
-  private async cleanBooks(report: CleanReport): Promise<void> {
+  private async cleanBooks(storeId: string, report: CleanReport): Promise<void> {
     const books = await this.prisma.book.findMany({
+      where: { storeId },
       select: { id: true, title: true, titleNormalized: true },
     });
 
@@ -326,47 +345,58 @@ export class CleanService {
 
   // ── 5. Remove duplicate books ────────────────────────
 
-  private async removeDuplicateBooks(report: CleanReport): Promise<void> {
+  /**
+   * Removes a book only when it is indistinguishable from an older one: same
+   * title, authors, publishers, year, price and notes. Books that merely share
+   * a title and author are often different editions or volumes of a series and
+   * are kept. A book that appears on an order is never removed.
+   */
+  private async removeDuplicateBooks(storeId: string, report: CleanReport): Promise<void> {
     const books = await this.prisma.book.findMany({
+      where: { storeId },
       select: {
         id: true,
         titleNormalized: true,
-        storeId: true,
-        createdAt: true,
-        authors: {
-          select: { authorId: true },
-          orderBy: { position: 'asc' },
-          take: 1,
-        },
+        year: true,
+        price: true,
+        notes: true,
+        authors: { select: { authorId: true }, orderBy: { position: 'asc' } },
+        publishers: { select: { publisherId: true }, orderBy: { position: 'asc' } },
+        _count: { select: { orderItems: true } },
       },
       orderBy: { createdAt: 'asc' },
     });
 
-    const seen = new Map<string, string>(); // dedupeKey → id to keep
+    const seen = new Set<string>();
 
     for (const book of books) {
       if (!book.titleNormalized) continue;
-      // Books are still deduped on (store, title, primary author).
-      const primaryAuthorId = book.authors[0]?.authorId ?? 'null';
-      const key = `${book.storeId}::${book.titleNormalized}::${primaryAuthorId}`;
+      const key = [
+        book.titleNormalized,
+        book.authors.map((a) => a.authorId).join(','),
+        book.publishers.map((p) => p.publisherId).join(','),
+        book.year ?? '',
+        book.price?.toString() ?? '',
+        normalizeSpaces(book.notes ?? ''),
+      ].join('::');
 
-      if (seen.has(key)) {
-        // Delete duplicate (keep the older one)
-        await this.prisma.inventory.deleteMany({ where: { bookId: book.id } });
-        await this.prisma.bookOnSubject.deleteMany({ where: { bookId: book.id } });
-        await this.prisma.book.delete({ where: { id: book.id } });
-        report.duplicatesRemoved++;
-      } else {
-        seen.set(key, book.id);
+      if (!seen.has(key)) {
+        seen.add(key);
+        continue;
       }
+      if (book._count.orderItems > 0) continue;
+
+      // Cascades remove its inventory, gallery and academic links.
+      await this.prisma.book.delete({ where: { id: book.id } });
+      report.duplicatesRemoved++;
     }
   }
 
   // ── 6. Validate images ───────────────────────────────
 
-  private async validateImages(report: CleanReport): Promise<void> {
+  private async validateImages(storeId: string, report: CleanReport): Promise<void> {
     const books = await this.prisma.book.findMany({
-      where: { imageUrl: { not: null } },
+      where: { storeId, imageUrl: { not: null } },
       select: { id: true, imageUrl: true },
     });
 
@@ -377,13 +407,8 @@ export class CleanService {
 
       await Promise.all(
         batch.map(async (book) => {
-          const url = book.imageUrl!;
-          const valid = await isImageUrlValid(url);
-          if (!valid) {
-            await this.prisma.book.update({
-              where: { id: book.id },
-              data: { imageUrl: null },
-            });
+          if (await isImageDefinitelyGone(book.imageUrl!)) {
+            await setBookCover(this.prisma, book.id, null);
             report.invalidImagesCleared++;
           }
         }),

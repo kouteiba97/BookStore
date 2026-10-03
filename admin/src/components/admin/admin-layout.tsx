@@ -60,6 +60,12 @@ const Icon = {
       <circle cx="12" cy="13" r="3.5" /><path d="M12 10v6M9 13h6" />
     </svg>
   ),
+  social: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+      <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
+    </svg>
+  ),
   chevron: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
       <path d="m9 6 6 6-6 6" />
@@ -91,6 +97,7 @@ const NAV: NavItem[] = [
   { to: "/admin/catalog/categories", label: "التصنيفات", icon: Icon.catalog },
   ...(features.academic ? [{ to: "/admin/academic", label: "الأكاديمي", icon: Icon.academic }] : []),
   { to: "/admin/inventory", label: "المخزون", icon: Icon.inventory },
+  { to: "/admin/social-content", label: "محتوى التواصل", icon: Icon.social },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
@@ -105,6 +112,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/catalog/countries": "الدول",
   "/admin/academic": "النظام الأكاديمي",
   "/admin/inventory": "المخزون",
+  "/admin/social-content": "محتوى التواصل الاجتماعي",
 };
 
 function getPageTitle(pathname: string) {

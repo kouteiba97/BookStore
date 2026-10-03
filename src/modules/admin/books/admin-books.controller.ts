@@ -12,6 +12,11 @@ import {
 import { AdminBooksService } from './admin-books.service';
 import { UpsertBookDto } from './dto/upsert-book.dto';
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
+import {
+  INVENTORY_STATUSES,
+  optionalEnum,
+  paging,
+} from '../../../common/validation/query';
 
 @UseGuards(AdminAuthGuard)
 @Controller('v1/admin/books')
@@ -29,9 +34,8 @@ export class AdminBooksController {
     return this.service.list({
       search,
       categoryId,
-      inventoryStatus,
-      page: Number(page) || 1,
-      pageSize: Number(pageSize) || 25,
+      inventoryStatus: optionalEnum(inventoryStatus, INVENTORY_STATUSES, 'inventoryStatus'),
+      ...paging(page, pageSize),
     });
   }
 

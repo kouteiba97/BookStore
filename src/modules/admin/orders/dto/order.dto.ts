@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -10,6 +11,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+import { ORDER_STATUSES } from '../../../../common/validation/query';
 
 export class OrderItemInputDto {
   @IsString()
@@ -51,7 +53,7 @@ export class UpsertOrderDto {
   notes?: string | null;
 
   @IsOptional()
-  @IsString()
+  @IsIn(ORDER_STATUSES)
   status?:
     | 'pending'
     | 'confirmed'
@@ -61,8 +63,7 @@ export class UpsertOrderDto {
 }
 
 export class UpdateOrderStatusDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsIn(ORDER_STATUSES)
   status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
 }
 

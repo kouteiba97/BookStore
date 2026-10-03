@@ -16,6 +16,7 @@ import {
   UpsertOrderDto,
 } from './dto/order.dto';
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
+import { ORDER_STATUSES, optionalEnum, paging } from '../../../common/validation/query';
 
 @UseGuards(AdminAuthGuard)
 @Controller('v1/admin/orders')
@@ -30,10 +31,9 @@ export class OrdersController {
     @Query('pageSize') pageSize?: string,
   ) {
     return this.service.list({
-      status,
+      status: optionalEnum(status, ORDER_STATUSES, 'status'),
       search,
-      page: Number(page) || 1,
-      pageSize: Number(pageSize) || 25,
+      ...paging(page, pageSize),
     });
   }
 

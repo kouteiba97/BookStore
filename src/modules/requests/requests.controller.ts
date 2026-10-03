@@ -12,6 +12,8 @@ import { Throttle } from '@nestjs/throttler';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { AdminAuthGuard } from '../../common/guards/admin-auth.guard';
+import { REQUEST_STATUSES, optionalEnum } from '../../common/validation/query';
+import { UpdateRequestStatusDto } from './dto/update-request-status.dto';
 
 @Controller('v1/:storeSlug/requests')
 export class RequestsController {
@@ -37,7 +39,11 @@ export class RequestsController {
     @Query('wilaya') wilaya?: string,
     @Query('search') search?: string,
   ) {
-    return this.requestsService.findAll(storeSlug, { status, wilaya, search });
+    return this.requestsService.findAll(storeSlug, {
+      status: optionalEnum(status, REQUEST_STATUSES, 'status'),
+      wilaya,
+      search,
+    });
   }
 
   @UseGuards(AdminAuthGuard)
@@ -45,8 +51,8 @@ export class RequestsController {
   updateStatus(
     @Param('storeSlug') storeSlug: string,
     @Param('id') id: string,
-    @Body('status') status: string,
+    @Body() dto: UpdateRequestStatusDto,
   ) {
-    return this.requestsService.updateStatus(storeSlug, id, status);
+    return this.requestsService.updateStatus(storeSlug, id, dto.status);
   }
 }

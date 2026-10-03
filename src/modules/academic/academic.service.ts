@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { bookInclude, serializeBooks } from '../../common/utils/book-serializer';
+import { bookCardInclude, serializeBooks } from '../../common/utils/book-serializer';
 
 @Injectable()
 export class AcademicService {
@@ -127,7 +127,7 @@ export class AcademicService {
 
     const books = await this.prisma.book.findMany({
       where: this.booksInFieldWhere(store.id, fieldId) as any,
-      include: bookInclude as any,
+      include: bookCardInclude as any,
       orderBy: { title: 'asc' },
     });
 
@@ -145,7 +145,7 @@ export class AcademicService {
 
     const books = await this.prisma.book.findMany({
       where: this.booksInYearWhere(store.id, yearId) as any,
-      include: bookInclude as any,
+      include: bookCardInclude as any,
       orderBy: { title: 'asc' },
     });
 
@@ -165,7 +165,7 @@ export class AcademicService {
         storeId: store.id,
         subjects: { some: { subjectId } },
       },
-      include: bookInclude as any,
+      include: bookCardInclude as any,
       orderBy: { title: 'asc' },
     });
 

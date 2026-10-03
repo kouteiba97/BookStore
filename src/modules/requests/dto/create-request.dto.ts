@@ -51,6 +51,7 @@ export class CreateRequestDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(64)
   bookId?: string;
 
   @IsString()

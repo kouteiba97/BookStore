@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { StoreResolver } from '../store-resolver.service';
+import { StoreResolver } from '../../../common/tenant/store-resolver.service';
 
 @Injectable()
 export class StatsService {
@@ -61,6 +61,8 @@ export class StatsService {
       }),
       this.prisma.orderItem.groupBy({
         by: ['bookId', 'bookTitle'],
+        // Only this store's sales — order items carry no storeId of their own.
+        where: { order: { storeId } },
         _sum: { quantity: true },
         orderBy: { _sum: { quantity: 'desc' } },
         take: 5,

@@ -9,7 +9,9 @@ export class StatsController {
 
   @Get('overview')
   overview(@Query('days') days?: string) {
-    const range = Number(days) > 0 ? Number(days) : 30;
+    // Clamped: the range drives a per-day loop and an unbounded query.
+    const n = Math.floor(Number(days));
+    const range = n > 0 ? Math.min(n, 365) : 30;
     return this.statsService.overview(range);
   }
 }

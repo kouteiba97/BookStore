@@ -44,8 +44,9 @@ function SectionHeader({ title, hint }: { title: string; hint?: string }) {
 
 export default function HomePage() {
   const { data: books = [], isLoading: booksLoading } = useQuery({
-    queryKey: ["books"],
-    queryFn: fetchBooks,
+    // The page shows two rows of 8; fetch exactly that, not the whole catalogue.
+    queryKey: ["books", "home"],
+    queryFn: () => fetchBooks(16),
   });
 
   const { data: fields = [], isLoading: fieldsLoading } = useQuery({

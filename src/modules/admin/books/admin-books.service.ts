@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { StoreResolver } from '../store-resolver.service';
+import { StoreResolver } from '../../../common/tenant/store-resolver.service';
 import { normalizeArabic } from '../../../common/utils/normalize-arabic';
 import {
   bookInclude,
@@ -361,7 +361,15 @@ export class AdminBooksService {
       );
     }
 
-    await this.prisma.book.delete({ where: { id } });
+    try {
+      await this.prisma.book.delete({ where: { id } });
+    } catch (err: any) {
+      // An order created between the check above and this delete.
+      if (err?.code === 'P2003') {
+        throw new BadRequestException('Cannot delete a book referenced by existing orders');
+      }
+      throw err;
+    }
     return { ok: true };
   }
 

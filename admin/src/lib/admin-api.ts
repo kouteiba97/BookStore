@@ -1,5 +1,6 @@
 import axios from "axios";
 import { attachAuth } from "./auth";
+import type { AdminBook } from "./admin-types";
 
 // Absolute API origin in production (e.g. https://bookstore-api.onrender.com).
 // Empty in dev so requests stay relative and go through the Vite proxy.
@@ -141,6 +142,7 @@ export const convertRequestToOrder = (
 
 // ── Inventory ────────────────────────────────────────────
 
+/** The stock list is bounded server-side; `total` says how many matched. */
 export const fetchInventory = (params: {
   search?: string;
   status?: string;
@@ -148,9 +150,86 @@ export const fetchInventory = (params: {
 }) =>
   adminApi
     .get("/inventory", { params: { ...params, lowStock: params.lowStock ? "true" : undefined } })
-    .then((r) => r.data);
+    .then((r) => ({
+      books: r.data as AdminBook[],
+      total: Number(r.headers["x-total-count"] ?? (r.data as AdminBook[]).length),
+    }));
 
 export const updateInventory = (
   bookId: string,
   data: { status: string; stock?: number | null },
 ) => adminApi.patch(`/inventory/${bookId}`, data).then((r) => r.data);
+
+// ── Social content ───────────────────────────────────────
+
+export interface SocialFilter {
+  search?: string;
+  categoryId?: string;
+  publisherId?: string;
+  status?: string;
+}
+
+export interface SocialBookRow {
+  id: string;
+  title: string;
+  authors: string[];
+  publishers: string[];
+  category: string | null;
+  price: number | null;
+  year: number | null;
+  status: "available" | "on_request" | "rare" | null;
+  cover: string | null;
+  pictures: number;
+}
+
+export const fetchSocialBooks = (params: SocialFilter & { page: number; pageSize: number }) =>
+  adminApi.get("/social-content/books", { params }).then(
+    (r) =>
+      r.data as {
+        items: SocialBookRow[];
+        total: number;
+        page: number;
+        pageSize: number;
+        maxExport: number;
+      },
+  );
+
+/**
+ * Download a ZIP of covers + metadata. Send ids, or a filter for "everything
+ * matching" — never book data; the server reads that from the database.
+ */
+export async function exportSocialContent(
+  body: { bookIds?: string[]; filter?: SocialFilter; includeGallery?: boolean },
+  onProgress?: (bytes: number) => void,
+): Promise<{ blob: Blob; filename: string; books: number; truncated: number }> {
+  try {
+    const r = await adminApi.post("/social-content/export", body, {
+      responseType: "blob",
+      onDownloadProgress: (e) => onProgress?.(e.loaded),
+    });
+    const disposition = String(r.headers["content-disposition"] ?? "");
+    const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? "social-content.zip";
+    return {
+      blob: r.data as Blob,
+      filename,
+      books: Number(r.headers["x-export-books"] ?? 0),
+      truncated: Number(r.headers["x-export-truncated"] ?? 0),
+    };
+  } catch (err: any) {
+    if (err?.response?.status === 429) {
+      err.message = "عمليات تنزيل كثيرة في وقت قصير. انتظر دقيقة ثم أعد المحاولة.";
+      throw err;
+    }
+    // Errors arrive as a Blob too (responseType); surface the JSON message.
+    const data = err?.response?.data;
+    if (data instanceof Blob) {
+      try {
+        const parsed = JSON.parse(await data.text());
+        err.message = Array.isArray(parsed.message) ? parsed.message.join("، ") : parsed.message ?? err.message;
+      } catch {
+        /* keep the original message */
+      }
+    }
+    throw err;
+  }
+}

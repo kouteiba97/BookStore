@@ -22,6 +22,12 @@ const INV_LABEL: Record<InventoryStatus, string> = {
 export default function InventoryPage() {
   const [params, setParams] = useSearchParams();
   const [search, setSearch] = useState("");
+  // Typing shouldn't fire a request per keystroke.
+  const [debounced, setDebounced] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
   const [status, setStatus] = useState("");
   const [lowStock, setLowStock] = useState(params.get("lowStock") === "true");
 
@@ -32,17 +38,18 @@ export default function InventoryPage() {
     setParams(next, { replace: true });
   }, [lowStock]);
 
-  const { data, isLoading } = useQuery<AdminBook[]>({
-    queryKey: ["admin-inventory", search, status, lowStock],
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-inventory", debounced, status, lowStock],
     queryFn: () =>
       fetchInventory({
-        search: search || undefined,
+        search: debounced || undefined,
         status: status || undefined,
         lowStock,
       }),
   });
 
-  const books = data ?? [];
+  const books: AdminBook[] = data?.books ?? [];
+  const total = data?.total ?? 0;
 
   return (
     <div className="space-y-5">
@@ -74,6 +81,12 @@ export default function InventoryPage() {
           مخزون منخفض فقط
         </label>
       </div>
+
+      {total > books.length && (
+        <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-800">
+          يُعرض أول {books.length} كتاب من أصل {total}. استعمل البحث أو الفلاتر للوصول إلى كتاب معيّن.
+        </p>
+      )}
 
       {isLoading ? (
         <TableSkeleton rows={6} cols={4} />

@@ -22,6 +22,19 @@ export const bookInclude = {
   subjects: { include: { subject: { include: { year: { include: { field: true } } } } } },
 } as const;
 
+/**
+ * What a book card needs — used by every public *list*. The full include
+ * above pulls the academic tree three levels deep for every row; on a 5,000
+ * book catalogue that made GET /books 6.5 MB. Cards (web and mobile) never
+ * read those fields, and the book page fetches the full shape on its own.
+ */
+export const bookCardInclude = {
+  inventory: { select: { id: true, status: true, stock: true } },
+  category: { select: { id: true, name: true } },
+  authors: { select: { author: { select: { id: true, name: true } } }, orderBy: { position: 'asc' } },
+  publishers: { select: { publisher: { select: { id: true, name: true } } }, orderBy: { position: 'asc' } },
+} as const;
+
 type Named = { id: string; name: string };
 
 export function serializeBook(book: any): any {

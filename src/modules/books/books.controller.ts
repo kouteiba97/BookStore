@@ -30,8 +30,8 @@ export class BooksController {
   }
 
   @Get()
-  findAll(@Param('storeSlug') storeSlug: string) {
-    return this.booksService.findAll(storeSlug);
+  findAll(@Param('storeSlug') storeSlug: string, @Query('limit') limit?: string) {
+    return this.booksService.findAll(storeSlug, Number(limit) || undefined);
   }
 
   @Get(':id/recommendations')

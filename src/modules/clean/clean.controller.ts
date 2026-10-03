@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards } from '@nestjs/common';
+import { Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { CleanService } from './clean.service';
 import { AdminAuthGuard } from '../../common/guards/admin-auth.guard';
 
@@ -8,7 +8,7 @@ export class CleanController {
   constructor(private readonly cleanService: CleanService) {}
 
   @Post('run')
-  run() {
-    return this.cleanService.cleanDatabase();
+  run(@Param('storeSlug') storeSlug: string) {
+    return this.cleanService.cleanDatabase(storeSlug);
   }
 }

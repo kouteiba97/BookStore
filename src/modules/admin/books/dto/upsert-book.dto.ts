@@ -1,18 +1,21 @@
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { INVENTORY_STATUSES } from '../../../../common/validation/query';
 
 export class InventoryDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsIn(INVENTORY_STATUSES)
   status: 'available' | 'on_request' | 'rare';
 
   @IsOptional()
@@ -25,6 +28,7 @@ export class InventoryDto {
 export class UpsertBookDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500)
   title: string;
 
   // Category stays single-valued. The form may send either an existing id OR a
@@ -107,11 +111,13 @@ export class UpsertBookDto {
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   @Type(() => Number)
   price?: number | null;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2048)
   imageUrl?: string | null;
 
   /// Every picture in display order; the first becomes the cover. When sent,
@@ -121,9 +127,14 @@ export class UpsertBookDto {
   @IsArray()
   @ArrayMaxSize(20)
   @IsString({ each: true })
+  @MaxLength(2048, { each: true })
   imageUrls?: string[];
 
+  // Nested objects are only validated when declared nested; without this an
+  // unknown status reached Prisma and surfaced as a 500.
   @IsOptional()
+  @ValidateNested()
+  @Type(() => InventoryDto)
   inventory?: InventoryDto | null;
 
   // ── Academic placement ────────────────────────────────────────────

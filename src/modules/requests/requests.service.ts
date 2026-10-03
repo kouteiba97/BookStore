@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { RequestStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 
@@ -13,6 +14,16 @@ export class RequestsService {
   async create(storeSlug: string, dto: CreateRequestDto) {
     const store = await this.resolveStore(storeSlug);
 
+    // Only link a book of this store; a foreign or stale id keeps the name only.
+    const bookId = dto.bookId
+      ? (
+          await this.prisma.book.findFirst({
+            where: { id: dto.bookId, storeId: store.id },
+            select: { id: true },
+          })
+        )?.id ?? null
+      : null;
+
     const request = await this.prisma.request.create({
       data: {
         storeId:   store.id,
@@ -21,7 +32,7 @@ export class RequestsService {
         phone:     dto.phone,
         wilaya:    dto.wilaya,
         address:   dto.address,
-        bookId:    dto.bookId ?? null,
+        bookId,
         bookName:  dto.bookName,
         status:    'pending',
       },
@@ -34,7 +45,7 @@ export class RequestsService {
 
   async findAll(
     storeSlug: string,
-    filters: { status?: string; wilaya?: string; search?: string },
+    filters: { status?: RequestStatus; wilaya?: string; search?: string },
   ) {
     const store = await this.resolveStore(storeSlug);
 
@@ -43,7 +54,7 @@ export class RequestsService {
     const requests = await this.prisma.request.findMany({
       where: {
         storeId: store.id,
-        ...(status ? { status: status as any } : {}),
+        ...(status ? { status } : {}),
         ...(wilaya ? { wilaya: { contains: wilaya } } : {}),
         ...(search
           ? {
@@ -56,6 +67,9 @@ export class RequestsService {
           : {}),
       },
       orderBy: { createdAt: 'desc' },
+      // Bounded: the newest leads are the ones being worked on. The status
+      // counts below still cover every request.
+      take: 500,
     });
 
     const counts = await this.prisma.request.groupBy({
@@ -69,7 +83,7 @@ export class RequestsService {
 
   // ── Update status ────────────────────────────────────────
 
-  async updateStatus(storeSlug: string, id: string, status: string) {
+  async updateStatus(storeSlug: string, id: string, status: RequestStatus) {
     const store = await this.resolveStore(storeSlug);
 
     const existing = await this.prisma.request.findFirst({
@@ -79,7 +93,7 @@ export class RequestsService {
 
     return this.prisma.request.update({
       where: { id },
-      data: { status: status as any },
+      data: { status },
     });
   }
 

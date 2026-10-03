@@ -12,7 +12,8 @@ import { OrdersService } from './orders/orders.service';
 import { InventoryController } from './inventory/inventory.controller';
 import { InventoryService } from './inventory/inventory.service';
 import { UploadsController } from './uploads/uploads.controller';
-import { StoreResolver } from './store-resolver.service';
+import { SocialContentController } from './social-content/social-content.controller';
+import { SocialContentService } from './social-content/social-content.service';
 
 @Module({
   controllers: [
@@ -23,15 +24,16 @@ import { StoreResolver } from './store-resolver.service';
     OrdersController,
     InventoryController,
     UploadsController,
+    SocialContentController,
   ],
   providers: [
-    StoreResolver,
     StatsService,
     AdminBooksService,
     CatalogService,
     AdminAcademicService,
     OrdersService,
     InventoryService,
+    SocialContentService,
   ],
 })
 export class AdminModule {}

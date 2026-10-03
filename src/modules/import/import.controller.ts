@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Param,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -39,11 +40,13 @@ export class ImportController {
   async importBooks(
     @Param('storeSlug') storeSlug: string,
     @UploadedFile() file: Express.Multer.File,
+    // ?images=false skips the online cover lookup (minutes for a large file).
+    @Query('images') images?: string,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded. Send a CSV or XLSX file as "file" field.');
     }
 
-    return this.importService.importBooks(storeSlug, file);
+    return this.importService.importBooks(storeSlug, file, { images: images !== 'false' });
   }
 }

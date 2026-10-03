@@ -40,7 +40,8 @@ Open **http://localhost:5173/admin** to land on the overview page.
 | `/admin/books` | CRUD for books. Inline inventory toggle (status + stock) inside the form. |
 | `/admin/catalog/:resource` | Tabs for Categories / Authors / Publishers / Countries. Add/edit/delete. Refuses delete if any book references the row. |
 | `/admin/academic` | Field → Year → Subject tree. Inline create/edit/delete at every level. |
-| `/admin/inventory` | Quick-edit table. Filter by status or "low stock only" (≤3 or rare). Save per-row when dirty. |
+| `/admin/inventory` | Quick-edit table. Filter by status or "low stock only" (≤3 or rare). Save per-row when dirty. Shows the first 300 matches (search to narrow). |
+| `/admin/social-content` | Pick books (per page, across pages, or "all results" of a filter) and download one ZIP for social media: a folder per book with the cover (optionally every picture of a series), `metadata.json`, a ready-to-paste `metadata.txt`, plus `index.csv`. Up to 200 books per file. |
 
 The sidebar collapses (state remembered between sessions). Mobile gets a slide-in drawer.
 
@@ -153,9 +154,19 @@ POST   /admin/orders/from-request/:requestId
 ### Inventory
 
 ```
-GET    /admin/inventory?search=&status=&lowStock=true
+GET    /admin/inventory?search=&status=&lowStock=true&limit=   → array (≤300 by default, ≤1000), total in X-Total-Count
 PATCH  /admin/inventory/:bookId         { status, stock? }
 ```
+
+### Social content
+
+```
+GET    /admin/social-content/books?search=&categoryId=&publisherId=&status=&page=&pageSize=   → { items, total, page, pageSize, maxExport }
+POST   /admin/social-content/export     { bookIds: string[] } | { filter: {search?, categoryId?, publisherId?, status?} }, includeGallery?
+       → application/zip (streamed); headers X-Export-Books, X-Export-Truncated
+```
+
+Only ids/filters are accepted; titles, prices and pictures are read from the database. Limits: 200 books, 500 MB, 15 MB per picture, 2 concurrent exports (429), 10 exports/min. Pictures are fetched over https only, never from private/loopback addresses.
 
 ---
 

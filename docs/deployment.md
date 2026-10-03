@@ -73,6 +73,8 @@ Full env var reference (see `.env.example`):
 | `ADMIN_PASSWORD` | API | ✅ | shared admin login (login disabled if unset) |
 | `JWT_SECRET` | API | ✅ | signs 30-day admin JWTs |
 | `CORS_ORIGINS` | API | ✅* | comma-separated storefront + admin origins |
+| `STOREFRONT_URL` | API | — | public storefront origin; social exports link each book to its page |
+| `TRUST_PROXY_HOPS` | API | — | proxies in front of the API (default 1 = Render); rate limits key on the real visitor IP |
 | `R2_ACCOUNT_ID` … `R2_PUBLIC_BASE_URL` | API | ✅ | cover storage (see §2) |
 | `VITE_API_URL` | both builds | ✅* | absolute API origin (e.g. `https://bookstore-api.onrender.com`); empty = relative/proxy |
 | `VITE_STORE_SLUG` | storefront build | ✅ | store slug |

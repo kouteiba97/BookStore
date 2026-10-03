@@ -9,9 +9,9 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { randomUUID } from 'crypto';
-import { extname } from 'path';
 import { StorageService } from '../../storage/storage.service';
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
+import { sniffImage } from '../../../common/utils/image-type';
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8 MB — phone photos
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
@@ -46,9 +46,15 @@ export class UploadsController {
       );
     }
 
-    const ext = (extname(file.originalname) || '.jpg').toLowerCase();
-    const key = `covers/${randomUUID()}${ext}`;
-    const url = await this.storage.upload(key, file.buffer, file.mimetype);
+    // The declared type and file name come from the client. Trust the bytes:
+    // the stored extension and Content-Type follow what the file really is.
+    const kind = sniffImage(file.buffer);
+    if (!kind) {
+      throw new BadRequestException('الملف ليس صورة صالحة (JPG أو PNG أو WEBP).');
+    }
+
+    const key = `covers/${randomUUID()}${kind.ext}`;
+    const url = await this.storage.upload(key, file.buffer, kind.mime);
 
     return { url, key };
   }

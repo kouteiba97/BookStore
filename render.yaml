@@ -26,6 +26,8 @@ services:
         sync: false
       - key: CORS_ORIGINS          # storefront + admin origins (comma-separated)
         sync: false
+      - key: STOREFRONT_URL        # public storefront origin; links books in social exports (optional)
+        sync: false
       - key: R2_ACCOUNT_ID
         sync: false
       - key: R2_ACCESS_KEY_ID

@@ -2,10 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { normalizeArabic } from '../../common/utils/normalize-arabic';
 import {
+  bookCardInclude,
   bookInclude,
   serializeBook,
   serializeBooks,
 } from '../../common/utils/book-serializer';
+
+/** Upper bound for an explicit ?limit= on the catalogue list. */
+const MAX_LIST_LIMIT = 100;
 
 @Injectable()
 export class BooksService {
@@ -23,12 +27,22 @@ export class BooksService {
     return q.trim().length >= 2;
   }
 
-  async findAll(storeSlug: string) {
+  /**
+   * The catalogue as cards, newest first. `limit` is what the home page uses
+   * (it shows 16); without it the whole catalogue is returned, as the mobile
+   * store app and the sitemap expect, but in the slim card shape.
+   */
+  async findAll(storeSlug: string, limit?: number) {
     const store = await this.resolveStore(storeSlug);
+
+    const take =
+      limit && limit > 0 ? Math.min(Math.floor(limit), MAX_LIST_LIMIT) : undefined;
 
     const books = await this.prisma.book.findMany({
       where: { storeId: store.id },
-      include: bookInclude as any,
+      include: bookCardInclude as any,
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+      ...(take ? { take } : {}),
     });
     return serializeBooks(books);
   }
@@ -76,7 +90,7 @@ export class BooksService {
           },
         ],
       },
-      include: bookInclude as any,
+      include: bookCardInclude as any,
       take: 20,
     });
     return serializeBooks(books);
@@ -112,14 +126,22 @@ export class BooksService {
     const normalized = normalizeArabic(trimmed);
 
     const [categories, authors, books] = await Promise.all([
+      // Categories and authors are shared reference data; suggest only those
+      // that actually have a book in this store.
       this.prisma.category.findMany({
-        where: { name: { contains: trimmed, mode: 'insensitive' } },
+        where: {
+          name: { contains: trimmed, mode: 'insensitive' },
+          books: { some: { storeId: store.id } },
+        },
         select: { id: true, name: true },
         take: 5,
       }),
 
       this.prisma.author.findMany({
-        where: { name: { contains: trimmed, mode: 'insensitive' } },
+        where: {
+          name: { contains: trimmed, mode: 'insensitive' },
+          books: { some: { book: { storeId: store.id } } },
+        },
         select: { id: true, name: true },
         take: 5,
       }),
@@ -176,7 +198,7 @@ export class BooksService {
         id: { not: book.id },
         OR: orConditions,
       },
-      include: bookInclude as any,
+      include: bookCardInclude as any,
       take: 10,
     });
     return serializeBooks(books);

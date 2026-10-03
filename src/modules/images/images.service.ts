@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { normalizeArabic } from '../../common/utils/normalize-arabic';
+import { setBookCover } from '../../common/utils/book-cover';
 
 // ── Types ──────────────────────────────────────────────
 
@@ -77,10 +78,7 @@ export class ImagesService {
       );
 
       if (imageUrl) {
-        await this.prisma.book.update({
-          where: { id: book.id },
-          data: { imageUrl },
-        });
+        await setBookCover(this.prisma, book.id, imageUrl);
         result.updated++;
       } else {
         result.failed++;

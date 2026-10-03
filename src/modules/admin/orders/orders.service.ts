@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
-import { StoreResolver } from '../store-resolver.service';
+import { StoreResolver } from '../../../common/tenant/store-resolver.service';
 import {
   ConvertRequestDto,
   OrderItemInputDto,
@@ -93,7 +93,7 @@ export class OrdersService {
 
   async create(dto: UpsertOrderDto) {
     const storeId = await this.storeResolver.getStoreId();
-    const items = await this.resolveItems(dto.items);
+    const items = await this.resolveItems(storeId, dto.items);
     const totals = computeOrderTotals(items, dto.shippingCost ?? 0);
 
     return this.prisma.order.create({
@@ -134,8 +134,15 @@ export class OrdersService {
         `Cannot edit a ${existing.status} order`,
       );
     }
+    // An edit may move the status too, but only along the same state machine
+    // as the dedicated status endpoint — never pending → delivered in one go.
+    if (dto.status && !canTransition(existing.status as OrderStatus, dto.status)) {
+      throw new BadRequestException(
+        `Cannot transition order from ${existing.status} to ${dto.status}`,
+      );
+    }
 
-    const items = await this.resolveItems(dto.items);
+    const items = await this.resolveItems(storeId, dto.items);
     const totals = computeOrderTotals(items, dto.shippingCost ?? 0);
 
     return this.prisma.$transaction(async (tx) => {
@@ -221,10 +228,22 @@ export class OrdersService {
       );
     }
 
-    const items = await this.resolveItems(dto.items);
+    const items = await this.resolveItems(storeId, dto.items);
     const totals = computeOrderTotals(items, dto.shippingCost ?? 0);
 
     return this.prisma.$transaction(async (tx) => {
+      // Claim the request first: two clicks on "convert" must not produce two
+      // orders. The conditional update only succeeds for the first one.
+      const claimed = await tx.request.updateMany({
+        where: { id: requestId, storeId, convertedOrderId: null },
+        data: { status: 'done' },
+      });
+      if (claimed.count === 0) {
+        throw new BadRequestException(
+          'This request has already been converted to an order',
+        );
+      }
+
       const order = await tx.order.create({
         data: {
           storeId,
@@ -252,7 +271,7 @@ export class OrdersService {
 
       await tx.request.update({
         where: { id: requestId },
-        data: { status: 'done', convertedOrderId: order.id },
+        data: { convertedOrderId: order.id },
       });
 
       return order;
@@ -261,12 +280,13 @@ export class OrdersService {
 
   // ── Helpers ─────────────────────────────────────────────
 
-  private async resolveItems(input: OrderItemInputDto[]) {
+  private async resolveItems(storeId: string, input: OrderItemInputDto[]) {
     if (!input.length) throw new BadRequestException('At least one item required');
 
     const ids = input.map((i) => i.bookId);
+    // Scoped to this store: an order can only ever contain its own books.
     const books = await this.prisma.book.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, storeId },
       select: { id: true, title: true, price: true },
     });
     const byId = new Map(books.map((b) => [b.id, b]));

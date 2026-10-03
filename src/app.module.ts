@@ -5,6 +5,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { join } from 'path';
 import { PrismaModule } from './prisma/prisma.module';
+import { TenantModule } from './common/tenant/tenant.module';
 import { BooksModule } from './modules/books/books.module';
 import { RequestsModule } from './modules/requests/requests.module';
 import { AcademicModule } from './modules/academic/academic.module';
@@ -30,6 +31,7 @@ import { HealthController } from './health.controller';
       serveStaticOptions: { index: false },
     }),
     PrismaModule,
+    TenantModule,
     // AdminModule first: its literal routes (v1/admin/books) must register
     // before the public wildcard routes (v1/:storeSlug/books), otherwise
     // ":storeSlug" swallows "admin" and admin GETs 404 with "Store not found".

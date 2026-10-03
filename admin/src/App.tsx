@@ -14,6 +14,7 @@ import QuickAddPage from "@/pages/admin/quick-add";
 import CatalogPage from "@/pages/admin/catalog";
 import AcademicAdminPage from "@/pages/admin/academic";
 import InventoryPage from "@/pages/admin/inventory";
+import SocialContentPage from "@/pages/admin/social-content";
 import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({
@@ -67,6 +68,7 @@ export default function App() {
               element={features.academic ? <AcademicAdminPage /> : <Navigate to="/admin" replace />}
             />
             <Route path="inventory" element={<InventoryPage />} />
+            <Route path="social-content" element={<SocialContentPage />} />
           </Route>
 
           {/* Anything outside /admin → send to the dashboard home */}

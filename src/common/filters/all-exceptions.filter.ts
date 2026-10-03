@@ -7,6 +7,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { STATUS_CODES } from 'http';
+
+const STATUS_TEXT: Record<number, string> = STATUS_CODES as Record<number, string>;
 
 /**
  * Catches everything that bubbles out of a request and returns a consistent
@@ -33,11 +36,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
     let error = 'Internal Server Error';
     if (isHttp) {
       const body = exception.getResponse();
+      // Default the label from the status (e.g. a throttler 429 carries only a
+      // string body and was being labelled "Internal Server Error").
+      error = STATUS_TEXT[status] ?? exception.name;
       if (typeof body === 'string') {
         message = body;
       } else if (body && typeof body === 'object') {
         message = (body as any).message ?? message;
-        error = (body as any).error ?? exception.name;
+        error = (body as any).error ?? error;
       }
     }
 
