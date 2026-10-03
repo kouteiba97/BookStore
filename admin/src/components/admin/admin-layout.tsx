@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactElement } from "react";
+import { Suspense, useEffect, useState, type ReactElement } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { TableSkeleton } from "@/components/admin/primitives";
 import { LogoMark } from "@/components/logo";
 import { clearToken } from "@/lib/auth";
 import { features } from "@/lib/features";
@@ -188,7 +189,10 @@ export default function AdminLayout() {
 
           <div className="flex-1 px-4 pb-12 pt-4 sm:px-6 lg:px-8">
             <div key={pathname} className="animate-in fade-in slide-in-from-bottom-1 duration-200">
-              <Outlet />
+              {/* Pages are code-split; keep the shell while one loads. */}
+              <Suspense fallback={<TableSkeleton rows={6} cols={4} />}>
+                <Outlet />
+              </Suspense>
             </div>
           </div>
         </main>

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { StoreResolver } from '../../common/tenant/store-resolver.service';
 import { normalizeArabic } from '../../common/utils/normalize-arabic';
 import {
   bookCardInclude,
@@ -7,20 +8,20 @@ import {
   serializeBook,
   serializeBooks,
 } from '../../common/utils/book-serializer';
+import { thumbUrlFor } from '../../common/utils/cover-image';
 
 /** Upper bound for an explicit ?limit= on the catalogue list. */
 const MAX_LIST_LIMIT = 100;
 
 @Injectable()
 export class BooksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly stores: StoreResolver,
+  ) {}
 
-  private async resolveStore(storeSlug: string) {
-    const store = await this.prisma.store.findUnique({
-      where: { slug: storeSlug },
-    });
-    if (!store) throw new NotFoundException('Store not found');
-    return store;
+  private resolveStore(storeSlug: string) {
+    return this.stores.bySlug(storeSlug);
   }
 
   private isQueryValid(q: string): boolean {
@@ -159,7 +160,11 @@ export class BooksService {
       }),
     ]);
 
-    return { categories, authors, books };
+    return {
+      categories,
+      authors,
+      books: books.map((b) => ({ ...b, thumbUrl: thumbUrlFor(b.imageUrl) })),
+    };
   }
 
   async recommendations(storeSlug: string, bookId: string) {

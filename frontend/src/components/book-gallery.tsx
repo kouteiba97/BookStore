@@ -8,11 +8,14 @@ import { createPortal } from "react-dom";
  */
 export default function BookGallery({
   images,
+  thumbs,
   title,
   fallback,
   overlay,
 }: {
   images: string[];
+  /** Small versions of `images`, same order, used for the page and strip. */
+  thumbs?: (string | null)[];
   title: string;
   /** Shown when the book has no picture that loads. */
   fallback: React.ReactNode;
@@ -35,6 +38,8 @@ export default function BookGallery({
     setViewerOpen(false);
   }, [key]);
 
+  const thumbOf = new Map(images.map((u, i) => [u, thumbs?.[i] ?? null]));
+
   const markBroken = (src: string) =>
     setBroken((prev) => (prev.has(src) ? prev : new Set(prev).add(src)));
 
@@ -48,11 +53,12 @@ export default function BookGallery({
             className="block h-full w-full cursor-zoom-in"
             aria-label={`عرض صورة «${title}» كاملة`}
           >
-            <img
-              src={current}
+            <Pic
+              full={current}
+              thumb={thumbOf.get(current)}
               alt={shown.length > 1 ? `${title} — الصورة ${index + 1}` : title}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-              onError={() => markBroken(current)}
+              onBroken={() => markBroken(current)}
             />
             <span className="pointer-events-none absolute bottom-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
@@ -80,12 +86,13 @@ export default function BookGallery({
                   i === index ? "ring-primary" : "ring-transparent opacity-70 hover:opacity-100"
                 }`}
               >
-                <img
-                  src={src}
+                <Pic
+                  full={src}
+                  thumb={thumbOf.get(src)}
                   alt=""
-                  loading="lazy"
+                  lazy
                   className="h-full w-full object-cover"
-                  onError={() => markBroken(src)}
+                  onBroken={() => markBroken(src)}
                 />
               </button>
             </li>
@@ -298,5 +305,38 @@ function NavButton({
         <path d={path} />
       </svg>
     </button>
+  );
+}
+
+/**
+ * A picture shown small: the thumbnail when there is one, the full file if
+ * the thumbnail fails, and `onBroken` only when neither loads.
+ */
+function Pic({
+  full,
+  thumb,
+  alt,
+  className,
+  lazy,
+  onBroken,
+}: {
+  full: string;
+  thumb?: string | null;
+  alt: string;
+  className: string;
+  lazy?: boolean;
+  onBroken: () => void;
+}) {
+  const [useFull, setUseFull] = useState(!thumb);
+  useEffect(() => setUseFull(!thumb), [full, thumb]);
+  return (
+    <img
+      src={useFull ? full : thumb!}
+      alt={alt}
+      loading={lazy ? "lazy" : undefined}
+      decoding="async"
+      className={className}
+      onError={() => (useFull ? onBroken() : setUseFull(true))}
+    />
   );
 }

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import SearchBox from "@/components/search-box";
 import BookCard from "@/components/book-card";
 import { BookGridSkeleton } from "@/components/book-card-skeleton";
-import RequestDialog from "@/components/request-dialog";
+import { RequestDialog } from "@/components/lazy-dialogs";
 import { LogoShamsa } from "@/components/logo";
 import { fetchBooks, fetchFields } from "@/lib/queries";
 import { features } from "@/lib/features";

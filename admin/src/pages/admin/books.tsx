@@ -38,6 +38,7 @@ import GalleryEditor, {
   galleryFromUrls,
   uploadGallery,
 } from "@/components/admin/gallery-editor";
+import { Thumb } from "@/components/admin/thumb";
 
 const INV_LABEL: Record<InventoryStatus, string> = {
   available: "متوفر",
@@ -175,7 +176,7 @@ export default function BooksAdminPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-muted">
-                          {b.imageUrl && <img src={b.imageUrl} alt="" className="h-full w-full object-cover" />}
+                          <Thumb src={b.imageUrl} thumb={b.thumbUrl} />
                           {(b.images?.length ?? 0) > 1 && (
                             <span
                               className="absolute bottom-0 inset-x-0 bg-black/60 text-center text-[9px] font-bold leading-4 text-white"

@@ -12,6 +12,7 @@ import { randomUUID } from 'crypto';
 import { StorageService } from '../../storage/storage.service';
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
 import { sniffImage } from '../../../common/utils/image-type';
+import { processCover, thumbKey } from '../../../common/utils/cover-image';
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8 MB — phone photos
 const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
@@ -46,15 +47,27 @@ export class UploadsController {
       );
     }
 
-    // The declared type and file name come from the client. Trust the bytes:
-    // the stored extension and Content-Type follow what the file really is.
+    // The declared type and file name come from the client; reject anything
+    // whose bytes are not an image before doing real work on it.
     const kind = sniffImage(file.buffer);
     if (!kind) {
       throw new BadRequestException('الملف ليس صورة صالحة (JPG أو PNG أو WEBP).');
     }
 
-    const key = `covers/${randomUUID()}${kind.ext}`;
-    const url = await this.storage.upload(key, file.buffer, kind.mime);
+    // Normalise once: upright, no metadata (GPS), ≤2000 px, plus a 480 px
+    // thumbnail for cards. A file sharp cannot decode is not a usable cover.
+    let processed: Awaited<ReturnType<typeof processCover>>;
+    try {
+      processed = await processCover(file.buffer);
+    } catch {
+      throw new BadRequestException('تعذّرت قراءة الصورة. جرّب صورة أخرى.');
+    }
+
+    const key = `covers/${randomUUID()}.jpg`;
+    const [url] = await Promise.all([
+      this.storage.upload(key, processed.full, 'image/jpeg'),
+      this.storage.upload(thumbKey(key), processed.thumb, 'image/jpeg'),
+    ]);
 
     return { url, key };
   }

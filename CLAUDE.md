@@ -31,7 +31,7 @@ Admin back office (`src/modules/admin/`, mounted at `/api/v1/admin/*`):
 - `catalog/` — catalog management + `dto/upsert-catalog.dto.ts`
 - `academic/` — taxonomy admin
 - `inventory/` — stock management
-- `uploads/` — cover-photo upload → Cloudflare R2 (multipart; type decided by magic bytes, not the client)
+- `uploads/` — cover-photo upload → Cloudflare R2 (multipart; type decided by magic bytes). Every cover is normalised with `sharp` (`common/utils/cover-image.ts`): EXIF-rotated, metadata/GPS stripped, ≤2000 px JPEG, plus a 480 px `<name>.thumb.jpg`. The API exposes `thumbUrl` (and `thumbs[]` for galleries); clients show the thumbnail and fall back to the full picture. `scripts/backfill-thumbnails.ts` creates missing thumbnails (additive, idempotent).
 - `social-content/` — content browser + ZIP export for social media (`GET /admin/social-content/books`, `POST /admin/social-content/export` with `bookIds` or `filter`). Streams a folder per book (cover, optional gallery, `metadata.json`, `metadata.txt`) + `index.csv`. Pictures are fetched server-side through `common/utils/image-source.ts` (https only, private IPs blocked, 15 MB cap); ZIP via the dependency-free `common/utils/zip-writer.ts`. Limits: 200 books/export, 500 MB/archive, 2 exports at once, 10/min. Captions plug into `social-post.ts`.
 
 Shared infra:
@@ -65,6 +65,8 @@ Frontend env (Vite): `VITE_EDITION` (default `basic`), `VITE_STORE_SLUG` (defaul
 - `frontend/src/components/` — `book-card`, `layout`, `logo`, `search-box`, `request-dialog`, `order-modal`, `ui/`
 - `frontend/src/components/admin/` — `admin-layout`, `charts`, `primitives`, `toaster`
 - `frontend/src/lib/` — `queries.ts` (TanStack), `types.ts`, `admin-api.ts`, `admin-types.ts`
+- Prisma runs with the `relationJoins` preview feature: an `include` is ONE SQL query instead of one per relation (production DB round trip ≈ 50 ms). Public routes resolve the store through `StoreResolver.bySlug` (60 s cache).
+- Storefront: the order/request dialogs load on first tap (`components/lazy-dialogs.tsx` — import dialogs from there, not directly). Admin: pages are `React.lazy` in `App.tsx`.
 - Public list endpoints (`/books`, search, recommendations, academic lists) return the slim **card** shape (`bookCardInclude`); only `GET /books/:id` returns the full shape. Home fetches `/books?limit=16`; `/books` without `limit` still returns the whole catalogue for the mobile store app.
 
 Perf/test tooling: `scripts/perf/` — `seed-perf-store.ts` (throwaway N-book store, `--drop`), `bench.mjs` (endpoint timings), `make-import.mjs` (CSV fixtures), `explain.ts` (search query plan). Local only; never against production.

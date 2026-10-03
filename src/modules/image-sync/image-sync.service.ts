@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import { normalizeArabic } from '../../common/utils/normalize-arabic';
 import { setBookCover } from '../../common/utils/book-cover';
+import { processCover, thumbKey } from '../../common/utils/cover-image';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createHash } from 'crypto';
@@ -478,23 +479,18 @@ export class ImageSyncService {
     const destFilename = `sync-${hash}${file.ext}`;
 
     if (this.storage.enabled) {
-      return this.storage.upload(`covers/${destFilename}`, body, this.contentType(file.ext));
+      // Same normalisation as admin uploads: ≤2000 px, no metadata, + thumbnail.
+      const key = `covers/sync-${hash}.jpg`;
+      const { full, thumb } = await processCover(body);
+      const [url] = await Promise.all([
+        this.storage.upload(key, full, 'image/jpeg'),
+        this.storage.upload(thumbKey(key), thumb, 'image/jpeg'),
+      ]);
+      return url;
     }
 
     const destPath = path.join(STATIC_FOLDER, destFilename);
     fs.copyFileSync(file.fullPath, destPath);
     return `/covers/${destFilename}`;
-  }
-
-  private contentType(ext: string): string {
-    switch (ext.toLowerCase()) {
-      case '.png':
-        return 'image/png';
-      case '.jpg':
-      case '.jpeg':
-        return 'image/jpeg';
-      default:
-        return 'application/octet-stream';
-    }
   }
 }

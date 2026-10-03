@@ -38,11 +38,14 @@ const EMPTY: FormState = {
 export default function RequestDialog({
   defaultBookName = "",
   trigger,
+  initialOpen = false,
 }: {
   defaultBookName?: string;
   trigger?: React.ReactElement;
+  /** Open on mount — used when the dialog is loaded on the first click. */
+  initialOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [form, setForm] = useState<FormState>({ ...EMPTY, bookName: defaultBookName });
   const [errors, setErrors] = useState<FormErrors>({});
   const [success, setSuccess] = useState(false);

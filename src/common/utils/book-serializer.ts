@@ -1,3 +1,5 @@
+import { thumbUrlFor } from './cover-image';
+
 /**
  * Shared shape + serializer for book reads.
  *
@@ -51,6 +53,10 @@ export function serializeBook(book: any): any {
   return {
     ...book,
     images,
+    // Small versions for cards, lists and gallery strips (null when the
+    // picture has none — clients then use the full one).
+    thumbUrl: thumbUrlFor(book.imageUrl),
+    thumbs: images.map((u: string) => thumbUrlFor(u)),
     authors,
     publishers,
     // Back-compat singulars — the primary (first) entry.

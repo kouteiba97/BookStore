@@ -12,6 +12,7 @@ import {
   selectClass,
 } from "@/components/admin/primitives";
 import { useToast } from "@/components/admin/toaster";
+import { Thumb } from "@/components/admin/thumb";
 
 const INV_LABEL: Record<InventoryStatus, string> = {
   available: "متوفر",
@@ -152,7 +153,7 @@ function InventoryRow({ book }: { book: AdminBook }) {
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-muted">
-            {book.imageUrl && <img src={book.imageUrl} alt="" className="h-full w-full object-cover" />}
+            <Thumb src={book.imageUrl} thumb={book.thumbUrl} />
           </div>
           <div className="min-w-0">
             <p className="truncate font-semibold">{book.title}</p>

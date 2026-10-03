@@ -11,6 +11,10 @@ export interface Book {
   imageUrl: string | null;
   /** Every picture in display order; a series shows each volume. */
   images?: string[];
+  /** 480 px version of the cover for cards (null → use imageUrl). */
+  thumbUrl?: string | null;
+  /** Small versions of `images`, same order (null where there is none). */
+  thumbs?: (string | null)[];
   price?: number | null;
   inventory: Inventory | null;
   category: Category | null;

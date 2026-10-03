@@ -26,6 +26,8 @@ export interface AdminBook {
   imageUrl: string | null;
   /** Every picture in display order; a series has one per volume. */
   images?: string[];
+  /** 480 px version of the cover (null → use imageUrl). */
+  thumbUrl?: string | null;
   categoryId: string;
   countryId: string | null;
   category: NamedRef | null;
@@ -65,7 +67,7 @@ export interface OrderItem {
   bookTitle: string;
   unitPrice: string;
   quantity: number;
-  book?: { id: string; title: string; imageUrl: string | null };
+  book?: { id: string; title: string; imageUrl: string | null; thumbUrl?: string | null };
 }
 
 export interface AdminOrder {

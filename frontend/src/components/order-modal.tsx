@@ -244,11 +244,14 @@ function OrderForm({ book, onClose }: { book: Book; onClose: () => void }) {
 export default function OrderModal({
   book,
   trigger,
+  initialOpen = false,
 }: {
   book: Book;
   trigger: React.ReactElement;
+  /** Open on mount — used when the dialog is loaded on the first click. */
+  initialOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

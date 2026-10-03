@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import BookCard from "@/components/book-card";
 import { BookGridSkeleton } from "@/components/book-card-skeleton";
 import SearchBox from "@/components/search-box";
-import RequestDialog from "@/components/request-dialog";
+import { RequestDialog } from "@/components/lazy-dialogs";
 import { searchBooks, fetchSuggestions } from "@/lib/queries";
 
 export default function SearchPage() {

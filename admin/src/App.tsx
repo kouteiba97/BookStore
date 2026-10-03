@@ -1,20 +1,22 @@
-import { useEffect, type ReactElement } from "react";
+import { lazy, useEffect, type ReactElement } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { isAuthed } from "@/lib/auth";
 
 import LoginPage from "@/pages/login";
 import AdminLayout from "@/components/admin/admin-layout";
-import OverviewPage from "@/pages/admin/overview";
-import OrdersPage from "@/pages/admin/orders";
-import OrderDetailPage from "@/pages/admin/order-detail";
-import AdminRequestsPage from "@/pages/admin/requests";
-import BooksAdminPage from "@/pages/admin/books";
-import QuickAddPage from "@/pages/admin/quick-add";
-import CatalogPage from "@/pages/admin/catalog";
-import AcademicAdminPage from "@/pages/admin/academic";
-import InventoryPage from "@/pages/admin/inventory";
-import SocialContentPage from "@/pages/admin/social-content";
+// Pages load on demand: the login screen and the shell come first, and a
+// page's code (the cover scanner, charts, forms) only when it is opened.
+const OverviewPage = lazy(() => import("@/pages/admin/overview"));
+const OrdersPage = lazy(() => import("@/pages/admin/orders"));
+const OrderDetailPage = lazy(() => import("@/pages/admin/order-detail"));
+const AdminRequestsPage = lazy(() => import("@/pages/admin/requests"));
+const BooksAdminPage = lazy(() => import("@/pages/admin/books"));
+const QuickAddPage = lazy(() => import("@/pages/admin/quick-add"));
+const CatalogPage = lazy(() => import("@/pages/admin/catalog"));
+const AcademicAdminPage = lazy(() => import("@/pages/admin/academic"));
+const InventoryPage = lazy(() => import("@/pages/admin/inventory"));
+const SocialContentPage = lazy(() => import("@/pages/admin/social-content"));
 import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({

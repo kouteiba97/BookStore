@@ -41,7 +41,7 @@ async function bench(name, url, headers) {
   );
 }
 
-const one = JSON.parse(Buffer.from((await time(`${pub}/books/search?q=${encodeURIComponent('شرح')}`)).body).toString())[0];
+const one = JSON.parse(Buffer.from((await time(`${pub}/books?limit=1`)).body).toString())[0];
 
 console.log(`API ${BASE}  store "${SLUG}"  ${RUNS} runs\n`);
 await bench('GET /books (all)', `${pub}/books`);

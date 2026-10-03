@@ -11,6 +11,7 @@ import { PrismaService } from '../../../prisma/prisma.service';
 import { StoreResolver } from '../../../common/tenant/store-resolver.service';
 import { normalizeArabic } from '../../../common/utils/normalize-arabic';
 import { loadImage, type LoadedImage } from '../../../common/utils/image-source';
+import { thumbUrlFor } from '../../../common/utils/cover-image';
 import { safeEntryName, ZipWriter, type ZipSink } from '../../../common/utils/zip-writer';
 import { ExportSocialContentDto, MAX_EXPORT_BOOKS, SocialFilterDto } from './social-content.dto';
 import { buildSocialMetadata, metadataText } from './social-post';
@@ -42,6 +43,8 @@ export interface SocialBookRow {
   year: number | null;
   status: string | null;
   cover: string | null;
+  /** Small version of the cover for the grid (null → use `cover`). */
+  thumb: string | null;
   pictures: number;
 }
 
@@ -121,6 +124,7 @@ export class SocialContentService {
       year: b.year,
       status: b.inventory?.status ?? null,
       cover: b.imageUrl,
+      thumb: thumbUrlFor(b.imageUrl),
       pictures: Math.max(b._count.images, b.imageUrl ? 1 : 0),
     }));
 

@@ -1,17 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { StoreResolver } from '../../common/tenant/store-resolver.service';
 import { bookCardInclude, serializeBooks } from '../../common/utils/book-serializer';
 
 @Injectable()
 export class AcademicService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly stores: StoreResolver,
+  ) {}
 
-  private async resolveStore(storeSlug: string) {
-    const store = await this.prisma.store.findUnique({
-      where: { slug: storeSlug },
-    });
-    if (!store) throw new NotFoundException('Store not found');
-    return store;
+  private resolveStore(storeSlug: string) {
+    return this.stores.bySlug(storeSlug);
   }
 
   /**

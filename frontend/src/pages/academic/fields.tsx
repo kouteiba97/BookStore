@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import RequestDialog from "@/components/request-dialog";
+import { RequestDialog } from "@/components/lazy-dialogs";
 import { fetchFields } from "@/lib/queries";
 
 const fieldIcons: Record<string, string> = {

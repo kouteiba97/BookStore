@@ -303,7 +303,10 @@ function BookTile({
   onDownload: () => void;
   busy: boolean;
 }) {
-  const [broken, setBroken] = useState(false);
+  // Thumbnail first, then the full cover, then a text placeholder.
+  const sources = [row.thumb, row.cover].filter((s): s is string => !!s);
+  const [attempt, setAttempt] = useState(0);
+  const src = sources[attempt];
   return (
     <li
       className={`group relative flex flex-col overflow-hidden rounded-xl border bg-card transition-shadow ${
@@ -318,14 +321,14 @@ function BookTile({
         aria-label={`${checked ? "إلغاء تحديد" : "تحديد"} ${row.title}`}
         className="relative block aspect-[3/4] w-full overflow-hidden bg-muted/40 text-start disabled:cursor-default"
       >
-        {row.cover && !broken ? (
+        {src ? (
           <img
-            src={row.cover}
+            src={src}
             alt=""
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover"
-            onError={() => setBroken(true)}
+            onError={() => setAttempt((a) => a + 1)}
           />
         ) : (
           <span className="flex h-full items-center justify-center p-3 text-center text-xs font-semibold text-muted-foreground">

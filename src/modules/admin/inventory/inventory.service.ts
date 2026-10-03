@@ -3,6 +3,7 @@ import { InventoryStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { StoreResolver } from '../../../common/tenant/store-resolver.service';
 import { normalizeArabic } from '../../../common/utils/normalize-arabic';
+import { thumbUrlFor } from '../../../common/utils/cover-image';
 
 @Injectable()
 export class InventoryService {
@@ -65,7 +66,7 @@ export class InventoryService {
       total,
       books: books.map((book) => {
         const authors = book.authors.map((r) => r.author);
-        return { ...book, authors, author: authors[0] ?? null };
+        return { ...book, authors, author: authors[0] ?? null, thumbUrl: thumbUrlFor(book.imageUrl) };
       }),
     };
   }

@@ -179,6 +179,7 @@ export interface SocialBookRow {
   year: number | null;
   status: "available" | "on_request" | "rare" | null;
   cover: string | null;
+  thumb: string | null;
   pictures: number;
 }
 

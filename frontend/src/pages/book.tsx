@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import BookCard from "@/components/book-card";
 import BookGallery from "@/components/book-gallery";
 import { BookGridSkeleton } from "@/components/book-card-skeleton";
-import OrderModal from "@/components/order-modal";
+import { OrderModal } from "@/components/lazy-dialogs";
 import { fetchBook, fetchRecommendations } from "@/lib/queries";
 import type { Book } from "@/lib/types";
 
@@ -190,6 +190,7 @@ export default function BookPage() {
         <div className="mx-auto w-full max-w-[240px] md:mx-0 md:max-w-none">
           <BookGallery
             images={book.images?.length ? book.images : book.imageUrl ? [book.imageUrl] : []}
+            thumbs={book.images?.length ? book.thumbs : [book.thumbUrl ?? null]}
             title={book.title}
             fallback={
               <div className={`flex h-full w-full items-center justify-center p-5 ${palette.bg}`}>

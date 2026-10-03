@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import BookCard from "@/components/book-card";
-import RequestDialog from "@/components/request-dialog";
+import { RequestDialog } from "@/components/lazy-dialogs";
 import { fetchYears, fetchFields, fetchFieldBooks } from "@/lib/queries";
 
 export default function YearsPage() {

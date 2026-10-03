@@ -21,6 +21,7 @@ import {
   textareaClass,
 } from "@/components/admin/primitives";
 import { useToast } from "@/components/admin/toaster";
+import { Thumb } from "@/components/admin/thumb";
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "قيد الانتظار",
@@ -197,7 +198,7 @@ export default function OrderDetailPage() {
               <li key={it.id} className="flex items-center gap-3 px-5 py-3">
                 <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-muted">
                   {it.book?.imageUrl && (
-                    <img src={it.book.imageUrl} alt="" className="h-full w-full object-cover" />
+                    <Thumb src={it.book.imageUrl} thumb={it.book.thumbUrl} />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">

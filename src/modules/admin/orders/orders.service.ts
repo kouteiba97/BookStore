@@ -12,6 +12,7 @@ import {
   UpsertOrderDto,
 } from './dto/order.dto';
 import { OrderStatus, canTransition, computeOrderTotals } from './order-rules';
+import { thumbUrlFor } from '../../../common/utils/cover-image';
 
 const orderInclude = {
   items: { include: { book: { select: { id: true, title: true, imageUrl: true } } } },
@@ -88,7 +89,13 @@ export class OrdersService {
       include: orderInclude,
     });
     if (!order) throw new NotFoundException('Order not found');
-    return order;
+    return {
+      ...order,
+      items: order.items.map((it) => ({
+        ...it,
+        book: it.book && { ...it.book, thumbUrl: thumbUrlFor(it.book.imageUrl) },
+      })),
+    };
   }
 
   async create(dto: UpsertOrderDto) {

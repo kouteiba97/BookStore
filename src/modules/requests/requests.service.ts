@@ -1,13 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RequestStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { StoreResolver } from '../../common/tenant/store-resolver.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 
 const WHATSAPP_NUMBER = process.env.WHATSAPP_NUMBER ?? '213XXXXXXXXX';
 
 @Injectable()
 export class RequestsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly stores: StoreResolver,
+  ) {}
 
   // ── Create ───────────────────────────────────────────────
 
@@ -99,10 +103,8 @@ export class RequestsService {
 
   // ── Helpers ──────────────────────────────────────────────
 
-  private async resolveStore(slug: string) {
-    const store = await this.prisma.store.findUnique({ where: { slug } });
-    if (!store) throw new NotFoundException('Store not found');
-    return store;
+  private resolveStore(slug: string) {
+    return this.stores.bySlug(slug);
   }
 
   private buildWhatsappUrl(dto: CreateRequestDto): string {

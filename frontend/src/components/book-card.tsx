@@ -46,8 +46,12 @@ function getPalette(title: string) {
 // ── Component ────────────────────────────────────────────
 
 export default function BookCard({ book }: { book: Book }) {
-  const [imgError, setImgError] = useState(false);
-  useEffect(() => { setImgError(false); }, [book.imageUrl]);
+  // The small thumbnail first; the full picture if it is missing; then the
+  // title placeholder.
+  const sources = [book.thumbUrl, book.imageUrl].filter((s): s is string => !!s);
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => { setAttempt(0); }, [book.imageUrl, book.thumbUrl]);
+  const src = sources[attempt];
   const status = book.inventory ? statusConfig[book.inventory.status] : null;
   const palette = getPalette(book.title);
 
@@ -64,13 +68,14 @@ export default function BookCard({ book }: { book: Book }) {
 
       {/* ── Cover image ── */}
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-t-xl">
-        {book.imageUrl && !imgError ? (
+        {src ? (
           <img
-            src={book.imageUrl}
+            src={src}
             alt={book.title}
             loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-            onError={() => setImgError(true)}
+            onError={() => setAttempt((a) => a + 1)}
           />
         ) : (
           <div className={`flex h-full w-full items-center justify-center p-4 ${palette.bg}`}>

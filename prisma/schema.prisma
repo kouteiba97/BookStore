@@ -1,5 +1,9 @@
 generator client {
   provider = "prisma-client-js"
+  // Load relations with SQL joins in ONE query instead of one query per
+  // relation. Each round trip to the database costs ~50 ms in production, so
+  // a book list went from 7-8 sequential queries to 1-2.
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {

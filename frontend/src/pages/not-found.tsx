@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import RequestDialog from "@/components/request-dialog";
+import { RequestDialog } from "@/components/lazy-dialogs";
 
 /**
  * Catch-all 404. The host rewrites every unknown path to index.html so the SPA
