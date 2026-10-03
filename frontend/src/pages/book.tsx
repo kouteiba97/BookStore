@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import BookCard from "@/components/book-card";
+import BookGallery from "@/components/book-gallery";
 import { BookGridSkeleton } from "@/components/book-card-skeleton";
 import OrderModal from "@/components/order-modal";
 import { fetchBook, fetchRecommendations } from "@/lib/queries";
@@ -114,8 +114,6 @@ function OrderButton({ book }: { book: Book }) {
 
 export default function BookPage() {
   const { id } = useParams<{ id: string }>();
-  const [imgError, setImgError] = useState(false);
-  useEffect(() => { setImgError(false); }, [id]);
 
   const { data: book, isLoading } = useQuery({
     queryKey: ["book", id],
@@ -188,30 +186,27 @@ export default function BookPage() {
       {/* ── Hero ── */}
       <section className="grid gap-8 md:grid-cols-[260px_1fr] md:gap-12">
 
-        {/* Cover — appears first in DOM = right side in RTL */}
+        {/* Pictures — appear first in DOM = right side in RTL */}
         <div className="mx-auto w-full max-w-[240px] md:mx-0 md:max-w-none">
-          <div className="group relative aspect-[4/5] overflow-hidden rounded-xl shadow-md ring-1 ring-border/40">
-            {book.imageUrl && !imgError ? (
-              <img
-                src={book.imageUrl}
-                alt={book.title}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                onError={() => setImgError(true)}
-              />
-            ) : (
+          <BookGallery
+            images={book.images?.length ? book.images : book.imageUrl ? [book.imageUrl] : []}
+            title={book.title}
+            fallback={
               <div className={`flex h-full w-full items-center justify-center p-5 ${palette.bg}`}>
                 <p className={`text-center text-base font-bold leading-snug ${palette.text}`}>
                   {book.title}
                 </p>
               </div>
-            )}
-            {status && (
-              <span className={`absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 backdrop-blur-sm ${status.bg} ${status.text}`}>
-                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${status.dot}`} />
-                {status.label}
-              </span>
-            )}
-          </div>
+            }
+            overlay={
+              status && (
+                <span className={`pointer-events-none absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 backdrop-blur-sm ${status.bg} ${status.text}`}>
+                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${status.dot}`} />
+                  {status.label}
+                </span>
+              )
+            }
+          />
         </div>
 
         {/* Info */}

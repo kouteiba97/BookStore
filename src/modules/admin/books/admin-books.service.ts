@@ -112,6 +112,8 @@ export class AdminBooksService {
       dto.countryName,
     );
     const academic = await this.resolveAcademic(dto);
+    const gallery =
+      this.resolveGallery(dto) ?? (dto.imageUrl?.trim() ? [dto.imageUrl.trim()] : []);
 
     const book = await this.prisma.book.create({
       data: {
@@ -122,7 +124,10 @@ export class AdminBooksService {
         notes: dto.notes ?? null,
         year: dto.year ?? null,
         price: dto.price ?? null,
-        imageUrl: dto.imageUrl ?? null,
+        imageUrl: gallery[0] ?? null,
+        images: {
+          create: gallery.map((url, position) => ({ url, position })),
+        },
         categoryId,
         countryId,
         authors: {
@@ -205,6 +210,11 @@ export class AdminBooksService {
       dto.publisherId !== undefined ||
       dto.publisherName !== undefined;
 
+    // undefined = the client did not send a gallery (mobile apps); only the
+    // cover is touched then, so a series' other pictures survive the edit.
+    const gallery = this.resolveGallery(dto);
+    const cover = gallery ? (gallery[0] ?? null) : (dto.imageUrl ?? null);
+
     await this.prisma.$transaction(async (tx) => {
       await tx.book.update({
         where: { id },
@@ -215,11 +225,41 @@ export class AdminBooksService {
           notes: dto.notes ?? null,
           year: dto.year ?? null,
           price: dto.price ?? null,
-          imageUrl: dto.imageUrl ?? null,
+          imageUrl: cover,
           categoryId,
           countryId,
         },
       });
+
+      if (gallery) {
+        await tx.bookImage.deleteMany({ where: { bookId: id } });
+        if (gallery.length) {
+          await tx.bookImage.createMany({
+            data: gallery.map((url, position) => ({ bookId: id, url, position })),
+          });
+        }
+      } else if (!cover) {
+        // Cover removed by a cover-only client: drop just that picture and let
+        // the next volume become the cover, rather than wiping a whole series.
+        const [first, next] = await tx.bookImage.findMany({
+          where: { bookId: id },
+          orderBy: { position: 'asc' },
+          take: 2,
+        });
+        if (first) await tx.bookImage.delete({ where: { id: first.id } });
+        if (next) await tx.book.update({ where: { id }, data: { imageUrl: next.url } });
+      } else {
+        // Cover-only client: keep picture 0 in step with the new cover.
+        const first = await tx.bookImage.findFirst({
+          where: { bookId: id },
+          orderBy: { position: 'asc' },
+        });
+        if (!first) {
+          await tx.bookImage.create({ data: { bookId: id, url: cover, position: 0 } });
+        } else if (first.url !== cover) {
+          await tx.bookImage.update({ where: { id: first.id }, data: { url: cover } });
+        }
+      }
 
       if (sentAuthors) {
         await tx.bookAuthor.deleteMany({ where: { bookId: id } });
@@ -323,6 +363,26 @@ export class AdminBooksService {
 
     await this.prisma.book.delete({ where: { id } });
     return { ok: true };
+  }
+
+  /**
+   * The ordered gallery a request asks for, or undefined when it did not send
+   * `imageUrls` at all. Only an explicit list may replace a gallery: a client
+   * that sends just `imageUrl` (the mobile apps) must never wipe a series'
+   * other pictures. Blanks and duplicates are dropped.
+   */
+  private resolveGallery(dto: UpsertBookDto): string[] | undefined {
+    if (!Array.isArray(dto.imageUrls)) return undefined;
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const raw of dto.imageUrls) {
+      const url = raw?.trim();
+      if (url && !seen.has(url)) {
+        seen.add(url);
+        out.push(url);
+      }
+    }
+    return out;
   }
 
   /**

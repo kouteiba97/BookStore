@@ -1,4 +1,5 @@
 import {
+  ArrayMaxSize,
   IsArray,
   IsInt,
   IsNotEmpty,
@@ -112,6 +113,15 @@ export class UpsertBookDto {
   @IsOptional()
   @IsString()
   imageUrl?: string | null;
+
+  /// Every picture in display order; the first becomes the cover. When sent,
+  /// replaces the whole gallery. Clients that only know `imageUrl` (the mobile
+  /// apps) omit it and keep working.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  imageUrls?: string[];
 
   @IsOptional()
   inventory?: InventoryDto | null;

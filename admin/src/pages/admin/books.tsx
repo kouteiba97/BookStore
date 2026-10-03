@@ -34,6 +34,10 @@ import {
   textareaClass,
 } from "@/components/admin/primitives";
 import { useToast } from "@/components/admin/toaster";
+import GalleryEditor, {
+  galleryFromUrls,
+  uploadGallery,
+} from "@/components/admin/gallery-editor";
 
 const INV_LABEL: Record<InventoryStatus, string> = {
   available: "متوفر",
@@ -170,8 +174,16 @@ export default function BooksAdminPage() {
                   <tr key={b.id} className="border-b border-border/40 last:border-0 transition-colors hover:bg-muted/30">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-9 shrink-0 overflow-hidden rounded bg-muted">
+                        <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-muted">
                           {b.imageUrl && <img src={b.imageUrl} alt="" className="h-full w-full object-cover" />}
+                          {(b.images?.length ?? 0) > 1 && (
+                            <span
+                              className="absolute bottom-0 inset-x-0 bg-black/60 text-center text-[9px] font-bold leading-4 text-white"
+                              title={`${b.images!.length} صور`}
+                            >
+                              {b.images!.length}
+                            </span>
+                          )}
                         </div>
                         <div className="min-w-0">
                           <p className="truncate font-semibold">{b.title}</p>
@@ -367,7 +379,7 @@ function BookFormModal({
   ];
 
   const mutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const payload: UpsertBookPayload = {
         title: form.title.trim(),
         categoryId: form.categoryId,
@@ -381,7 +393,7 @@ function BookFormModal({
         notes: form.notes.trim() || null,
         year: form.year ? Number(form.year) : null,
         price: form.price ? Number(form.price) : null,
-        imageUrl: form.imageUrl || null,
+        imageUrls: await uploadGallery(form.pictures),
         inventory: form.hasInventory
           ? {
               status: form.invStatus as InventoryStatus,
@@ -502,12 +514,14 @@ function BookFormModal({
           />
         </Field>
 
-        <Field label="رابط صورة الغلاف">
-          <input
-            className={inputClass}
-            dir="ltr"
-            value={form.imageUrl}
-            onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
+        <Field
+          label="الصور"
+          hint="الأولى هي الغلاف. للسلاسل (شروح، موسوعات...) أضف صورة لكل جزء."
+        >
+          <GalleryEditor
+            items={form.pictures}
+            onChange={(pictures) => setForm((prev) => ({ ...prev, pictures }))}
+            allowLink
           />
         </Field>
 
@@ -801,7 +815,9 @@ function buildForm(editing: AdminBook | null) {
     notes: editing?.notes ?? "",
     year: editing?.year ? String(editing.year) : "",
     price: editing?.price ? String(editing.price) : "",
-    imageUrl: editing?.imageUrl ?? "",
+    pictures: galleryFromUrls(
+      editing?.images?.length ? editing.images : editing?.imageUrl ? [editing.imageUrl] : [],
+    ),
     hasInventory: Boolean(editing?.inventory),
     invStatus: editing?.inventory?.status ?? "available",
     invStock:

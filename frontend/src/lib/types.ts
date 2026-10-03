@@ -7,7 +7,10 @@ export interface Book {
   /** Extra cataloguing detail (edition, volumes, binding…), shown under "معلومات إضافية". */
   notes: string | null;
   year: number | null;
+  /** The cover — first of `images`. */
   imageUrl: string | null;
+  /** Every picture in display order; a series shows each volume. */
+  images?: string[];
   price?: number | null;
   inventory: Inventory | null;
   category: Category | null;

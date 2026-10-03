@@ -22,7 +22,10 @@ export interface AdminBook {
   notes: string | null;
   year: number | null;
   price: string | null;
+  /** The cover — always the first of `images`. */
   imageUrl: string | null;
+  /** Every picture in display order; a series has one per volume. */
+  images?: string[];
   categoryId: string;
   countryId: string | null;
   category: NamedRef | null;
@@ -116,7 +119,10 @@ export interface UpsertBookPayload {
   notes?: string | null;
   year?: number | null;
   price?: number | null;
+  /** Cover only. Ignored when `imageUrls` is sent. */
   imageUrl?: string | null;
+  /** The whole gallery in order (first = cover). Replaces the stored pictures. */
+  imageUrls?: string[];
   inventory?: { status: InventoryStatus; stock?: number | null } | null;
   fieldIds?: string[];
   yearIds?: string[];

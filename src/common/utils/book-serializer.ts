@@ -13,6 +13,7 @@
 export const bookInclude = {
   inventory: true,
   category: true,
+  images: { orderBy: { position: 'asc' } },
   country: true,
   authors: { include: { author: true }, orderBy: { position: 'asc' } },
   publishers: { include: { publisher: true }, orderBy: { position: 'asc' } },
@@ -29,8 +30,14 @@ export function serializeBook(book: any): any {
   const authors: Named[] = (book.authors ?? []).map((r: any) => r.author).filter(Boolean);
   const publishers: Named[] = (book.publishers ?? []).map((r: any) => r.publisher).filter(Boolean);
 
+  // Ordered gallery. Books created before galleries existed, or by a client
+  // that only sends `imageUrl`, fall back to the single cover.
+  const rows: string[] = (book.images ?? []).map((r: any) => r.url).filter(Boolean);
+  const images = rows.length ? rows : book.imageUrl ? [book.imageUrl] : [];
+
   return {
     ...book,
+    images,
     authors,
     publishers,
     // Back-compat singulars — the primary (first) entry.

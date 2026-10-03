@@ -68,6 +68,8 @@ model Book {
   categoryId String
   storeId    String
 
+  /// The cover — always the first picture. Kept as its own column because
+  /// cards, order lines and the mobile apps read a single image.
   imageUrl String?
 
   createdAt DateTime @default(now())
@@ -88,11 +90,28 @@ model Book {
   years    BookOnYear[]
   subjects BookOnSubject[]
 
+  /// Every picture of the book in display order — a series shows each volume.
+  images BookImage[]
+
   inventory  Inventory?
   orderItems OrderItem[]
 
   @@index([storeId, title])
   @@index([titleNormalized])
+}
+
+/// One picture of a book. position 0 is the cover and mirrors Book.imageUrl.
+model BookImage {
+  id       String @id @default(uuid())
+  bookId   String
+  url      String
+  position Int    @default(0)
+
+  createdAt DateTime @default(now())
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId, position])
 }
 
 // ================= REFERENCE TABLES =================
