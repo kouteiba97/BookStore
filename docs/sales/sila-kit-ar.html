@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Warraq SILA Sales Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: one RTL reading column under a sticky chapter bar; tables scroll inside their own box.
+   The page wears the brand it proposes: ink on paper, one stamp-red accent. */
+:root {
+  --paper: #f7f7f4;
+  --sheet: #ffffff;
+  --ink: #17212b;
+  --graphite: #4f5a65;
+  --rule: #d9dcd8;
+  --stamp: #8e2f2a;
+  --stamp-soft: #f3e6e4;
+  --hi: #8e2f2a;  --hi-bg: #f3e6e4;
+  --mid: #7a5a12; --mid-bg: #f4ecd9;
+  --lo: #3f5d4c;  --lo-bg: #e3ece6;
+  --head: "Noto Naskh Arabic", "Traditional Arabic", serif;
+  --body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --latin: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12181f; --sheet: #19212a; --ink: #e7e9e6; --graphite: #a9b2bb; --rule: #2e3944;
+    --stamp: #e08a80; --stamp-soft: #3a2422;
+    --hi: #f0a197; --hi-bg: #3a2422; --mid: #e3c27a; --mid-bg: #372e1a; --lo: #9cc7ad; --lo-bg: #1f3329;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #12181f; --sheet: #19212a; --ink: #e7e9e6; --graphite: #a9b2bb; --rule: #2e3944;
+  --stamp: #e08a80; --stamp-soft: #3a2422;
+  --hi: #f0a197; --hi-bg: #3a2422; --mid: #e3c27a; --mid-bg: #372e1a; --lo: #9cc7ad; --lo-bg: #1f3329;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { direction: rtl; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.9; }
+.wrap { max-width: 820px; margin: 0 auto; padding-inline: 18px; padding-block: 0 80px; }
+h1, h2, h3 { font-family: var(--head); font-weight: 700; text-wrap: balance; line-height: 1.5; }
+h1 { font-size: clamp(30px, 6vw, 42px); margin: 0 0 10px; }
+h2 { font-size: clamp(23px, 4vw, 29px); margin: 0 0 6px; }
+h3 { font-size: 19px; margin: 28px 0 8px; }
+p { margin: 0 0 12px; }
+a { color: var(--stamp); }
+:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
+.eyebrow { font-size: 13px; color: var(--stamp); font-weight: 600; }
+.muted { color: var(--graphite); }
+.small { font-size: 14px; }
+.ltr { direction: ltr; unicode-bidi: isolate; font-family: var(--latin); }
+ul, ol { padding-inline-start: 24px; margin: 0 0 12px; }
+li { margin: 4px 0; }
+li::marker { color: var(--graphite); }
+code { font-family: var(--latin); font-size: 0.9em; background: var(--stamp-soft); padding: 0 5px; border-radius: 3px; direction: ltr; unicode-bidi: isolate; }
+
+header.mast { padding-block: 38px 22px; border-bottom: 1px solid var(--rule); }
+.mast .lede { font-size: 17.5px; color: var(--graphite); max-width: 40em; }
+.stamp-mark { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.stamp-mark .sq { width: 34px; height: 34px; border: 2px solid var(--stamp); color: var(--stamp); display: grid; place-items: center; font-family: var(--head); font-weight: 700; font-size: 19px; border-radius: 3px; line-height: 1; }
+.stamp-mark .wm { font-family: var(--head); font-size: 20px; font-weight: 700; }
+
+nav.chapters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 1px solid var(--rule); }
+nav.chapters .track { max-width: 820px; margin: 0 auto; padding: 8px 18px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
+nav.chapters a { flex: none; text-decoration: none; color: var(--graphite); font-size: 13.5px; padding: 3px 11px; border: 1px solid var(--rule); border-radius: 999px; white-space: nowrap; }
+nav.chapters a:hover { color: var(--ink); border-color: var(--graphite); }
+nav.chapters a.key { color: var(--stamp); border-color: var(--stamp); font-weight: 600; }
+
+section { padding-block: 44px 8px; border-bottom: 1px solid var(--rule); scroll-margin-top: 56px; }
+section > .eyebrow { display: block; margin-bottom: 2px; }
+.intro { color: var(--graphite); margin-bottom: 18px; max-width: 42em; }
+
+.box { background: var(--sheet); border: 1px solid var(--rule); border-inline-start: 4px solid var(--stamp); padding: 16px 20px; margin: 20px 0 10px; }
+.box h2 { font-size: 21px; margin-bottom: 8px; }
+.box ol, .box ul { margin: 0; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.links a { text-decoration: none; background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 5px; font-weight: 600; font-size: 14.5px; }
+.links a.alt { background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); }
+
+.tbl { overflow-x: auto; margin: 10px 0 18px; border: 1px solid var(--rule); background: var(--sheet); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 600px; }
+th, td { text-align: start; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--rule); }
+th { font-size: 13px; color: var(--graphite); font-weight: 600; background: var(--paper); }
+tr:last-child td { border-bottom: 0; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbl.narrow table { min-width: 480px; }
+.rec { background: var(--stamp-soft); }
+tfoot td { font-weight: 700; }
+
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 0 8px; border-radius: 3px; white-space: nowrap; }
+.p-hi { color: var(--hi); background: var(--hi-bg); }
+.p-mid { color: var(--mid); background: var(--mid-bg); }
+.p-lo { color: var(--lo); background: var(--lo-bg); }
+
+.script { background: var(--sheet); border: 1px solid var(--rule); padding: 12px 16px; margin: 10px 0 14px; }
+.script .head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 4px; }
+.script .label { font-size: 12.5px; font-weight: 600; color: var(--graphite); }
+.script .body { white-space: pre-line; }
+.script .body.fr { direction: ltr; text-align: left; font-family: var(--latin); font-size: 15px; line-height: 1.7; }
+.copy { font: inherit; font-size: 12.5px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); padding: 1px 10px; border-radius: 3px; cursor: pointer; flex: none; }
+.copy:hover { border-color: var(--graphite); }
+.copy.done { color: var(--lo); border-color: var(--lo); }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 10px 0 16px; }
+.cols > div { min-width: 0; background: var(--sheet); border: 1px solid var(--rule); padding: 14px 16px; }
+.cols h4 { margin: 0 0 6px; font-size: 15.5px; }
+.cols ul, .cols p { margin: 0; }
+
+.step { display: grid; grid-template-columns: 70px 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid var(--rule); }
+.step:first-of-type { border-top: 0; }
+.step .t { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; color: var(--stamp); font-family: var(--latin); }
+.step .t span { display: block; font-family: var(--body); color: var(--graphite); font-weight: 500; font-size: 13px; }
+.step dl { margin: 0; display: grid; grid-template-columns: 80px 1fr; gap: 4px 12px; font-size: 15px; }
+.step dt { color: var(--graphite); font-size: 13px; font-weight: 600; }
+.step dd { margin: 0; min-width: 0; }
+.wow { display: inline-block; margin-inline-start: 6px; font-size: 11px; font-weight: 700; color: var(--sheet); background: var(--stamp); padding: 0 6px; border-radius: 2px; }
+@media (max-width: 520px) { .step { grid-template-columns: 1fr; gap: 4px; } .step dl { grid-template-columns: 1fr; } .step dt { padding-top: 6px; } }
+
+.calc { background: var(--sheet); border: 1px solid var(--rule); padding: 14px 18px; margin: 12px 0 16px; }
+.calc .eq { font-variant-numeric: tabular-nums; font-weight: 600; margin-top: 6px; }
+
+.cards { display: flex; flex-wrap: wrap; gap: 18px; margin: 12px 0 18px; }
+.bcard { width: min(340px, 100%); aspect-ratio: 85 / 55; max-width: 100%; background: #ffffff; color: #17212b; border: 1px solid var(--rule); padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.bcard .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.bcard .brand { display: flex; align-items: center; gap: 8px; }
+.bcard .brand .sq { width: 24px; height: 24px; border: 1.6px solid #8e2f2a; color: #8e2f2a; display: grid; place-items: center; font-family: var(--head); font-size: 14px; font-weight: 700; border-radius: 2px; line-height: 1; }
+.bcard .brand b { font-family: var(--head); font-size: 16px; }
+.bcard .pos { font-size: 10px; color: #4f5a65; line-height: 1.5; }
+.bcard .who { font-size: 12px; line-height: 1.6; }
+.bcard .who b { font-family: var(--head); font-size: 15px; }
+.bcard .bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; font-size: 10px; line-height: 1.6; }
+.bcard .bottom .ltr { font-size: 10px; }
+.bcard .qr { width: 50px; height: 50px; flex: none; background: conic-gradient(from 90deg at 2px 2px, #17212b 25%, transparent 0) 0 0 / 8px 8px, #fff; border: 4px solid #fff; outline: 1px solid #17212b; opacity: .85; }
+.bcard .nfc { font-family: var(--latin); font-size: 9px; letter-spacing: .08em; color: #8e2f2a; border: 1px solid #8e2f2a; border-radius: 2px; padding: 0 4px; }
+.bcard.back { background: #17212b; color: #f7f7f4; }
+.bcard.back ul { margin: 0; padding: 0; list-style: none; font-size: 11px; line-height: 1.8; }
+.bcard.back .cta { font-size: 10.5px; color: #e0b0aa; }
+
+.check { list-style: none; padding: 0; counter-reset: c; }
+.check li { display: grid; grid-template-columns: 26px 28px 1fr; gap: 8px; align-items: start; padding: 10px 0; border-top: 1px solid var(--rule); counter-increment: c; }
+.check li::before { content: counter(c); font-variant-numeric: tabular-nums; color: var(--stamp); font-weight: 700; padding-top: 2px; }
+.check input { width: 18px; height: 18px; margin-top: 6px; accent-color: var(--stamp); }
+.check label { min-width: 0; }
+.check li.done label { color: var(--graphite); text-decoration: line-through; text-decoration-color: var(--rule); }
+.note { border-inline-start: 3px solid var(--rule); padding-inline-start: 12px; color: var(--graphite); font-size: 14.5px; margin: 10px 0 14px; }
+footer { padding-block: 30px; color: var(--graphite); font-size: 13.5px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+
+<nav class="chapters" aria-label="الأقسام">
+  <div class="track">
+    <a href="#first">ابدأ هنا</a>
+    <a href="#what">ماذا تبيع</a>
+    <a href="#who">لمن</a>
+    <a href="#brand">الاسم</a>
+    <a class="key" href="#price">الأسعار ولماذا</a>
+    <a href="#pitch">ماذا تقول</a>
+    <a href="#demo">العرض 3 دقائق</a>
+    <a class="key" href="#nfc">بطاقة NFC</a>
+    <a href="#sila">في المعرض</a>
+    <a href="#whatsapp">واتساب</a>
+    <a href="#objections">الاعتراضات</a>
+    <a href="#trust">الثقة</a>
+    <a class="key" href="#todo">قبل المعرض</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<header class="mast" id="first">
+  <div class="stamp-mark"><span class="sq">و</span><span class="wm">ورّاق</span></div>
+  <h1>دليل البيع في معرض الكتاب SILA</h1>
+  <p class="lede">كل ما تحتاجه لبيع المنظومة التي بنيناها لمكتبة البيان إلى مكتبات ودور نشر أخرى: ماذا تبيع، بكم ولماذا، ماذا تقول، وكيف تتابع الزبائن بعد المعرض.</p>
+
+  <div class="box">
+    <h2>الخلاصة في خمس نقاط</h2>
+    <ol>
+      <li><strong>المنظومة جاهزة للبيع.</strong> المتجر الإلكتروني ولوحة التحكم ومسح الأغلفة والنظام الأكاديمي كلها تعمل. والأهم: هي تعمل فعلًا في مكتبة حقيقية.</li>
+      <li><strong>ستبيع النسخة الكاملة (full)</strong> التي فيها النظام الأكاديمي. نسخة مكتبة البيان مخفّفة فقط بإعداد واحد، ولم يُحذف أي شيء.</li>
+      <li><strong>ثلاثة أشياء يجب إصلاحها قبل المعرض:</strong>
+        <ul>
+          <li>الخادم المجاني يتأخر <strong>33 ثانية</strong> في أول فتح (قِسته اليوم).</li>
+          <li>الروابط على <code>onrender.com</code> وليست على نطاقك الخاص.</li>
+          <li>لا توجد نسخة تجريبية منفصلة، ولا يجوز عرض لوحة تحكم مكتبة البيان لأن فيها أسماء وأرقام زبائن حقيقيين.</li>
+        </ul>
+      </li>
+      <li><strong>نقاط ضعف سيسأل عنها الزبون، فكن صريحًا فيها:</strong>
+        <ul>
+          <li>الزبون يطلب كتابًا واحدًا في كل مرة، فلا توجد سلة.</li>
+          <li>كلمة سر واحدة للوحة التحكم، بلا حسابات منفصلة للموظفين.</li>
+          <li>لا دفع إلكتروني.</li>
+          <li>لا تطبيق آيفون.</li>
+        </ul>
+      </li>
+      <li><strong>صنعت لك صفحة عرض (portfolio) بالعربية</strong> بصور حقيقية من النسخة الكاملة، لتفتحها بطاقة NFC. هي الآن خاصة بك وتحتاج نشرها على نطاقك (القسم 8).</li>
+    </ol>
+    <div class="links">
+      <a href="https://claude.ai/artifact/AbP1UFdPH2tKdEMJrawKCQ" target="_blank" rel="noopener">افتح صفحة العرض</a>
+      <a class="alt" href="#price">انتقل إلى الأسعار</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 1 ============ -->
+<section id="what">
+  <span class="eyebrow">1</span>
+  <h2>ماذا تبيع بالضبط؟</h2>
+  <p class="intro">هذا ما وجدته في الكود فعلًا، وليس ما هو مكتوب في الوثائق. العمود الأخير يقول لك: هل تعد به الزبون أم لا.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>الجزء</th><th>ماذا يفعل</th><th>هل تعد به؟</th></tr></thead>
+    <tbody>
+      <tr><td><b>المتجر الإلكتروني</b></td><td>صفحة رئيسية، تصنيفات، صفحة لكل كتاب بعدة صور، السعر والتوفر، كتب مشابهة، خريطة المحل، صفحات الخصوصية والشروط.</td><td><span class="pill p-lo">نعم</span></td></tr>
+      <tr><td><b>البحث</b></td><td>بحث بالعربية مع اقتراحات. يتجاهل التشكيل، ويعامل أ/إ/آ كـ ا، وة كـ ه، وى كـ ي. لا يصحّح الأخطاء الإملائية.</td><td><span class="pill p-lo">نعم</span> «بحث مناسب للعربية»، وليس «بحث ذكي».</td></tr>
+      <tr><td><b>طلب الزبون</b></td><td>الاسم، الهاتف، الولاية (69)، العنوان. يُسجَّل الطلب أولًا ثم يُفتح واتساب برسالة جاهزة. كتاب واحد في كل طلب. الدفع عند الاستلام.</td><td><span class="pill p-lo">نعم</span> لكن لا تقل «سلة» ولا «دفع إلكتروني».</td></tr>
+      <tr><td><b>«اطلب توفير هذا الكتاب»</b></td><td>الزبون يطلب كتابًا غير موجود، فيصلك اسمه ورقمه.</td><td><span class="pill p-lo">نعم</span> نقطة قوة.</td></tr>
+      <tr><td><b>إدارة الكتب</b></td><td>عدة مؤلفين ودور نشر للكتاب، التصنيف، البلد، السنة، السعر، النبذة، الطبعة والأجزاء، عدة صور.</td><td><span class="pill p-lo">نعم</span></td></tr>
+      <tr><td><b>الإضافة السريعة ومسح الغلاف</b></td><td>من الهاتف: مسح الغلاف مع قصّ وتقويم تلقائي، ثم العنوان والتصنيف والحفظ.</td><td><span class="pill p-lo">نعم</span> هذه لحظة الإبهار في العرض.</td></tr>
+      <tr><td><b>المخزون</b></td><td>الحالة (متوفر / عند الطلب / نادر) والكمية، وتنبيه عند 3 نسخ أو أقل.</td><td><span class="pill p-lo">نعم</span> «متابعة المخزون»، وليس «نظام مخزون كامل».</td></tr>
+      <tr><td><b>الطلبيات</b></td><td>تحويل طلب الزبون إلى طلبية، وجمع عدة كتب فيها. الحالات: قيد الانتظار، مؤكدة، قيد الشحن، مسلّمة، ملغاة. مع تكلفة التوصيل.</td><td><span class="pill p-lo">نعم</span></td></tr>
+      <tr><td><b>لوحة التحكم</b></td><td>الإيرادات، الطلبيات حسب الحالة، أكثر 5 كتب طلبًا، والكتب التي توشك على النفاد. على 7 أو 30 أو 90 يومًا.</td><td><span class="pill p-lo">نعم</span> لكن لا تعد بإحصاءات الزوار.</td></tr>
+      <tr><td><b>محتوى التواصل</b></td><td>تحميل صور الكتب ونصوصها في ملف ZIP للنشر على فيسبوك وإنستغرام.</td><td><span class="pill p-lo">نعم</span></td></tr>
+      <tr class="rec"><td><b>النظام الأكاديمي</b></td><td>تخصص ← سنة ← مادة. يُربط الكتاب بأي مستوى. واجهة للطلبة وإدارة كاملة في لوحة التحكم.</td><td><span class="pill p-lo">نعم</span> في النسخة الكاملة. صوّرته اليوم.</td></tr>
+      <tr><td><b>تطبيقات الهاتف</b></td><td>أندرويد فقط، غير منشورة على Google Play، ومتأخرة أسبوعًا عن الموقع (لا تدعم عدة صور، وقائمة 58 ولاية قديمة).</td><td><span class="pill p-mid">جزئيًا</span> تطبيق الإدارة نعم. لا تعد أبدًا بالآيفون.</td></tr>
+      <tr><td><b>الدخول للوحة التحكم</b></td><td>كلمة سر واحدة مشتركة، صالحة 30 يومًا.</td><td><span class="pill p-mid">انتبه</span> لا تقل «حسابات للموظفين».</td></tr>
+      <tr><td><b>استيراد Excel</b></td><td>موجود في الخادم، بلا شاشة. أنت من يشغّله.</td><td><span class="pill p-mid">كخدمة</span> «نُدخل ملفكم نيابة عنكم».</td></tr>
+      <tr><td><b>البحث التلقائي عن الأغلفة / التعرّف على الصور</b></td><td>سكربتات داخلية، ضعيفة مع العناوين العربية.</td><td><span class="pill p-hi">لا</span></td></tr>
+      <tr><td><b>عدة متاجر على خادم واحد</b></td><td>غير مبني. كل زبون يحتاج تشغيلًا مستقلًا.</td><td><span class="pill p-hi">لا</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>ملاحظات وجدتها أثناء التصوير (أصلحها لاحقًا)</h3>
+  <ul>
+    <li><b>في مكتبة البيان: 56 كتابًا منها 23 مكررة</b>، وكتاب عنوانه «..». نظّفها مع والدك.</li>
+    <li>أغلب الكتب الحقيقية بلا سعر ولا مؤلف، لأن الإدخال يتم بالنسخة المخففة.</li>
+    <li>السنوات الأكاديمية تظهر بترتيب خاطئ: «سنة ثالثة» قبل «سنة ثانية». ستلاحظها عند العرض.</li>
+    <li>تصنيف «غير مصنف» يظهر في الصفحة الرئيسية.</li>
+  </ul>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="who">
+  <span class="eyebrow">2</span>
+  <h2>لمن تبيع؟</h2>
+  <div class="tbl narrow"><table>
+    <thead><tr><th>الزبون</th><th>كيف تعرفه</th><th>الأولوية</th></tr></thead>
+    <tbody>
+      <tr class="rec"><td><b>مكتبة مستقلة</b></td><td>محل أو محلّان، صاحبه حاضر، من 500 إلى 5.000 عنوان. يبيع عبر فيسبوك والهاتف، والمخزون في كرّاس أو Excel.</td><td><span class="pill p-hi">الأولى</span></td></tr>
+      <tr class="rec"><td><b>دار نشر جزائرية صغيرة أو متوسطة</b></td><td>50 إلى 1.000 عنوان خاص بها. تبيع في المعارض وعبر الموزعين وفيسبوك، وتريد قناة مباشرة للقرّاء.</td><td><span class="pill p-hi">الأولى</span></td></tr>
+      <tr class="rec"><td><b>مكتبة جامعية أو متخصصة</b></td><td>قرب جامعة، أو كتب شرعية وأكاديمية. الطلبة يسألون حسب المادة والسنة. هنا النظام الأكاديمي هو نقطة البيع.</td><td><span class="pill p-hi">ممتاز</span></td></tr>
+      <tr><td><b>موزّع أو تاجر جملة</b></td><td>يحتاج أسعار جملة وحسابات زبائن وطلبيات كبيرة. هذه غير موجودة.</td><td><span class="pill p-lo">ضعيف</span></td></tr>
+      <tr><td><b>دور النشر الكبيرة والعمومية</b></td><td>تحتاج ERP وفروعًا ومحاسبة وصفقات.</td><td><span class="pill p-lo">تجنّبها</span></td></tr>
+    </tbody>
+  </table></div>
+  <h3>ما الذي يوجعهم (ابدأ الحديث من هنا)</h3>
+  <ul>
+    <li>«هل هذا الكتاب متوفر؟» عشرات المرات يوميًا في الرسائل.</li>
+    <li>طلبيات تضيع في المحادثات.</li>
+    <li>المخزون في رأس شخص واحد أو في كرّاس.</li>
+    <li>نشر كتاب جديد يعني صورة ومنشورًا وردودًا، كتابًا كتابًا.</li>
+    <li>دور النشر تعتمد على المعارض والموزعين فقط.</li>
+  </ul>
+  <h3>جملة التعريف</h3>
+  <div class="script"><div class="head"><span class="label">بالعربية</span><button class="copy">نسخ</button></div><div class="body">ورّاق منظومة رقمية لتسيير وبيع الكتب، للمكتبات ودور النشر: الفهرس، المخزون، الأسعار، الطلبيات، ومتجر إلكتروني باسمكم، مع نظام أكاديمي حسب التخصص والسنة والمادة. مصمّمة للكتاب العربي وللبيع في الجزائر: الدفع عند الاستلام، 69 ولاية، وواتساب.</div></div>
+  <div class="script"><div class="head"><span class="label">بالفرنسية</span><button class="copy">نسخ</button></div><div class="body fr">Warraq est une solution de gestion et de vente pour les librairies et les maisons d'édition : catalogue, stock, prix, commandes et boutique en ligne à votre nom, avec un module académique par spécialité, année et matière. Conçue pour le livre arabe et la vente en Algérie.</div></div>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="brand">
+  <span class="eyebrow">3</span>
+  <h2>اسم المنظومة</h2>
+  <p class="intro">لماذا لا تبيعها باسم «البيان»؟ لأن كل مكتبة تشتري منك ستضع اسمها هي على المتجر. اسم المنظومة يظهر فقط في لوحة التحكم والعقد والفاتورة. ولو سمّيتها «البيان» سيظن الزبون أنك تبيع له مكتبة أخرى. «البيان» يبقى مرجعك: «المنظومة تعمل في مكتبة البيان».</p>
+  <div class="tbl narrow"><table>
+    <thead><tr><th>الاسم</th><th>المعنى</th><th>الرأي</th></tr></thead>
+    <tbody>
+      <tr class="rec"><td><b>ورّاق · Warraq</b></td><td>الورّاق قديمًا كان ينسخ الكتب ويبيعها وينشرها، أي المكتبة ودار النشر معًا. وهما بالضبط زبائنك.</td><td><span class="pill p-hi">أنصح به</span> تحقّق قبل الطباعة من النطاق <code>.com</code>، وصفحات فيسبوك وإنستغرام، وتسجيل العلامة لدى INAPI.</td></tr>
+      <tr><td>فهرس · Fihris</td><td>الفهرس والكتالوج.</td><td>البديل إن كان «ورّاق» محجوزًا. صعب النطق على غير العرب.</td></tr>
+      <tr><td>رفّ · Raff</td><td>رفّ الكتب.</td><td>كلمة عامة، يصعب حجز نطاقها.</td></tr>
+      <tr><td>كتبي · Kutubi</td><td>بائع الكتب.</td><td>يبدو كتطبيق للقرّاء وليس للمكتبات.</td></tr>
+      <tr><td>مداد · Midad</td><td>الحبر.</td><td>دور نشر كثيرة اسمها «المداد».</td></tr>
+    </tbody>
+  </table></div>
+  <p><b>الهوية:</b> حبر داكن <code>#17212B</code>، ورق <code>#F7F7F4</code>، وأحمر الختم <code>#8E2F2A</code> بكمية قليلة. الشعار ختم مربع فيه حرف «و». الخط: IBM Plex Sans Arabic للنصوص، وNoto Naskh Arabic للعناوين. صور حقيقية فقط، بلا صور جاهزة ولا صور مولّدة بالذكاء الاصطناعي. هذه الصفحة وصفحة العرض مصمّمتان بهذه الهوية.</p>
+</section>
+
+<!-- ============ 4 PRICING ============ -->
+<section id="price">
+  <span class="eyebrow">4</span>
+  <h2>الأسعار: كيف تحسبها ولماذا</h2>
+  <p class="intro">القاعدة: السعر = تكلفتك (وقتك + الاستضافة) + هامش. لن تبيع «موقعًا» بسعر الموقع، بل منظومة جاهزة تُركَّب وتُشغَّل وتُصان.</p>
+
+  <h3>الخطوة 1: ما الذي يكلّفك كل زبون؟</h3>
+  <div class="cols">
+    <div><h4>وقتك في التركيب</h4><p>تغيير الاسم والشعار والألوان، إدخال كتبهم، التشغيل وربط النطاق، التدريب، والتعديلات بعد الإطلاق.</p></div>
+    <div><h4>الاستضافة (تدفعها كل شهر بالعملة الصعبة)</h4><p>خادم دائم التشغيل على Render بحوالي <span class="ltr">7$</span>. قاعدة البيانات Neon مجانية للمكتبة الصغيرة، وحوالي <span class="ltr">19$</span> إن كبرت. الصور على R2 مجانية حتى 10 جيغا. صفحتا الموقع مجانيتان.</p></div>
+    <div><h4>وقت الدعم</h4><p>حوالي ساعة إلى ساعتين شهريًا لكل زبون: أسئلة، وتصحيحات، وتحديثات.</p></div>
+  </div>
+  <p class="note">قيمة يومك: افترضتُ 12.000 دج لليوم الواحد. غيّرها إن رأيت أنها لا تناسبك، وأعد الحساب بنفس الطريقة. سعر الدولار افترضته حوالي 260 دج في السوق الموازية. تحقّق منه قبل الطباعة.</p>
+
+  <h3>الخطوة 2: حساب مبلغ التركيب (يُدفع مرة واحدة)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>العمل</th><th class="num">الأساسي</th><th class="num rec">المحترف</th><th class="num">المؤسسات</th></tr></thead>
+    <tbody>
+      <tr><td>الاسم، الشعار، الألوان، المعلومات، الخريطة</td><td class="num">1 يوم</td><td class="num rec">1 يوم</td><td class="num">1 يوم</td></tr>
+      <tr><td>إدخال الكتب من Excel وتنظيفها</td><td class="num">1 يوم (500 كتاب)</td><td class="num rec">2 يوم (2.000 كتاب)</td><td class="num">2 يوم أو أكثر</td></tr>
+      <tr><td>التشغيل، ربط النطاق، الفحص</td><td class="num">0.5 يوم</td><td class="num rec">0.5 يوم</td><td class="num">0.5 يوم</td></tr>
+      <tr><td>تطبيق الإدارة باسمهم (أندرويد)</td><td class="num">—</td><td class="num rec">1 يوم</td><td class="num">1 يوم</td></tr>
+      <tr><td>إعداد النظام الأكاديمي وربط الكتب</td><td class="num">—</td><td class="num rec">(خيار: 2 يوم)</td><td class="num">2 يوم</td></tr>
+      <tr><td>تطبيق الزبائن على Google Play</td><td class="num">—</td><td class="num rec">—</td><td class="num">2 يوم</td></tr>
+      <tr><td>تطوير خاص مكتوب مسبقًا</td><td class="num">—</td><td class="num rec">—</td><td class="num">حتى 3 أيام</td></tr>
+      <tr><td>التدريب</td><td class="num">0.5 يوم</td><td class="num rec">1 يوم</td><td class="num">1 يوم (في مقرّهم)</td></tr>
+      <tr><td>التعديلات بعد الإطلاق</td><td class="num">0.5 يوم</td><td class="num rec">1.5 يوم</td><td class="num">1.5 يوم</td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td>مجموع الأيام</td><td class="num">3.5 يوم</td><td class="num rec">7 أيام</td><td class="num">14 يومًا</td></tr>
+      <tr><td>التكلفة بـ12.000 دج لليوم</td><td class="num">42.000 دج</td><td class="num rec">84.000 دج</td><td class="num">168.000 دج</td></tr>
+      <tr><td>سعر البيع</td><td class="num">60.000 دج</td><td class="num rec">120.000 دج</td><td class="num">من 200.000 دج</td></tr>
+    </tfoot>
+  </table></div>
+  <p><b>لماذا هامش حوالي 40%؟</b> لأن الوقت الفعلي يزيد دائمًا عن التقدير: ملفات Excel غير مرتبة، شعار بجودة رديئة، زبون يغيّر رأيه. ولأن وقت البيع نفسه (المعرض، الاجتماعات، العروض) لا يدفعه أحد غيرك.</p>
+  <p><b>النظام الأكاديمي كخيار في المحترف: 30.000 دج</b> = يومان × 12.000 + هامش. هو عمل حقيقي: إنشاء تخصصاتهم وسنواتهم وموادهم، وربط كل كتاب بمكانه.</p>
+
+  <h3>الخطوة 3: حساب الخدمة السنوية (إجبارية، تُدفع كل عام مسبقًا)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th class="num">الأساسي</th><th class="num rec">المحترف</th><th class="num">المؤسسات</th></tr></thead>
+    <tbody>
+      <tr><td>الاستضافة في السنة</td><td class="num">≈ 25.000 دج <span class="muted small">(<span class="ltr">8$</span>/شهر)</span></td><td class="num rec">≈ 25.000 دج</td><td class="num">≈ 82.000 دج <span class="muted small">(<span class="ltr">26$</span>/شهر)</span></td></tr>
+      <tr><td>الدعم في السنة</td><td class="num">≈ 18.000 دج <span class="muted small">(ساعة/شهر)</span></td><td class="num rec">≈ 27.000 دج <span class="muted small">(1.5 ساعة/شهر)</span></td><td class="num">≈ 36.000 دج <span class="muted small">(ساعتان/شهر)</span></td></tr>
+      <tr><td>تحديث تطبيق أندرويد سنويًا</td><td class="num">—</td><td class="num rec">≈ 12.000 دج</td><td class="num">≈ 24.000 دج <span class="muted small">(تطبيقان)</span></td></tr>
+    </tbody>
+    <tfoot>
+      <tr><td>التكلفة</td><td class="num">≈ 43.000 دج</td><td class="num rec">≈ 64.000 دج</td><td class="num">≈ 142.000 دج</td></tr>
+      <tr><td>سعر البيع في السنة</td><td class="num">48.000 دج <span class="muted small">(4.000/شهر)</span></td><td class="num rec">72.000 دج <span class="muted small">(6.000/شهر)</span></td><td class="num">من 150.000 دج</td></tr>
+    </tfoot>
+  </table></div>
+  <p class="note">غيّرتُ الخدمة السنوية مقارنةً بالنسخة الإنجليزية (كانت 36 و60 و90 ألفًا)، لأن الحساب أظهر أنها لا تغطي الاستضافة والدعم. الهامش في السنوية صغير عن قصد، فربحك الأساسي في التركيب. وعندما يصبح لديك 5 زبائن أو أكثر، يمكن تشغيلهم كلهم على خادم واحد فتنخفض التكلفة كثيرًا.</p>
+
+  <h3>النتيجة: العروض الثلاثة</h3>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>الأساسي</th><th class="rec">المحترف (الذي تنصح به)</th><th>المؤسسات</th></tr></thead>
+    <tbody>
+      <tr><td><b>لمن</b></td><td>مكتبة تبدأ البيع عبر الإنترنت</td><td class="rec">مكتبة أو دار نشر تبيع اليوم عبر فيسبوك والهاتف</td><td>كتالوج كبير، مكتبة جامعية، أو من يريد تطبيقًا باسمه</td></tr>
+      <tr><td><b>التركيب</b></td><td class="num">60.000 دج</td><td class="num rec"><b>120.000 دج</b></td><td class="num">من 200.000 دج</td></tr>
+      <tr><td><b>الخدمة السنوية</b></td><td class="num">48.000 دج</td><td class="num rec">72.000 دج</td><td class="num">من 150.000 دج</td></tr>
+      <tr><td>متجر باسمهم + لوحة التحكم كاملة</td><td>✓</td><td class="rec">✓</td><td>✓</td></tr>
+      <tr><td>إدخال الكتب من Excel</td><td>حتى 500</td><td class="rec">حتى 2.000</td><td>حسب الحجم</td></tr>
+      <tr><td>تطبيق الإدارة مع مسح الأغلفة</td><td>—</td><td class="rec">✓</td><td>✓</td></tr>
+      <tr><td>النظام الأكاديمي</td><td>—</td><td class="rec">خيار +30.000 دج</td><td>✓</td></tr>
+      <tr><td>تطبيق الزبائن على Google Play</td><td>—</td><td class="rec">—</td><td>✓ (حساب Google باسمهم)</td></tr>
+      <tr><td>التدريب</td><td>جلسة</td><td class="rec">جلستان</td><td>في مقرّهم</td></tr>
+      <tr><td>بعد الإطلاق</td><td>أسبوعان تصحيحات</td><td class="rec">شهر تعديلات</td><td>حتى 3 أيام تطوير خاص</td></tr>
+      <tr><td>الرد على الدعم</td><td>يوما عمل</td><td class="rec">يوم عمل</td><td>نفس اليوم</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>لماذا هذه الطريقة بالذات (تركيب + خدمة سنوية)؟</h3>
+  <ul>
+    <li><b>ليس دفعة واحدة فقط:</b> أنت تدفع استضافتهم كل شهر بالعملة الصعبة إلى الأبد. بعد سنة ستخسر في كل زبون.</li>
+    <li><b>ليس اشتراكًا شهريًا:</b> التحويل الشهري (CCP أو البنك) متعب للطرفين ويُنسى، وصاحب المكتبة الجزائري يفضّل «استثمارًا» واضحًا على «كراء».</li>
+    <li><b>ليست صيانة اختيارية:</b> الزبون يلغيها بعد السنة الأولى، بينما متجره ما زال يعمل على خوادمك.</li>
+    <li><b>المحترف هو الخيار الطبيعي:</b> ضعف الأساسي تقريبًا وفيه التطبيق ومسح الأغلفة، وأقل بوضوح من المؤسسات. أغلب الناس يختارون الوسط.</li>
+  </ul>
+
+  <h3>كيف تقدّم السعر</h3>
+  <ol>
+    <li><b>لا تبدأ بالسعر أبدًا.</b> اسأل أولًا: كم عنوانًا عندكم؟ كيف تبيعون اليوم؟</li>
+    <li><b>عند السؤال:</b> «يبدأ من 60.000، وأغلب من في حجمكم يأخذ المحترف بـ120.000».</li>
+    <li><b>طريقة الدفع:</b> نصف عند الإمضاء ونصف عند التشغيل. هذا يطمئن الزبون.</li>
+    <li><b>عرض المعرض:</b> خصم 15% على التركيب فقط، لمن يمضي قبل تاريخ محدد (مثلًا 15 ديسمبر). لا خصم على الخدمة السنوية أبدًا.</li>
+    <li><b>أول زبونين (اختياري):</b> خصم 20% على التركيب مقابل إذن مكتوب بذكر اسمهم كمرجع.</li>
+    <li><b>إن قال «غالي»:</b> اعرض الأساسي، أو قلّل عدد الكتب. لا تخفّض سعر المحترف أبدًا دون أن تنقص منه شيئًا.</li>
+    <li><b>التطوير الخاص:</b> 12.000 إلى 15.000 دج لليوم، تُقدَّر الأيام وتُكتب قبل البدء. لا «تعديلات مجانية بلا حدود» أبدًا.</li>
+  </ol>
+
+  <h3>ما يدفعه الزبون بنفسه (اكتبه في العرض)</h3>
+  <ul>
+    <li>اسم النطاق (domain) باسمه: حوالي 2.500 إلى 4.000 دج في السنة لـ<code>.com</code>.</li>
+    <li>حساب Google Play إن أراد تطبيقًا للزبائن: <span class="ltr">25$</span> مرة واحدة.</li>
+    <li>إدخال الكتب فوق حدود العرض، أو تصوير الكتب، أو إدارة صفحاته على فيسبوك: ليست من عملك إلا بسعر منفصل.</li>
+  </ul>
+
+  <h3>الملكية</h3>
+  <p>البيانات (الكتب، الطلبيات، الزبائن) واسم النطاق ملك للزبون. المنظومة ملكك، والزبون يحصل على حق استعمالها ما دامت الخدمة السنوية سارية. إن لم يجدّد: يبقى المتجر 30 يومًا، تسلّمه نسخة من بياناته، ثم يتوقف.</p>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="pitch">
+  <span class="eyebrow">5</span>
+  <h2>ماذا تقول</h2>
+  <p class="intro">بالدارجة، ومعها نسخة فرنسية لمن يتكلم الفرنسية. تكلّم بهدوء، واسأل أكثر مما تتكلم.</p>
+
+  <h3>في 15 ثانية</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">السلام عليكم. أنا [الاسم]، مهندس برمجيات. عندي منظومة خاصة بالمكتبات ودور النشر: تسيّر بيها الكتب والستوك والطلبيات، وعندك متجر إلكتروني باسمك، وفيها حتى نظام أكاديمي للطلبة. راهي خدّامة اليوم في مكتبة حقيقية. عندك دقيقتين نوريهالك على التيليفون؟</div></div>
+  <div class="script"><div class="head"><span class="label">فرنسية</span><button class="copy">نسخ</button></div><div class="body fr">Bonjour. Je suis [Prénom], ingénieur logiciel. J'ai une solution pour les librairies et les éditeurs : gestion des livres, du stock et des commandes, avec une boutique en ligne à votre nom. Elle tourne déjà dans une vraie librairie. Je vous la montre en deux minutes ?</div></div>
+
+  <h3>في 60 ثانية</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">نخدم مع المكتبات ودور النشر اللي يبيعو برا المحل: فايسبوك، تيليفون، واتساب.
+المشكل اللي نشوفو دايمًا: الطلبيات تضيع في الميساجات، والزبون ما يعرفش واش كاين في الستوك.
+عندنا منظومة فيها: متجر إلكتروني باسمكم بالعربية، لوحة تحكم للكتب والأسعار والستوك والطلبيات، وتطبيق في التيليفون تدخّلو بيه الكتب بالسكانير. وللمكتبات الجامعية كاين نظام أكاديمي: الطالب يلقى كتبو حسب التخصص والسنة والمادة.
+الزبون يطلب، يختار الولاية من 69، الطلبية تتسجّل عندكم، ومن بعد يكمّل معاكم في الواتساب. الدفع عند الاستلام كيما العادة.
+راهي خدّامة في مكتبة البيان. نحطّولكم كتبكم من ملف Excel، وتكونو أونلاين في حوالي 15 يوم.
+واش رايكم نتلاقاو بعد الصالون ونوريكم المنظومة على كتبكم أنتم؟</div></div>
+  <div class="script"><div class="head"><span class="label">فرنسية</span><button class="copy">نسخ</button></div><div class="body fr">Je travaille avec des librairies et des éditeurs qui vendent en dehors de leur magasin : Facebook, téléphone, WhatsApp.
+Le problème qu'on voit partout : des commandes perdues dans les messages, et des clients qui ne savent pas ce qui est disponible.
+Notre solution : une boutique en ligne à votre nom, en arabe ; un back-office pour les livres, les prix, le stock et les commandes ; une application pour ajouter les livres en scannant la couverture ; et un module académique par spécialité, année et matière.
+Le client commande, choisit sa wilaya, la commande est enregistrée chez vous, puis la discussion continue sur WhatsApp. Paiement à la livraison.
+Ça tourne déjà à la librairie El Bayane. On importe votre catalogue depuis Excel, et vous êtes en ligne en deux à trois semaines.
+On se voit après le salon pour vous la montrer avec vos propres titres ?</div></div>
+
+  <h3>«واش تبيع بالضبط؟»</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">ماشي موقع برك. نبيعو منظومة: متجر إلكتروني باسمكم، ولوحة تحكم للكتب والستوك والطلبيات، وتطبيق للتيليفون. نركّبوها، نحطّو فيها كتبكم، نعلّموكم كيفاش تخدمو بيها، ومن بعد نتكفّلو بالاستضافة والصيانة كل عام.</div></div>
+
+  <h3>«بشحال؟»</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">يبدا من 60 ألف دينار للتركيب، مع خدمة سنوية تغطي الاستضافة والصيانة والدعم. أغلب اللي في حجمكم ياخذو العرض المحترف بـ120 ألف، فيه التطبيق وإدخال حتى 2000 كتاب. باش نعطيك رقم دقيق: قدّاش عندكم من عنوان، وتحبّو التطبيق ولا لا؟</div></div>
+
+  <h3>«عندنا موقع»</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">مليح. سؤال برك: كي يجيكم طلب من الموقع، وين يروح؟ وشكون يبدّل الستوك كي يتباع كتاب؟ حنا نبيعو التسيير اللي وراه: الطلبيات تتسجّل، الستوك يتبّع، وتعرفو واش يتباع.</div></div>
+
+  <h3>«ما نحتاجوش تطبيق»</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">معاك الحق، الزبائن ما يحبّوش يحمّلو تطبيق لكل مكتبة. الزبون يشري من الرابط اللي تحطّوه في الفايسبوك. التطبيق اللي نهدر عليه راهو ليكم أنتم: تدخّلو بيه الكتب بالسكانير وتتبّعو الطلبيات.</div></div>
+
+  <h3>«غالي»</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">نفهمك. غالي مقارنة بواش؟ قدّاش من طلبية تضيع في الشهر في الميساجات؟ إذا الميزانية هي المشكل، نبداو بالعرض الأساسي ونزيدو التطبيق من بعد. والخلاص على مرّتين: النص عند الإمضاء والنص كي تكون المنظومة أونلاين.</div></div>
+
+  <h3>«ابعثلي المعلومات»</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">بكل فرح. ولا قرّب التيليفون تاعك من البطاقة هذي، تفتحلك الصفحة فيها كلش. وخليني ناخذ الواتساب تاعك نبعتلك الليلة فيديو دقيقة. وشكون آخر لازم يشوفها عندكم؟</div></div>
+
+  <h3>«نخمّمو»</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">نورمال. باش نعرف كيفاش نعاونك: واش هي النقطة اللي تحب تخمّم فيها؟ السوما، الوقت، ولا واش المنظومة تناسب خدمتكم؟ إذا تحب نجي نوريها لشريكك، نحدّدو موعد من دروك.</div></div>
+
+  <h3>«نخدمو بـExcel»</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">ممتاز، هذا يربّحنا الوقت: نحطّو الملف تاعكم مباشرة في المنظومة. Excel مليح ليكم في الداخل، بصّح الزبون ما يشوفوش، وما يسجّلش الطلبيات.</div></div>
+
+  <h3>«تقدر تبدّل فيها؟»</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">إيه، في حدود واضحة. الاسم، اللوغو، الألوان، التصنيفات، التخصصات الأكاديمية، المعلومات والخريطة نديروهم في التركيب. أي حاجة خاصة زيادة نحسبوها بالأيام ونكتبوها قبل ما نبداو. ما نوعدش بكلش مجانًا، باش اللي نوعد بيه نوفي بيه.</div></div>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="demo">
+  <span class="eyebrow">6</span>
+  <h2>العرض في 3 دقائق</h2>
+  <p class="intro">قصة واحدة: كتاب ← مخزون ← متجر ← زبون ← طلبية ← لوحة التحكم. معك هاتفك (تطبيق الإدارة)، ولوحة أو حاسوب (لوحة التحكم مفتوحة)، وهاتف الزبون نفسه. كل شيء على النسخة التجريبية، وافتحها قبل كل عرض بخمس دقائق حتى لا يتأخر الخادم.</p>
+
+  <div class="step"><div class="t">0:00<span>البداية</span></div><dl>
+    <dt>الشاشة</dt><dd>الصفحة الرئيسية للمتجر التجريبي.</dd>
+    <dt>قل</dt><dd>«هذي مكتبة كيما تاعكم. نوريك كيفاش كتاب جديد يوصل للزبون.»</dd>
+  </dl></div>
+  <div class="step"><div class="t">0:20<span>الكتاب</span></div><dl>
+    <dt>افعل</dt><dd>من الهاتف: إضافة سريعة ← امسح كتابًا حقيقيًا جئت به ← العنوان ← التصنيف ← حفظ.<span class="wow">إبهار 1</span></dd>
+    <dt>قل</dt><dd>«عشر ثواني. الخدّام يقدر يديرها بين زبون وزبون.»</dd>
+  </dl></div>
+  <div class="step"><div class="t">0:55<span>المخزون</span></div><dl>
+    <dt>افعل</dt><dd>في اللوحة: المخزون ← الكتاب ← الكمية 2، الحالة «متوفر».</dd>
+    <dt>قل</dt><dd>«الستوك والسعر في بلاصة وحدة.»</dd>
+  </dl></div>
+  <div class="step"><div class="t">1:15<span>المتجر</span></div><dl>
+    <dt>افعل</dt><dd>قرّب بطاقة NFC من هاتفه (أو امسح الرمز). يبحث عن الكتاب بلا همزة: يجده.<span class="wow">إبهار 2</span></dd>
+    <dt>قل</dt><dd>«الكتاب اللي دخّلناه قبل دقيقة راهو في المتجر عندك في التيليفون.»</dd>
+  </dl></div>
+  <div class="step"><div class="t">1:45<span>الزبون</span></div><dl>
+    <dt>افعل</dt><dd>على هاتفه: اطلب ← اسم «تجربة» ← ولايته ← إرسال. يُفتح واتساب برسالة جاهزة إلى رقمك التجريبي.</dd>
+    <dt>قل</dt><dd>«الطلبية تسجّلت عندك حتى لو الزبون ما بعثش الميساج.»</dd>
+  </dl></div>
+  <div class="step"><div class="t">2:15<span>اللوحة</span></div><dl>
+    <dt>افعل</dt><dd>طلبات العملاء ← طلبه في الأعلى ← تحويل إلى طلبية ← مؤكدة ← نظرة عامة.</dd>
+    <dt>قل</dt><dd>«من هنا تتبّع كل طلبية حتى توصل.» وإن كان الزبون جامعيًا، افتح القسم الأكاديمي ← تخصص ← سنة ← مادة.</dd>
+  </dl></div>
+  <div class="step"><div class="t">2:45<span>الإغلاق</span></div><dl>
+    <dt>قل</dt><dd>«هذا خدّام اليوم في مكتبة البيان. عندكم، قدّاش من عنوان، ووين تجيكم الطلبيات؟ نقدر نوريها لكم على كتبكم: الثلاثاء ولا الخميس بعد الصالون؟»</dd>
+    <dt>الهدف</dt><dd>موعد بتاريخ ورقم واتساب، وليس إمضاء في الجناح.</dd>
+  </dl></div>
+
+  <div class="cols">
+    <div><h4>لا تقل</h4><ul><li>NestJS، Prisma، Render، API، قاعدة بيانات.</li><li>«كيما Shopify».</li><li>«نزيدلك واش تحب».</li><li>«مشروع صغير»، «مازال في التجربة».</li></ul></div>
+    <div><h4>لا تعرض</h4><ul><li>لوحة تحكم مكتبة البيان الحقيقية، ففيها بيانات زبائن.</li><li>شاشات الحذف والإعدادات.</li><li>تطبيق الزبائن إلا إذا سأل.</li></ul></div>
+    <div><h4>إن تعطّل شيء</h4><ul><li>شغّل فيديو الدقيقة الواحدة وواصل الكلام.</li><li>لا تصلح الخطأ أمامه.</li><li>استعمل إنترنت هاتفك (4G)، لا شبكة المعرض.</li></ul></div>
+  </div>
+</section>
+
+<!-- ============ 7 (screens) ============ -->
+<section id="screens">
+  <span class="eyebrow">7</span>
+  <h2>الصور التي التقطتها</h2>
+  <p class="intro">التقطتها اليوم من النسخة الكاملة (full) على نسخة تجريبية محلية: الكتب والأغلفة الحقيقية لمكتبة البيان (33 كتابًا بعد حذف المكرر)، مع أسعار ومخزون وطلبيات <b>تجريبية</b> بأسماء غير حقيقية. لم ألمس المتجر الحقيقي ولا بيانات زبائنه.</p>
+  <ul>
+    <li><b>23 صورة بالحجم الكامل (PNG)</b> في: <code>Desktop\BookStore-Portfolio\screenshots-full</code></li>
+    <li><b>نسخ خفيفة (WebP)</b> تستعملها صفحة العرض في: <code>Desktop\BookStore-Portfolio\img</code></li>
+  </ul>
+  <div class="tbl narrow"><table>
+    <thead><tr><th>الصورة</th><th>ماذا تُظهر</th></tr></thead>
+    <tbody>
+      <tr><td>store-home، store-home-m</td><td>الصفحة الرئيسية (حاسوب / هاتف)</td></tr>
+      <tr><td>store-book، store-book-m</td><td>صفحة كتاب «التحرير والتنوير»</td></tr>
+      <tr><td>store-search-m</td><td>البحث بالعربية</td></tr>
+      <tr><td>store-order-m، store-request-m</td><td>نموذج الطلب، وطلب كتاب غير متوفر</td></tr>
+      <tr class="rec"><td>academic-fields، academic-years، academic-subjects، academic-subject-m</td><td>النظام الأكاديمي: التخصصات ← السنوات ← المواد ← الكتب</td></tr>
+      <tr><td>admin-overview، admin-overview-m</td><td>لوحة التحكم (الإيرادات، الحالات، الأكثر طلبًا)</td></tr>
+      <tr><td>admin-orders، admin-order، admin-requests</td><td>الطلبيات وتفاصيلها وطلبات العملاء</td></tr>
+      <tr><td>admin-books، admin-quickadd، admin-quickadd-m، admin-inventory</td><td>الكتب، الإضافة السريعة، المخزون</td></tr>
+      <tr class="rec"><td>admin-academic</td><td>إدارة التخصصات والسنوات والمواد</td></tr>
+      <tr><td>admin-social، admin-catalog</td><td>محتوى التواصل، التصنيفات</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">لم أستطع تصوير تطبيق الهاتف (الماسح الحقيقي) لأنه يحتاج هاتفًا. صوّره بنفسك: صورة غلاف مائل قبل المسح، وصورته بعد القصّ والتقويم. هذه أقوى صورة لديك.</p>
+</section>
+
+<!-- ============ 8 NFC ============ -->
+<section id="nfc">
+  <span class="eyebrow">8</span>
+  <h2>بطاقة NFC وصفحة العرض</h2>
+  <p class="intro">فكرة جيدة: الزبون يقرّب هاتفه من البطاقة فتُفتح صفحة العرض. لكن هناك ثلاث قواعد يجب احترامها.</p>
+
+  <h3>صفحة العرض جاهزة</h3>
+  <p>بنيتها بالعربية، بصور حقيقية من النسخة الكاملة. فيها: ماذا تفعل المنظومة، كيف تعمل في 6 خطوات، النظام الأكاديمي، لوحة التحكم، العروض والأسعار، الأسئلة المتكررة، وزر واتساب.</p>
+  <div class="links"><a href="https://claude.ai/artifact/AbP1UFdPH2tKdEMJrawKCQ" target="_blank" rel="noopener">افتح صفحة العرض</a></div>
+  <p class="note">ينقصها اسمك ورقمك وبريدك ومدينتك. أرسلها لي وأضعها، أو عدّلها بنفسك في أسفل ملف <code>index.html</code> (قسم <code>CONFIG</code>). نسخة كاملة منها في <code>Desktop\BookStore-Portfolio</code>.</p>
+
+  <h3>القاعدة 1: لا تضع رابط Claude في البطاقة</h3>
+  <p>الرابط الحالي خاص بحسابك، والزبون لن يستطيع فتحه. ضع الصفحة على نطاقك الخاص، مثل <code>warraq.com</code>، ثم اجعل البطاقة تفتح رابطًا قصيرًا عليه، مثل <code>warraq.com/c</code>. هكذا تستطيع تغيير الصفحة لاحقًا دون إعادة طباعة البطاقات.</p>
+  <p><b>أين تستضيفها؟</b> على Render كـ«Static Site» مجانًا، وهي لا تنام مثل الخادم. ارفع مجلد <code>BookStore-Portfolio</code> إلى مستودع GitHub جديد، ثم في Render: New ← Static Site، ومجلد النشر <code>.</code>. أستطيع أن أفعل ذلك معك.</p>
+
+  <h3>القاعدة 2: ضع رمز QR أيضًا على البطاقة</h3>
+  <ul>
+    <li>كثير من هواتف أندرويد في الجزائر تكون فيها خاصية NFC مطفأة.</li>
+    <li>الآيفون يقرأ NFC فقط والشاشة مفتوحة، والهواتف القديمة لا تقرؤه أصلًا.</li>
+    <li>رمز QR يعمل مع الجميع. البطاقة تحمل الاثنين: NFC للإبهار، وQR للضمان.</li>
+  </ul>
+
+  <h3>القاعدة 3: لا تقفل الشريحة إلا في النهاية</h3>
+  <ul>
+    <li>اطلب من المطبعة شريحة <b>NTAG215</b> أو <b>NTAG216</b>.</li>
+    <li>برمجتها بنفسك سهلة: تطبيق <b>NFC Tools</b> المجاني ← Write ← Add a record ← URL ← اكتب رابطك ← قرّب البطاقة.</li>
+    <li>خيار «Lock» يمنع تغيير الرابط إلى الأبد. لا تستعمله، أو استعمله فقط بعد التأكد التام.</li>
+    <li>جرّب البطاقة على 3 هواتف مختلفة قبل طلب الكمية كاملة.</li>
+  </ul>
+
+  <h3>تصميم البطاقة</h3>
+  <div class="cards" aria-label="تصميم البطاقة">
+    <div class="bcard" role="img" aria-label="الوجه الأمامي">
+      <div class="top"><div class="brand"><span class="sq">و</span><b>ورّاق</b></div><span class="nfc">NFC</span></div>
+      <div class="who"><b>[الاسم واللقب]</b><br>مؤسس، مهندس برمجيات<br><span class="pos">منظومة تسيير وبيع للمكتبات ودور النشر</span></div>
+      <div class="bottom"><div><span class="ltr">+213 [XXX XX XX XX]</span> · واتساب<br><span class="ltr">warraq.[…]/c</span></div><div class="qr" aria-hidden="true"></div></div>
+    </div>
+    <div class="bcard back" role="img" aria-label="الوجه الخلفي">
+      <ul><li>متجر إلكتروني باسم مكتبتكم</li><li>إدخال الكتب بمسح الغلاف</li><li>المخزون والأسعار في مكان واحد</li><li>الطلبيات من الطلب إلى التسليم</li><li>نظام أكاديمي: تخصص، سنة، مادة</li></ul>
+      <div class="cta">قرّبوا الهاتف من البطاقة، أو امسحوا الرمز</div>
+    </div>
+  </div>
+  <div class="cols">
+    <div><h4>المقاس والورق</h4><p>85 × 55 ملم. بطاقات NFC تكون عادة من PVC. اختر الأسود المطفي (mat) مع الطباعة بالأبيض، وأحمر الختم في الشعار فقط.</p></div>
+    <div><h4>الرمز QR</h4><p>18 ملم على الأقل، أسفل الوجه الأمامي، بهامش أبيض حوله. يفتح نفس رابط NFC.</p></div>
+    <div><h4>الكمية</h4><p>بطاقات NFC أغلى من الورقية. اطبع 50 بطاقة NFC للزبائن الجادين، و200 بطاقة ورقية بالرمز QR للبقية.</p></div>
+  </div>
+</section>
+
+<!-- ============ 9 ============ -->
+<section id="sila">
+  <span class="eyebrow">9</span>
+  <h2>في المعرض</h2>
+  <p class="intro">تحقّق من تواريخ SILA 2026 الرسمية، وحمّل قائمة العارضين حين تُنشر، واختر منها 40 جناحًا جزائريًا. الهدف كل يوم: 15 إلى 20 حديثًا، و5 عروض، وزبونان «ساخنان».</p>
+  <div class="cols">
+    <div><h4>ابدأ بـ</h4><ol><li>دور النشر الجزائرية الصغيرة والمتوسطة، حين يكون صاحبها في الجناح.</li><li>المكتبات الجزائرية العارضة.</li><li>المتخصصون في الكتب الشرعية والأكاديمية.</li></ol></div>
+    <div><h4>لا تضيّع وقتك مع</h4><ul><li>الأجنحة الأجنبية (مصر، لبنان، الخليج).</li><li>دور النشر الكبيرة والعمومية.</li><li>البائع في وقت الزحمة.</li><li>من يطلب «موقع بلاش».</li></ul></div>
+    <div><h4>الوقت</h4><p>صباح أيام الأسبوع، حين تكون الأجنحة هادئة. تجنّب مساء نهاية الأسبوع، فالعائلات والزحام.</p></div>
+  </div>
+  <h3>أول سؤال</h3>
+  <div class="script"><div class="head"><span class="label">دارجة</span><button class="copy">نسخ</button></div><div class="body">السلام عليكم، شكون اللي يتكفّل بالبيع والتسيير عندكم؟ … وبرّا الصالون، كيفاش تبيعو؟ فايسبوك، تيليفون، ولا عندكم موقع؟</div></div>
+  <h3>أسئلة الاكتشاف</h3>
+  <ol><li>قدّاش عندكم من عنوان؟ وقدّاش من كتاب جديد في الشهر؟</li><li>الطلبيات منين يجيو؟ وشكون يسجّلهم؟</li><li>الستوك وين: كرّاس، Excel، برنامج؟</li><li>توصلو لأي ولايات؟ مع أي شركة توصيل؟</li><li>واش اللي يضيّعلكم أكثر وقت في السيمانة؟</li><li>عندكم طلبة يسقسيو على كتب حسب المادة؟ (للنظام الأكاديمي)</li><li>شكون يقرّر في استثمار كيما هذا؟</li></ol>
+
+  <h3>تصنيف الزبائن</h3>
+  <div class="tbl narrow"><table>
+    <thead><tr><th>التصنيف</th><th>متى بالضبط</th><th>ماذا تفعل</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill p-hi">ساخن</span></td><td>الثلاثة معًا: (1) تكلّمت مع صاحب القرار، (2) يبيع خارج المحل اليوم وذكر مشكلة، (3) قَبِل موعدًا بتاريخ خلال 14 يومًا أو طلب سعرًا مكتوبًا.</td><td>رسالة واتساب نفس اليوم. حضّر عرضًا بـ20 كتابًا من كتبه. موعد في الأسبوع الذي يلي المعرض.</td></tr>
+      <tr><td><span class="pill p-mid">دافئ</span></td><td>مهتم وأعطاك رقمه، لكن ينقص شرط من الثلاثة.</td><td>رسالة نفس اليوم مع الفيديو. متابعة بعد 7 أيام.</td></tr>
+      <tr><td><span class="pill p-lo">بارد</span></td><td>لا يبيع عبر الإنترنت ولا ينوي، أو «ابعثلي» بلا رقم، أو مؤسسة كبيرة، أو جناح أجنبي.</td><td>رسالة واحدة بعد المعرض فقط.</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><b>متى تعرض المنظومة:</b> بعد أن يؤكد في أول جوابين أنه يبيع خارج المحل.</li>
+    <li><b>متى تذكر السعر:</b> عندما يسأل، أو بعد العرض إن كان مهتمًا.</li>
+    <li><b>متى تطلب الواتساب:</b> مباشرة بعد العرض: «نبعتلك الفيديو والأسعار في الواتساب؟»</li>
+    <li><b>كيف تنهي الحديث:</b> بموعد له يوم وساعة، تكتبه أمامه.</li>
+    <li><b>التسجيل:</b> بعد كل حديث مباشرة، صوّر بطاقته واكتب خلفها التصنيف والمشكلة. وفي المساء املأ جدولًا: التاريخ، الدار، الاسم، الصفة، الواتساب، عدد العناوين، طريقة البيع، المشكلة، التصنيف، الخطوة التالية.</li>
+  </ul>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="whatsapp">
+  <span class="eyebrow">10</span>
+  <h2>رسائل واتساب</h2>
+  <p class="intro">احفظها كردود سريعة في WhatsApp Business، واستعمل دائمًا اسم الشخص واسم الدار.</p>
+  <h3>1. نفس اليوم (مساءً)</h3>
+  <div class="script"><div class="head"><span class="label">عربية</span><button class="copy">نسخ</button></div><div class="body">السلام عليكم سي [الاسم]، معاك [اسمك] من ورّاق، تلاقينا اليوم في الصالون عند جناح [الدار].
+كيما وعدتك، هذي الصفحة فيها المنظومة بالصور: [الرابط]
+إذا يناسبك نتلاقاو هاد السيمانة ونوريك على كتبكم. يعطيك الصحة.</div></div>
+  <div class="script"><div class="head"><span class="label">فرنسية</span><button class="copy">نسخ</button></div><div class="body fr">Bonsoir M. [Nom], [Prénom] de Warraq. On s'est vus aujourd'hui au SILA, sur le stand [Maison].
+Comme promis, la présentation avec les écrans : [lien]
+Si ça vous intéresse, je vous la montre cette semaine avec vos propres titres. Bonne soirée.</div></div>
+  <h3>2. اليوم التالي</h3>
+  <div class="script"><div class="head"><span class="label">عربية</span><button class="copy">نسخ</button></div><div class="body">صباح الخير سي [الاسم]، قدرت تشوف الصفحة؟ نقدر نجيك [الثلاثاء] ولا [الخميس]، 20 دقيقة برك.</div></div>
+  <h3>3. دعوة للعرض</h3>
+  <div class="script"><div class="head"><span class="label">عربية</span><button class="copy">نسخ</button></div><div class="body">سي [الاسم]، باش العرض يكون على مقاسكم: ابعثلي 20 عنوان من كتبكم (ولا رابط صفحتكم)، ونحضّرلك متجر تجريبي باسم [الدار]. نتلاقاو [اليوم] على [الساعة]؟</div></div>
+  <h3>4. العرض المالي</h3>
+  <div class="script"><div class="head"><span class="label">عربية</span><button class="copy">نسخ</button></div><div class="body">سي [الاسم]، كيما تفاهمنا، هذا العرض: [المحترف]، التركيب [120.000 دج]، والخدمة السنوية [72.000 دج] (الاستضافة، الصيانة والدعم). أونلاين في حوالي 3 أسابيع من وصول الملف واللوغو. الخلاص: النص عند الإمضاء والنص عند التشغيل. تخفيض الصالون صالح حتى [التاريخ]. التفاصيل في الملف المرفق.</div></div>
+  <h3>5. بعد العرض المالي بـ3 أيام</h3>
+  <div class="script"><div class="head"><span class="label">عربية</span><button class="copy">نسخ</button></div><div class="body">سي [الاسم]، عندك أي سؤال على العرض؟ إذا تحب نبداو بعرض أصغر ونزيدو من بعد، نقدر نعدّلو.</div></div>
+  <h3>6. الرسالة الأخيرة (بعد أسبوعين أو ثلاثة)</h3>
+  <div class="script"><div class="head"><span class="label">عربية</span><button class="copy">نسخ</button></div><div class="body">سي [الاسم]، ما نحبّش نقلّق عليك. نحبس الملف دروك، وسعر الصالون يبقى صالح حتى [التاريخ]. وقت ما تكونو جاهزين، أنا هنا.</div></div>
+  <h3>7. شكر بعد اللقاء</h3>
+  <div class="script"><div class="head"><span class="label">عربية</span><button class="copy">نسخ</button></div><div class="body">يعطيك الصحة سي [الاسم] على الوقت اليوم. كيما اتفقنا: [الخطوة]، قبل [التاريخ].</div></div>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="objections">
+  <span class="eyebrow">11</span>
+  <h2>الاعتراضات</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>ماذا يقول</th><th>ماذا يقصد</th><th>جوابك</th><th>سؤالك التالي</th></tr></thead>
+    <tbody>
+      <tr><td>غالي</td><td>لا يرى الفائدة بعد، أو ليس صاحب القرار.</td><td>قارن بالطلبيات الضائعة ووقت الموظف. اعرض الأساسي، والدفع على مرتين.</td><td>مقارنة بماذا؟ كم طلبية تضيع في الشهر؟</td></tr>
+      <tr><td>عندنا موقع</td><td>موقع واجهة لا يُحدَّث.</td><td>نبيع التسيير الذي وراء الموقع.</td><td>من يعالج الطلب حين يصل من الموقع؟</td></tr>
+      <tr><td>ما نحتاجوش تطبيق</td><td>زبائننا لن يحمّلوا تطبيقًا. وهذا صحيح.</td><td>التطبيق لكم أنتم، والزبون يشتري من الرابط.</td><td>من يُدخل الكتب الجديدة اليوم، وكم يأخذ ذلك من وقت؟</td></tr>
+      <tr><td>نبيعو في الفايسبوك</td><td>يعمل ومجاني.</td><td>احتفظوا به، وضعوا روابط المتجر فيه.</td><td>كم رسالة «كاين؟» تجيبون يوميًا؟</td></tr>
+      <tr><td>نخدمو بـExcel</td><td>لا نريد البدء من الصفر.</td><td>نُدخل ملفكم كما هو.</td><td>تبعثلي الملف نوريهولك في العرض؟</td></tr>
+      <tr><td>عندنا برنامج</td><td>برنامج محاسبة أو بيع في المحل.</td><td>لا نعوّضه، نضيف المتجر والطلبيات.</td><td>هل يسمح برنامجكم للزبون أن يرى كتبكم ويطلبها؟</td></tr>
+      <tr><td>ابعثلي المعلومات</td><td>خروج مهذّب.</td><td>NFC الآن، والصفحة على واتساب الليلة.</td><td>رقم واتساب؟ ومن يجب أن يراها أيضًا؟</td></tr>
+      <tr><td>نتشاورو</td><td>شخص آخر يقرّر.</td><td>اعرض أن تقدّمها لشريكه.</td><td>مع من؟ نجيكم 20 دقيقة؟</td></tr>
+      <tr><td>مازال ما وجدناش</td><td>الوقت، أو الخوف من العمل.</td><td>العمل علينا، أنتم ترسلون ملفًا وشعارًا فقط.</td><td>واش لازم يصرى باش تكونو جاهزين؟ ووقتاش؟</td></tr>
+      <tr><td>ما نبيعوش بزاف أونلاين</td><td>لا يرى الإنترنت كقناة.</td><td>ابدؤوا بطلبات الكتب غير المتوفرة، وانظروا ماذا يطلب الناس.</td><td>كم شخصًا سأل الأسبوع الماضي عن كتاب لم يكن عندكم؟</td></tr>
+      <tr><td>كل موظف عندو حساب؟</td><td>يريد التحكم في الموظفين.</td><td>الحقيقة: كلمة سر مشتركة حاليًا، والحسابات المنفصلة قادمة. لا تعد بتاريخ.</td><td>كم شخصًا سيستعملها؟</td></tr>
+      <tr><td>الدفع بالبطاقة / الذهبية؟</td><td>يريد أن يبدو عصريًا.</td><td>لا. الدفع عند الاستلام هو ما يستعمله مشترو الكتب، وبلا عمولات بنكية.</td><td>كم من زبائنكم يدفع بطريقة أخرى اليوم؟</td></tr>
+      <tr><td>وإذا رحت؟</td><td>هل أنت جاد ودائم؟</td><td>عقد وفاتورة، والبيانات والنطاق باسمه، ونسخة من بياناته متى شاء. ومكتبة البيان تعمل بها منذ [الشهر].</td><td>ماذا يطمئنك أكثر: بند في العقد أم نسخة من البيانات؟</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="trust">
+  <span class="eyebrow">12</span>
+  <h2>كيف تبدو محترفًا دون ادعاء</h2>
+  <p class="intro">أنت مهندس واحد بمنظومة تعمل وزبون حقيقي واحد. قل ذلك بوضوح، واجعل كل ما حوله متقنًا.</p>
+  <div class="cols">
+    <div><h4>افعل</h4><ul><li>اعرض المنظومة حيّة على هاتف الزبون نفسه.</li><li>اعرض متجر البيان الحقيقي كمرجع (المتجر فقط، بإذن والدك).</li><li>أسعار ونطاق مكتوبان على ورقة A5.</li><li>عقد وفاتورة من وضع قانوني (مثلًا المقاول الذاتي).</li><li>الدفع على مرتين.</li><li>البيانات والنطاق ملك الزبون، مكتوبًا.</li><li>«تتعامل مباشرة مع المهندس اللي بنى المنظومة ويصونها».</li><li>نفس الاسم والشعار في البطاقة والصفحة وواتساب والبريد.</li></ul></div>
+    <div><h4>لا تفعل</h4><ul><li>«فريقنا» إن لم يكن لديك فريق.</li><li>شعارات زبائن أو شهادات أو أرقام مزيّفة.</li><li>صور جاهزة أو مولّدة بالذكاء الاصطناعي.</li><li>«الأول في الجزائر»، «ثوري».</li><li>«نزيدها في 15 يوم».</li><li>إخفاء الحدود حتى بعد الإمضاء.</li></ul></div>
+  </div>
+  <p><b>قصتك في جملة:</b> «بنيت المنظومة داخل مكتبة حقيقية، وهي تخدم فيها كل يوم، ودروك نقدّمها للمكتبات الأخرى.» وإن سألوك هل هي مكتبة العائلة؟ قل نعم. هذه نقطة قوة، لأن المنظومة صُنعت من الاستعمال اليومي الحقيقي.</p>
+</section>
+
+<!-- ============ 13 TODO ============ -->
+<section id="todo">
+  <span class="eyebrow">13</span>
+  <h2>افعل هذا قبل المعرض</h2>
+  <p class="muted small">مرتّبة حسب الأهمية. علامات الإنجاز تُحفظ في متصفحك فقط.</p>
+  <ol class="check" id="checklist">
+    <li><input type="checkbox" id="c1"><label for="c1"><b>أوقف تأخّر الـ33 ثانية:</b> خادم دائم التشغيل (حوالي <span class="ltr">7$</span>/شهر) للنسخة التجريبية، ولمكتبة البيان أيضًا، فزبائن والدك ينتظرون كذلك.</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2"><b>الاسم والنطاق:</b> تحقّق من «ورّاق»، اشترِ النطاق، وأنشئ بريد contact@ وحساب WhatsApp Business.</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3"><b>انشر صفحة العرض</b> على نطاقك، وأرسل لي اسمك ورقمك وبريدك ومدينتك لأضعها فيها.</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><b>نسخة تجريبية على الإنترنت</b> بالنسخة الكاملة وبيانات تجريبية، مثل التي صوّرت منها اليوم. لا بيانات زبائن حقيقيين أبدًا.</label></li>
+    <li><input type="checkbox" id="c5"><label for="c5"><b>جمع اسم المكتبة وشعارها في ملف إعدادات واحد،</b> حتى يأخذ تغيير الاسم لكل زبون ساعات لا أيامًا.</label></li>
+    <li><input type="checkbox" id="c6"><label for="c6"><b>إذن والدك</b> بذكر مكتبة البيان، ومعه رقمان أو ثلاثة حقيقية (عدد الكتب، عدد الطلبيات).</label></li>
+    <li><input type="checkbox" id="c7"><label for="c7"><b>الأوراق:</b> ابدأ إجراءات وضع قانوني يسمح بالفوترة. حضّر ورقة الأسعار A5، ونموذج عرض، وعقدًا من صفحة واحدة.</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8"><b>صوّر الماسح على هاتفك:</b> غلاف مائل قبل المسح وبعده، وسجّل فيديو العرض في دقيقة واحدة.</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9"><b>البطاقات:</b> 50 بطاقة NFC من نوع NTAG215، و200 ورقية، والاثنتان بالرمز QR. جرّبها على 3 هواتف قبل الطباعة الكاملة.</label></li>
+    <li><input type="checkbox" id="c10"><label for="c10"><b>الأجهزة:</b> تطبيق الإدارة على هاتفك، ولوحة التحكم على لوحة أو حاسوب، وبطارية احتياطية، وإنترنت 4G، و3 كتب حقيقية للمسح.</label></li>
+    <li><input type="checkbox" id="c11"><label for="c11"><b>تدرّب</b> على العرض 10 مرات بالساعة، وقل الجمل بصوت عالٍ بالدارجة والفرنسية.</label></li>
+    <li><input type="checkbox" id="c12"><label for="c12"><b>الميدان:</b> جدول الزبائن، وتصنيفات واتساب والردود السريعة، و40 جناحًا مستهدفًا من قائمة العارضين.</label></li>
+  </ol>
+
+  <h3>بعد المعرض (لا تبدأ بها الآن)</h3>
+  <div class="tbl narrow"><table>
+    <thead><tr><th>التطوير</th><th>الأثر</th><th>الجهد</th></tr></thead>
+    <tbody>
+      <tr><td>سلة: عدة كتب في طلب واحد</td><td><span class="pill p-hi">كبير</span></td><td><span class="pill p-hi">كبير</span></td></tr>
+      <tr><td>حسابات للموظفين بصلاحيات</td><td><span class="pill p-mid">متوسط</span></td><td><span class="pill p-hi">كبير</span></td></tr>
+      <tr><td>ترتيب السنوات الأكاديمية، وحذف «غير مصنف» من الرئيسية</td><td><span class="pill p-mid">متوسط</span></td><td><span class="pill p-lo">صغير</span></td></tr>
+      <tr><td>تحديث تطبيقات الهاتف لتلحق بالموقع</td><td><span class="pill p-mid">متوسط</span></td><td><span class="pill p-mid">متوسط</span></td></tr>
+      <tr><td>شاشة استيراد Excel</td><td><span class="pill p-lo">صغير</span></td><td><span class="pill p-mid">متوسط</span></td></tr>
+      <tr><td>كل الزبائن على خادم واحد (لتخفيض التكلفة)</td><td><span class="pill p-mid">بعد 5 زبائن</span></td><td><span class="pill p-hi">كبير</span></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>المصادر: كود BookStore وBookStoreMobile (فرع master، 4 أكتوبر 2026)، فحص المتجر الحقيقي والخادم في نفس اليوم، ونسخة تجريبية محلية بالنسخة الكاملة صُوّرت منها الصور. الأسعار توصيات تُجرَّب في المعرض، وليست بيانات سوق.</footer>
+</div>
+
+<script>
+document.querySelectorAll('.script').forEach(function (box) {
+  var btn = box.querySelector('.copy');
+  var body = box.querySelector('.body');
+  if (!btn || !body) return;
+  btn.addEventListener('click', function () {
+    var text = body.innerText.trim();
+    var done = function () { btn.textContent = 'تم النسخ'; btn.classList.add('done'); setTimeout(function () { btn.textContent = 'نسخ'; btn.classList.remove('done'); }, 1600); };
+    var fallback = function () {
+      var r = document.createRange(); r.selectNodeContents(body);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = 'محدّد: انسخه';
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+      else fallback();
+    } catch (e) { fallback(); }
+  });
+});
+(function () {
+  var KEY = 'warraq-sila-checklist-ar';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { state = {}; }
+  document.querySelectorAll('#checklist input').forEach(function (box) {
+    var li = box.closest('li');
+    if (state[box.id]) { box.checked = true; li.classList.add('done'); }
+    box.addEventListener('change', function () {
+      li.classList.toggle('done', box.checked);
+      state[box.id] = box.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
