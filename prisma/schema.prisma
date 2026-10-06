@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   // Load relations with SQL joins in ONE query instead of one query per
   // relation. Each round trip to the database costs ~50 ms in production, so
   // a book list went from 7-8 sequential queries to 1-2.
@@ -45,6 +45,7 @@ model Store {
 
   books       Book[]
   inventories Inventory[]
+  importJobs  ImportJob[]
   requests    Request[]
   orders      Order[]
 }
@@ -65,8 +66,13 @@ model Book {
   /// under "معلومات إضافية".
   notes String?
 
-  year  Int?
-  price Decimal? @db.Decimal(10, 2)
+  year      Int?
+  price     Decimal? @db.Decimal(10, 2)
+  /// What the store paid for it. Admin-only — never sent to the storefront.
+  costPrice Decimal? @db.Decimal(10, 2)
+
+  /// The spreadsheet import that created this book, if any (lets an import be undone).
+  importJobId String?
 
   countryId  String?
   categoryId String
@@ -80,9 +86,10 @@ model Book {
   updatedAt DateTime @updatedAt
 
   // relations
-  store    Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  category Category @relation(fields: [categoryId], references: [id])
-  country  Country? @relation(fields: [countryId], references: [id])
+  store     Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category  Category   @relation(fields: [categoryId], references: [id])
+  importJob ImportJob? @relation(fields: [importJobId], references: [id], onDelete: SetNull)
+  country   Country?   @relation(fields: [countryId], references: [id])
 
   // A book may be written by several authors and issued by several publishers.
   authors    BookAuthor[]
@@ -102,6 +109,7 @@ model Book {
 
   @@index([storeId, title])
   @@index([titleNormalized])
+  @@index([importJobId])
 }
 
 /// One picture of a book. position 0 is the cover and mirrors Book.imageUrl.
@@ -342,4 +350,35 @@ model OrderItem {
   book  Book  @relation(fields: [bookId], references: [id])
 
   @@index([orderId])
+}
+
+// ================= DATA IMPORT =================
+
+/// One spreadsheet imported through the admin wizard: what was done, and
+/// enough to undo the books it created.
+model ImportJob {
+  id        String @id @default(uuid())
+  storeId   String
+  fileName  String
+  sheetName String
+  /// "catalog" (books, prices, stock). Later phases add sales, purchases…
+  kind      String @default("catalog")
+  /// "completed" | "undone"
+  status    String @default("completed")
+
+  created Int @default(0)
+  updated Int @default(0)
+  skipped Int @default(0)
+  errors  Int @default(0)
+
+  /// Column mapping and options used, for the history screen.
+  mapping Json?
+
+  createdAt DateTime  @default(now())
+  undoneAt  DateTime?
+
+  store Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  books Book[]
+
+  @@index([storeId, createdAt])
 }

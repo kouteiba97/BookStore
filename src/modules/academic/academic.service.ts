@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { StoreResolver } from '../../common/tenant/store-resolver.service';
-import { bookCardInclude, serializeBooks } from '../../common/utils/book-serializer';
+import { bookCardInclude, serializePublicBooks } from '../../common/utils/book-serializer';
 
 @Injectable()
 export class AcademicService {
@@ -131,7 +131,7 @@ export class AcademicService {
       orderBy: { title: 'asc' },
     });
 
-    return serializeBooks(books);
+    return serializePublicBooks(books);
   }
 
   /** All books under a study year, aggregated across its subjects. */
@@ -149,7 +149,7 @@ export class AcademicService {
       orderBy: { title: 'asc' },
     });
 
-    return serializeBooks(books);
+    return serializePublicBooks(books);
   }
 
   async getBooksBySubject(storeSlug: string, subjectId: string) {
@@ -169,6 +169,6 @@ export class AcademicService {
       orderBy: { title: 'asc' },
     });
 
-    return serializeBooks(books);
+    return serializePublicBooks(books);
   }
 }

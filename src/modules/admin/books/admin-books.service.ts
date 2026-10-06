@@ -13,6 +13,16 @@ import {
 } from '../../../common/utils/book-serializer';
 import { UpsertBookDto } from './dto/upsert-book.dto';
 
+/** "What is this book missing?" filters, used by the data-quality links. */
+export const MISSING_FILTERS: Record<string, any> = {
+  price: { price: null },
+  cover: { imageUrl: null },
+  author: { authors: { none: {} } },
+  category: { category: { name: { in: ['غير مصنف', 'عام'] } } },
+  stock: { OR: [{ inventory: null }, { inventory: { stock: null } }] },
+  outOfStock: { inventory: { stock: 0 } },
+};
+
 @Injectable()
 export class AdminBooksService {
   constructor(
@@ -24,11 +34,13 @@ export class AdminBooksService {
     search?: string;
     categoryId?: string;
     inventoryStatus?: string;
+    /** Books lacking something: price | cover | author | category | stock. */
+    missing?: string;
     page: number;
     pageSize: number;
   }) {
     const storeId = await this.storeResolver.getStoreId();
-    const { search, categoryId, inventoryStatus, page, pageSize } = opts;
+    const { search, categoryId, inventoryStatus, missing, page, pageSize } = opts;
 
     const where: any = {
       storeId,
@@ -36,6 +48,7 @@ export class AdminBooksService {
       ...(inventoryStatus
         ? { inventory: { is: { status: inventoryStatus as any } } }
         : {}),
+      ...(missing ? MISSING_FILTERS[missing] : {}),
       ...(search?.trim()
         ? {
             OR: [
@@ -124,6 +137,8 @@ export class AdminBooksService {
         notes: dto.notes ?? null,
         year: dto.year ?? null,
         price: dto.price ?? null,
+        // Kept when a client does not send it (the mobile apps do not know it).
+        ...(dto.costPrice !== undefined ? { costPrice: dto.costPrice } : {}),
         imageUrl: gallery[0] ?? null,
         images: {
           create: gallery.map((url, position) => ({ url, position })),
@@ -225,6 +240,8 @@ export class AdminBooksService {
           notes: dto.notes ?? null,
           year: dto.year ?? null,
           price: dto.price ?? null,
+        // Kept when a client does not send it (the mobile apps do not know it).
+        ...(dto.costPrice !== undefined ? { costPrice: dto.costPrice } : {}),
           imageUrl: cover,
           categoryId,
           countryId,

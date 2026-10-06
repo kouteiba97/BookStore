@@ -1,4 +1,8 @@
-import sharp = require('sharp');
+import type SharpFn from 'sharp';
+// sharp 0.35 ships ESM types at the top level; Node loads its CommonJS build.
+// A typed require keeps both sides honest without changing module settings.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const sharp: typeof SharpFn = require('sharp');
 import { processCover, thumbKey, thumbUrlFor } from './cover-image';
 
 describe('processCover', () => {

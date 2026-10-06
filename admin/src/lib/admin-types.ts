@@ -22,6 +22,8 @@ export interface AdminBook {
   notes: string | null;
   year: number | null;
   price: string | null;
+  /** Purchase price — admin-only. */
+  costPrice?: string | null;
   /** The cover — always the first of `images`. */
   imageUrl: string | null;
   /** Every picture in display order; a series has one per volume. */
@@ -121,6 +123,7 @@ export interface UpsertBookPayload {
   notes?: string | null;
   year?: number | null;
   price?: number | null;
+  costPrice?: number | null;
   /** Cover only. Ignored when `imageUrls` is sent. */
   imageUrl?: string | null;
   /** The whole gallery in order (first = cover). Replaces the stored pictures. */

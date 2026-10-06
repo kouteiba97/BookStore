@@ -115,6 +115,13 @@ export class UpsertBookDto {
   @Type(() => Number)
   price?: number | null;
 
+  /** Purchase price — admin-only, never shown on the storefront. */
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  costPrice?: number | null;
+
   @IsOptional()
   @IsString()
   @MaxLength(2048)

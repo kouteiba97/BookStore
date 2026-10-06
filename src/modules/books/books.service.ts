@@ -5,8 +5,8 @@ import { normalizeArabic } from '../../common/utils/normalize-arabic';
 import {
   bookCardInclude,
   bookInclude,
-  serializeBook,
-  serializeBooks,
+  serializePublicBook,
+  serializePublicBooks,
 } from '../../common/utils/book-serializer';
 import { thumbUrlFor } from '../../common/utils/cover-image';
 
@@ -45,7 +45,7 @@ export class BooksService {
       orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
       ...(take ? { take } : {}),
     });
-    return serializeBooks(books);
+    return serializePublicBooks(books);
   }
 
   async findOne(storeSlug: string, id: string) {
@@ -58,7 +58,7 @@ export class BooksService {
 
     if (!book) throw new NotFoundException('Book not found');
 
-    return serializeBook(book);
+    return serializePublicBook(book);
   }
 
   async search(storeSlug: string, q: string) {
@@ -96,7 +96,7 @@ export class BooksService {
       include: bookCardInclude as any,
       take: 40,
     });
-    return serializeBooks(books);
+    return serializePublicBooks(books);
   }
 
   /**
@@ -230,6 +230,6 @@ export class BooksService {
       include: bookCardInclude as any,
       take: 10,
     });
-    return serializeBooks(books);
+    return serializePublicBooks(books);
   }
 }

@@ -14,6 +14,9 @@ import { InventoryService } from './inventory/inventory.service';
 import { UploadsController } from './uploads/uploads.controller';
 import { SocialContentController } from './social-content/social-content.controller';
 import { SocialContentService } from './social-content/social-content.service';
+import { DataImportController } from './data-import/data-import.controller';
+import { DataExportController } from './data-import/data-export.controller';
+import { DataImportService } from './data-import/data-import.service';
 
 @Module({
   controllers: [
@@ -25,6 +28,8 @@ import { SocialContentService } from './social-content/social-content.service';
     InventoryController,
     UploadsController,
     SocialContentController,
+    DataImportController,
+    DataExportController,
   ],
   providers: [
     StatsService,
@@ -34,6 +39,7 @@ import { SocialContentService } from './social-content/social-content.service';
     OrdersService,
     InventoryService,
     SocialContentService,
+    DataImportService,
   ],
 })
 export class AdminModule {}

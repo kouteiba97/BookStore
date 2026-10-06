@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createBook,
@@ -40,6 +41,15 @@ import GalleryEditor, {
 } from "@/components/admin/gallery-editor";
 import { Thumb } from "@/components/admin/thumb";
 
+const MISSING_LABEL: Record<string, string> = {
+  price: "بدون سعر بيع",
+  cover: "بدون صورة غلاف",
+  author: "بدون مؤلف",
+  category: "بدون تصنيف",
+  stock: "بدون كمية مخزون",
+  outOfStock: "التي نفدت كميتها",
+};
+
 const INV_LABEL: Record<InventoryStatus, string> = {
   available: "متوفر",
   on_request: "حسب الطلب",
@@ -54,6 +64,9 @@ export default function BooksAdminPage() {
   const [categoryId, setCategoryId] = useState("");
   const [invStatus, setInvStatus] = useState("");
   const [page, setPage] = useState(1);
+  // Opened from "data quality": show only books missing something.
+  const [params, setParams] = useSearchParams();
+  const missing = params.get("missing") ?? "";
 
   const [editing, setEditing] = useState<AdminBook | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,12 +81,13 @@ export default function BooksAdminPage() {
     books: AdminBook[];
     total: number;
   }>({
-    queryKey: ["admin-books", search, categoryId, invStatus, page],
+    queryKey: ["admin-books", search, categoryId, invStatus, missing, page],
     queryFn: () =>
       fetchAdminBooks({
         search: search || undefined,
         categoryId: categoryId || undefined,
         inventoryStatus: invStatus || undefined,
+        missing: missing || undefined,
         page,
         pageSize: 25,
       }),
@@ -94,6 +108,20 @@ export default function BooksAdminPage() {
 
   return (
     <div className="space-y-5">
+      {missing && (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-900">
+          <span>
+            عرض الكتب {MISSING_LABEL[missing] ?? "الناقصة"} فقط — أكملها من زر «تعديل».
+          </span>
+          <button
+            type="button"
+            onClick={() => { params.delete("missing"); setParams(params, { replace: true }); setPage(1); }}
+            className="text-xs font-semibold underline"
+          >
+            عرض كل الكتب
+          </button>
+        </div>
+      )}
       {/* ── Toolbar ── */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1">
@@ -394,6 +422,7 @@ function BookFormModal({
         notes: form.notes.trim() || null,
         year: form.year ? Number(form.year) : null,
         price: form.price ? Number(form.price) : null,
+        costPrice: form.costPrice ? Number(form.costPrice) : null,
         imageUrls: await uploadGallery(form.pictures),
         inventory: form.hasInventory
           ? {
@@ -483,6 +512,16 @@ function BookFormModal({
               className={inputClass}
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
+            />
+          </Field>
+          <Field label="سعر الشراء (د.ج)" hint="لا يظهر للزبائن — لحساب الأرباح وقيمة المخزون.">
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              className={inputClass}
+              value={form.costPrice}
+              onChange={(e) => setForm({ ...form, costPrice: e.target.value })}
             />
           </Field>
         </div>
@@ -816,6 +855,7 @@ function buildForm(editing: AdminBook | null) {
     notes: editing?.notes ?? "",
     year: editing?.year ? String(editing.year) : "",
     price: editing?.price ? String(editing.price) : "",
+    costPrice: editing?.costPrice ? String(editing.costPrice) : "",
     pictures: galleryFromUrls(
       editing?.images?.length ? editing.images : editing?.imageUrl ? [editing.imageUrl] : [],
     ),

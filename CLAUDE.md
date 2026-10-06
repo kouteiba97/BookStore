@@ -18,7 +18,7 @@ Public storefront:
 - `books/` — book catalog reads
 - `academic/` — fields → years → subjects → books taxonomy
 - `requests/` — customer book-request leads (with WhatsApp redirect)
-- `import/` — CSV/XLSX bulk import (≤5000 rows/file; dedupe in memory on title+primary author, bulk name resolution, chunked transactional writes; one import per store at a time; `?images=false` skips the slow online cover lookup)
+- `import/` — legacy curl-only CSV/XLSX bulk import (the admin wizard is `admin/data-import/`) (≤5000 rows/file; dedupe in memory on title+primary author, bulk name resolution, chunked transactional writes; one import per store at a time; `?images=false` skips the slow online cover lookup)
 - `images/` — book cover image serving
 - `image-sync/` — match phone photos to books via filename + OCR
 - `clean/` — data cleanup for one store (merges author/publisher spelling variants — shared tables; removes a book only if fully identical and never ordered; clears a cover only on a definite 404/410)
@@ -32,6 +32,7 @@ Admin back office (`src/modules/admin/`, mounted at `/api/v1/admin/*`):
 - `academic/` — taxonomy admin
 - `inventory/` — stock management
 - `uploads/` — cover-photo upload → Cloudflare R2 (multipart; type decided by magic bytes). Every cover is normalised with `sharp` (`common/utils/cover-image.ts`): EXIF-rotated, metadata/GPS stripped, ≤2000 px JPEG, plus a 480 px `<name>.thumb.jpg`. The API exposes `thumbUrl` (and `thumbs[]` for galleries); clients show the thumbnail and fall back to the full picture. `scripts/backfill-thumbnails.ts` creates missing thumbnails (additive, idempotent).
+- `data-import/` — Excel/CSV import wizard + Excel exports (`/admin/data`). `analyze` (upload, kept 30 min in memory) → `preview` → `commit`; plus `report` (row-by-row Excel), `history`, `jobs/:id/undo` (deletes books the import created, never ordered ones), `template`, `GET /admin/data-quality`, `GET /admin/export/{books,orders}`. Column recognition in `fields.ts` (Arabic/French/English synonyms), value parsing in `values.ts` (prices like «1 500 دج», Arabic digits, Hijri years), layout detection in `detect.ts`, SheetJS I/O in `workbook.ts`. Imported books carry `importJobId`. `Book.costPrice` (purchase price) is admin-only — public routes use `serializePublicBook(s)`, which strips it. Product roadmap and packs: [docs/product-plan.md](docs/product-plan.md).
 - `social-content/` — content browser + ZIP export for social media (`GET /admin/social-content/books`, `POST /admin/social-content/export` with `bookIds` or `filter`). Streams a folder per book (cover, optional gallery, `metadata.json`, `metadata.txt`) + `index.csv`. Pictures are fetched server-side through `common/utils/image-source.ts` (https only, private IPs blocked, 15 MB cap); ZIP via the dependency-free `common/utils/zip-writer.ts`. Limits: 200 books/export, 500 MB/archive, 2 exports at once, 10/min. Captions plug into `social-post.ts`.
 
 Shared infra:
@@ -48,7 +49,7 @@ Auth & hardening:
 
 Public: `home.tsx`, `search.tsx`, `book.tsx`, `academic/{fields,years,subjects,subject-books}.tsx`
 
-Admin (separate app — `admin/src/pages/admin/`, served at `/admin`): `overview`, `orders`, `order-detail`, `books`, `quick-add` (mobile book entry), `catalog`, `academic`, `inventory`, `requests`. Login at `/admin/login` (`admin/src/pages/login.tsx`); token helpers + axios interceptors in `admin/src/lib/auth.ts`. Admin shared components live in `admin/src/components/admin/`, API in `admin/src/lib/admin-api.ts`.
+Admin (separate app — `admin/src/pages/admin/`, served at `/admin`): `overview`, `orders`, `order-detail`, `books` (`?missing=price|cover|author|category|stock|outOfStock`), `quick-add` (mobile book entry), `catalog`, `academic`, `inventory`, `requests`, `social-content`, `data` (import wizard / history / exports / data quality). Login at `/admin/login` (`admin/src/pages/login.tsx`); token helpers + axios interceptors in `admin/src/lib/auth.ts`. Admin shared components live in `admin/src/components/admin/`, API in `admin/src/lib/admin-api.ts`.
 
 **Editions** — one codebase, two products. `basic` (default) is the build for مكتبة البيان; `full` is the complete platform sold to other stores. Hidden features stay in code and DB, only the UI is gated:
 - Storefront: `VITE_EDITION` (`basic` | `full`), read in `frontend/src/lib/features.ts`. Basic hides the academic browse (nav link, home section, `/academic/*` routes → redirect home, sitemap entry). Set in `render.yaml`.
@@ -79,6 +80,7 @@ Perf/test tooling: `scripts/perf/` — `seed-perf-store.ts` (throwaway N-book st
 ## Key references
 
 - Book data model (Quick Add fields): [docs/book-data-model.md](docs/book-data-model.md)
+- Product plan (phases, packs): [docs/product-plan.md](docs/product-plan.md)
 - Audit & R2/upgrade plan: [docs/app-audit-and-upgrade-plan.md](docs/app-audit-and-upgrade-plan.md)
 - Admin operator guide: [docs/admin-dashboard.md](docs/admin-dashboard.md)
 - Admin deep-dive / recipes: [.claude/skills/admin-dashboard/SKILL.md](.claude/skills/admin-dashboard/SKILL.md)

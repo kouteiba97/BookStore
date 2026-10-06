@@ -38,6 +38,7 @@ export const fetchAdminBooks = (params: {
   search?: string;
   categoryId?: string;
   inventoryStatus?: string;
+  missing?: string;
   page?: number;
   pageSize?: number;
 }) => adminApi.get("/books", { params }).then((r) => r.data);
@@ -234,3 +235,143 @@ export async function exportSocialContent(
     throw err;
   }
 }
+
+// ── Data import / export ─────────────────────────────────
+
+export type ImportField =
+  | "title" | "author" | "publisher" | "category" | "price" | "costPrice" | "quantity" | "status"
+  | "year" | "edition" | "volumes" | "isbn" | "country" | "description" | "notes" | "imageUrl";
+
+export interface ImportColumn {
+  index: number;
+  letter: string;
+  header: string;
+  samples: string[];
+  field: ImportField | null;
+  confidence: number;
+  reason: "header" | "content" | "none";
+}
+
+export interface ImportSheet {
+  name: string;
+  totalRows: number;
+  truncated: boolean;
+  headerRow: number;
+  columns: ImportColumn[];
+  firstRows: string[][];
+  looksLikeCatalog: boolean;
+}
+
+export interface ImportAnalysis {
+  sessionId: string;
+  fileName: string;
+  expiresAt: string;
+  fields: { key: ImportField; label: string }[];
+  sheets: ImportSheet[];
+}
+
+export interface ImportOptions {
+  sheet: string;
+  headerRow: number;
+  mapping: Partial<Record<ImportField, number>>;
+  existing: "update" | "skip";
+  stockMode: "set" | "add";
+  defaultCategory?: string | null;
+  defaultStatus: "available" | "on_request" | "rare";
+}
+
+export type ImportAction = "create" | "update" | "unchanged" | "skip" | "error";
+
+export interface ImportPreview {
+  summary: { rows: number; create: number; update: number; unchanged: number; skip: number; error: number };
+  issues: { code: string; message: string; rows: number }[];
+  newNames: { authors: number; publishers: number; categories: string[] };
+  rows: { row: number; title: string; action: ImportAction; issues: { code: string; level: "error" | "warning"; message: string }[]; changes: string[] }[];
+  truncatedRows: boolean;
+}
+
+export interface DataQuality {
+  total: number;
+  noPrice: number;
+  noCover: number;
+  noAuthor: number;
+  uncategorized: number;
+  noStock: number;
+  outOfStock: number;
+}
+
+export interface ImportResult {
+  jobId: string;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  missing: DataQuality;
+}
+
+export interface ImportJob {
+  id: string;
+  fileName: string;
+  sheetName: string;
+  status: "completed" | "undone";
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: number;
+  createdAt: string;
+  undoneAt: string | null;
+  booksStillLinked: number;
+}
+
+export const analyzeImport = (file: File) => {
+  const fd = new FormData();
+  fd.append("file", file);
+  return adminApi.post("/data-import/analyze", fd).then((r) => r.data as ImportAnalysis);
+};
+
+export const previewImport = (sessionId: string, opts: ImportOptions) =>
+  adminApi.post(`/data-import/${sessionId}/preview`, opts).then((r) => r.data as ImportPreview);
+
+export const commitImport = (sessionId: string, opts: ImportOptions) =>
+  adminApi.post(`/data-import/${sessionId}/commit`, opts).then((r) => r.data as ImportResult);
+
+export const fetchImportHistory = () =>
+  adminApi.get("/data-import/history").then((r) => r.data as ImportJob[]);
+
+export const undoImport = (jobId: string) =>
+  adminApi.post(`/data-import/jobs/${jobId}/undo`).then((r) => r.data as { removed: number; keptBecauseOrdered: number });
+
+export const fetchDataQuality = () =>
+  adminApi.get("/data-quality").then((r) => r.data as DataQuality);
+
+/** Save a downloaded file under the server's name (or a fallback). */
+function saveBlob(blob: Blob, disposition: string | undefined, fallback: string) {
+  const utf = /filename\*=UTF-8''([^;]+)/i.exec(disposition ?? "")?.[1];
+  const plain = /filename="([^"]+)"/i.exec(disposition ?? "")?.[1];
+  const name = utf ? decodeURIComponent(utf) : plain ?? fallback;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+async function download(req: Promise<{ data: Blob; headers: Record<string, any> }>, fallback: string) {
+  const r = await req;
+  saveBlob(r.data, r.headers["content-disposition"], fallback);
+}
+
+export const downloadImportReport = (sessionId: string, opts: ImportOptions) =>
+  download(adminApi.post(`/data-import/${sessionId}/report`, opts, { responseType: "blob" }), "import-report.xlsx");
+
+export const downloadImportTemplate = () =>
+  download(adminApi.get("/data-import/template", { responseType: "blob" }), "books-template.xlsx");
+
+export const downloadBooksExport = () =>
+  download(adminApi.get("/export/books", { responseType: "blob" }), "books.xlsx");
+
+export const downloadOrdersExport = (params: { from?: string; to?: string; status?: string }) =>
+  download(adminApi.get("/export/orders", { params, responseType: "blob" }), "orders.xlsx");

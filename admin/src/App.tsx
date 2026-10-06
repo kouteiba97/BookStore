@@ -17,6 +17,7 @@ const CatalogPage = lazy(() => import("@/pages/admin/catalog"));
 const AcademicAdminPage = lazy(() => import("@/pages/admin/academic"));
 const InventoryPage = lazy(() => import("@/pages/admin/inventory"));
 const SocialContentPage = lazy(() => import("@/pages/admin/social-content"));
+const DataPage = lazy(() => import("@/pages/admin/data"));
 import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({
@@ -71,6 +72,7 @@ export default function App() {
             />
             <Route path="inventory" element={<InventoryPage />} />
             <Route path="social-content" element={<SocialContentPage />} />
+            <Route path="data" element={<DataPage />} />
           </Route>
 
           {/* Anything outside /admin → send to the dashboard home */}

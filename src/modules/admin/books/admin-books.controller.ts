@@ -28,6 +28,7 @@ export class AdminBooksController {
     @Query('search') search?: string,
     @Query('categoryId') categoryId?: string,
     @Query('inventoryStatus') inventoryStatus?: string,
+    @Query('missing') missing?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
@@ -35,6 +36,7 @@ export class AdminBooksController {
       search,
       categoryId,
       inventoryStatus: optionalEnum(inventoryStatus, INVENTORY_STATUSES, 'inventoryStatus'),
+      missing: optionalEnum(missing, ['price', 'cover', 'author', 'category', 'stock', 'outOfStock'] as const, 'missing'),
       ...paging(page, pageSize),
     });
   }

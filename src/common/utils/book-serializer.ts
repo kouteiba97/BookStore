@@ -72,3 +72,21 @@ export function serializeBook(book: any): any {
 export function serializeBooks(books: any[]): any[] {
   return (books ?? []).map(serializeBook);
 }
+
+/**
+ * Fields that exist for the back office only. The storefront and the mobile
+ * store app must never receive them — a purchase price in a public JSON
+ * response would hand every competitor the shop's margins.
+ */
+const INTERNAL_FIELDS = ['costPrice', 'importJobId'] as const;
+
+/** `serializeBook` for public (storefront) responses. */
+export function serializePublicBook(book: any): any {
+  const out = serializeBook(book);
+  if (out) for (const f of INTERNAL_FIELDS) delete out[f];
+  return out;
+}
+
+export function serializePublicBooks(books: any[]): any[] {
+  return (books ?? []).map(serializePublicBook);
+}

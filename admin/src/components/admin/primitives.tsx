@@ -196,6 +196,9 @@ export function Modal({
         onClick={onClose}
       />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className={`relative w-full ${sizes[size]} max-h-[90vh] overflow-hidden rounded-2xl border border-border/60 bg-card shadow-warm-lg animate-in zoom-in-95 slide-in-from-bottom-2 duration-200`}
       >
         {title && (

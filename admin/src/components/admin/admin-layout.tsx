@@ -61,6 +61,11 @@ const Icon = {
       <circle cx="12" cy="13" r="3.5" /><path d="M12 10v6M9 13h6" />
     </svg>
   ),
+  data: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M12 18v-6M9 15l3 3 3-3" />
+    </svg>
+  ),
   social: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
       <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
@@ -98,6 +103,7 @@ const NAV: NavItem[] = [
   { to: "/admin/catalog/categories", label: "التصنيفات", icon: Icon.catalog },
   ...(features.academic ? [{ to: "/admin/academic", label: "الأكاديمي", icon: Icon.academic }] : []),
   { to: "/admin/inventory", label: "المخزون", icon: Icon.inventory },
+  { to: "/admin/data", label: "استيراد وتصدير", icon: Icon.data },
   { to: "/admin/social-content", label: "محتوى التواصل", icon: Icon.social },
 ];
 
@@ -114,6 +120,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/academic": "النظام الأكاديمي",
   "/admin/inventory": "المخزون",
   "/admin/social-content": "محتوى التواصل الاجتماعي",
+  "/admin/data": "استيراد وتصدير البيانات",
 };
 
 function getPageTitle(pathname: string) {
