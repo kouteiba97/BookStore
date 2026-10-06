@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ورّاق للمكتبات ودور النشر</title>
+<meta name="description" content="منظومة متكاملة لتسيير وبيع الكتب: متجر إلكتروني باسم مكتبتكم، لوحة تحكم للكتب والمخزون والطلبيات، ونظام أكاديمي حسب التخصص والسنة والمادة.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&display=swap">
+<style>
+/* Layout: a single editorial column; screenshots sit flat on "paper" inside plain device outlines.
+   Brand: ink + paper + one stamp-red mark. The product's own green/gold lives only inside the screenshots. */
+:root {
+  --paper: #f6f6f2;
+  --sheet: #ffffff;
+  --ink: #17212b;
+  --ink-2: #26323d;
+  --graphite: #56616c;
+  --rule: #dcdfda;
+  --stamp: #8e2f2a;
+  --stamp-soft: #f2e5e3;
+  --on-ink: #eef0ec;
+  --on-ink-muted: #aab4bd;
+  --wa: #1f7a4d;
+  --head: "Noto Naskh Arabic", "Amiri", "Traditional Arabic", serif;
+  --body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11171d; --sheet: #182029; --ink: #e9ebe7; --ink-2: #0c1116; --graphite: #a7b0b8; --rule: #2b3640;
+    --stamp: #e39187; --stamp-soft: #35211f; --on-ink: #e9ebe7; --on-ink-muted: #94a0aa; --wa: #4fbf86; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11171d; --sheet: #182029; --ink: #e9ebe7; --ink-2: #0c1116; --graphite: #a7b0b8; --rule: #2b3640;
+  --stamp: #e39187; --stamp-soft: #35211f; --on-ink: #e9ebe7; --on-ink-muted: #94a0aa; --wa: #4fbf86; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { direction: rtl; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 16.5px; line-height: 1.85; }
+img { max-width: 100%; display: block; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--stamp); outline-offset: 3px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+h1, h2, h3 { font-family: var(--head); font-weight: 700; line-height: 1.45; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(32px, 5.4vw, 54px); }
+h2 { font-size: clamp(26px, 3.6vw, 36px); }
+h3 { font-size: 21px; }
+p { margin: 0; }
+.muted { color: var(--graphite); }
+.eyebrow { font-size: 13px; font-weight: 600; color: var(--stamp); letter-spacing: 0.02em; }
+
+/* top bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; }
+.mark { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.mark .sq { width: 36px; height: 36px; border: 2px solid var(--stamp); color: var(--stamp); border-radius: 3px; display: grid; place-items: center; font-family: var(--head); font-size: 20px; font-weight: 700; line-height: 1; }
+.mark b { font-family: var(--head); font-size: 22px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-weight: 600; font-size: 15px; padding: 10px 18px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; font-family: var(--body); }
+.btn-ink { background: var(--ink); color: var(--paper); }
+.btn-line { border-color: var(--rule); color: var(--ink); background: var(--sheet); }
+.btn-line:hover { border-color: var(--graphite); }
+.btn svg { width: 18px; height: 18px; }
+
+/* hero */
+.hero { padding-block: 56px 40px; display: grid; grid-template-columns: 1fr 1.15fr; gap: 48px; align-items: center; }
+.hero > div { min-width: 0; }
+.hero .lede { font-size: 19px; color: var(--graphite); margin-top: 18px; max-width: 34em; }
+.hero .ctas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.live { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; font-size: 14px; color: var(--graphite); }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: #2e9e63; box-shadow: 0 0 0 4px color-mix(in srgb, #2e9e63 20%, transparent); }
+.stage { position: relative; padding-bottom: 40px; }
+.browser { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; box-shadow: 0 18px 50px -24px rgba(23, 33, 43, .35); }
+.browser .chrome { height: 26px; border-bottom: 1px solid var(--rule); display: flex; gap: 6px; align-items: center; padding-inline: 12px; direction: ltr; }
+.browser .chrome span { width: 8px; height: 8px; border-radius: 50%; background: var(--rule); }
+.phone { background: #0d1318; padding: 7px; border-radius: 26px; box-shadow: 0 18px 40px -18px rgba(23, 33, 43, .5); }
+.phone img { border-radius: 20px; }
+.stage .phone { position: absolute; width: 31%; left: -12px; bottom: 0; }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 30px; padding-block: 36px 24px; } .stage .phone { left: 0; } }
+
+section { padding-block: 72px; border-top: 1px solid var(--rule); }
+.head { max-width: 640px; margin-bottom: 34px; }
+.head p { margin-top: 10px; color: var(--graphite); font-size: 17.5px; }
+
+/* problem */
+.pains { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--rule); background: var(--sheet); }
+.pains div { padding: 22px 22px; border-inline-start: 1px solid var(--rule); min-width: 0; }
+.pains div:first-child { border-inline-start: 0; }
+.pains b { display: block; font-family: var(--head); font-size: 20px; margin-bottom: 6px; }
+@media (max-width: 760px) { .pains { grid-template-columns: 1fr; } .pains div { border-inline-start: 0; border-top: 1px solid var(--rule); } .pains div:first-child { border-top: 0; } }
+
+/* flow */
+.flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 26px; counter-reset: s; }
+.flow figure { margin: 0; min-width: 0; counter-increment: s; }
+.flow .shot { aspect-ratio: 4 / 5; overflow: hidden; border: 1px solid var(--rule); border-radius: 10px; background: var(--sheet); display: flex; justify-content: center; align-items: flex-start; padding: 18px 18px 0; }
+.flow .shot img { width: 72%; border-radius: 14px 14px 0 0; box-shadow: 0 10px 30px -14px rgba(23,33,43,.4); }
+.flow .shot.wide { padding: 18px 0 0 18px; justify-content: flex-start; }
+.flow .shot.wide img { width: 165%; max-width: none; border-radius: 8px 0 0 0; object-fit: cover; object-position: right top; }
+.flow figcaption { margin-top: 14px; }
+.flow figcaption b { display: flex; align-items: baseline; gap: 10px; font-family: var(--head); font-size: 20px; }
+.flow figcaption b::before { content: counter(s, arabic-indic); color: var(--stamp); font-size: 22px; }
+.flow figcaption p { color: var(--graphite); font-size: 15.5px; margin-top: 4px; }
+@media (max-width: 900px) { .flow { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .flow { grid-template-columns: 1fr; } }
+
+/* academic band */
+.band { background: var(--ink-2); color: var(--on-ink); border-top: 0; }
+:root:not([data-theme]) .band, :root[data-theme="light"] .band { background: #17212b; }
+.band .eyebrow { color: #e3a59d; }
+.band .head p { color: var(--on-ink-muted); }
+.acad { display: grid; grid-template-columns: 1.6fr 1fr; gap: 22px; align-items: start; }
+.acad > * { min-width: 0; }
+.acad .browser { border-color: rgba(255,255,255,.12); }
+.acad .side { display: grid; gap: 22px; }
+.acad ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.acad li { padding-inline-start: 18px; position: relative; color: var(--on-ink); }
+.acad li::before { content: ""; position: absolute; inset-inline-start: 0; top: 0.8em; width: 7px; height: 7px; background: #e3a59d; transform: rotate(45deg); }
+.acad .phone { width: 62%; margin-inline: auto; }
+@media (max-width: 860px) { .acad { grid-template-columns: 1fr; } }
+
+/* dashboard */
+.dash { display: grid; grid-template-columns: 1fr 260px; gap: 26px; align-items: start; }
+.dash > * { min-width: 0; }
+.facts { display: grid; gap: 0; border-top: 1px solid var(--rule); }
+.facts div { padding: 14px 0; border-bottom: 1px solid var(--rule); }
+.facts b { display: block; font-size: 15.5px; }
+.facts span { color: var(--graphite); font-size: 14.5px; }
+@media (max-width: 860px) { .dash { grid-template-columns: 1fr; } }
+
+/* features */
+.feats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--rule); background: var(--sheet); }
+.feats div { padding: 20px; border-inline-start: 1px solid var(--rule); border-top: 1px solid var(--rule); min-width: 0; }
+.feats div:nth-child(-n+4) { border-top: 0; }
+.feats div:nth-child(4n+1) { border-inline-start: 0; }
+.feats svg { width: 22px; height: 22px; color: var(--stamp); }
+.feats b { display: block; margin-top: 10px; font-size: 16px; }
+.feats p { color: var(--graphite); font-size: 14.5px; margin-top: 4px; line-height: 1.7; }
+@media (max-width: 900px) { .feats { grid-template-columns: repeat(2, 1fr); } .feats div:nth-child(-n+4) { border-top: 1px solid var(--rule); } .feats div:nth-child(-n+2) { border-top: 0; } .feats div:nth-child(4n+1) { border-inline-start: 1px solid var(--rule); } .feats div:nth-child(2n+1) { border-inline-start: 0; } }
+@media (max-width: 520px) { .feats { grid-template-columns: 1fr; } .feats div { border-inline-start: 0 !important; border-top: 1px solid var(--rule) !important; } .feats div:first-child { border-top: 0 !important; } }
+
+/* gallery */
+.gallery { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px; scroll-snap-type: x mandatory; }
+.gallery a { flex: none; width: min(78vw, 520px); scroll-snap-align: start; text-decoration: none; }
+.gallery a.m { width: min(46vw, 220px); }
+.gallery img { border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); }
+.gallery span { display: block; font-size: 13.5px; color: var(--graphite); margin-top: 8px; }
+
+/* who */
+.who { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+.who div { min-width: 0; border-top: 2px solid var(--ink); padding-top: 14px; }
+.who p { color: var(--graphite); margin-top: 6px; font-size: 15.5px; }
+.not { margin-top: 26px; color: var(--graphite); font-size: 15px; }
+@media (max-width: 760px) { .who { grid-template-columns: 1fr; } }
+
+/* offers */
+.offers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
+.offer { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.offer.rec { border: 2px solid var(--stamp); }
+.offer .tag { align-self: flex-start; font-size: 12.5px; font-weight: 600; color: var(--stamp); background: var(--stamp-soft); padding: 2px 10px; border-radius: 3px; }
+.offer h3 { font-size: 22px; }
+.price { font-variant-numeric: tabular-nums; }
+.price b { font-size: 30px; font-family: var(--body); }
+.price small { display: block; color: var(--graphite); font-size: 14px; }
+.offer ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 15px; flex: 1; }
+.offer li { padding-inline-start: 22px; position: relative; }
+.offer li::before { content: "✓"; position: absolute; inset-inline-start: 0; color: var(--stamp); font-weight: 700; }
+.offer li.no { color: var(--graphite); }
+.offer li.no::before { content: "—"; color: var(--graphite); }
+.fine { margin-top: 18px; font-size: 14.5px; color: var(--graphite); }
+@media (max-width: 900px) { .offers { grid-template-columns: 1fr; } }
+
+/* faq */
+.faq details { border-bottom: 1px solid var(--rule); padding-block: 14px; }
+.faq summary { cursor: pointer; font-weight: 600; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--stamp); font-weight: 700; }
+.faq details[open] summary::after { content: "−"; }
+.faq p { color: var(--graphite); margin-top: 8px; max-width: 46em; }
+
+/* contact */
+.contact { display: grid; grid-template-columns: 1.2fr 1fr; gap: 36px; align-items: center; }
+.contact > * { min-width: 0; }
+.card { background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px; padding: 24px; display: grid; gap: 14px; }
+.row { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--rule); padding-bottom: 12px; }
+.row:last-of-type { border-bottom: 0; padding-bottom: 0; }
+.row span { color: var(--graphite); font-size: 14px; }
+.row b { direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+.btn-wa { background: var(--wa); color: #fff; }
+@media (max-width: 860px) { .contact { grid-template-columns: 1fr; } }
+
+footer { border-top: 1px solid var(--rule); padding-block: 26px 40px; color: var(--graphite); font-size: 13.5px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="mark" href="#top"><span class="sq">و</span><b data-cfg="brand">ورّاق</b></a>
+    <a class="btn btn-ink" data-wa href="#contact">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.3-4.4A9 9 0 1 1 21 12Z"/></svg>
+      اطلب عرضًا مباشرًا
+    </a>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div>
+      <span class="eyebrow">للمكتبات ودور النشر في الجزائر</span>
+      <h1>منظومة متكاملة لتسيير الكتب وبيعها</h1>
+      <p class="lede">متجر إلكتروني باسم مكتبتكم، ولوحة تحكم للكتب والمخزون والأسعار والطلبيات، ونظام أكاديمي حسب التخصص والسنة والمادة. تسيّرونها من الحاسوب أو الهاتف، والدفع عند الاستلام في 69 ولاية.</p>
+      <div class="ctas">
+        <a class="btn btn-ink" data-wa href="#contact">اطلب عرضًا على كتبك أنت</a>
+        <a class="btn btn-line" href="#how">شاهد كيف تعمل</a>
+      </div>
+      <p class="live"><i></i>تعمل اليوم في مكتبة حقيقية: مكتبة البيان</p>
+    </div>
+    <div class="stage">
+      <div class="browser"><div class="chrome"><span></span><span></span><span></span></div><img src="img/store-home.webp" alt="الصفحة الرئيسية للمتجر الإلكتروني" width="1600" height="1000"></div>
+      <div class="phone"><img src="img/store-book-m.webp" alt="صفحة كتاب على الهاتف" width="780" height="1688"></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">المشكلة</span>
+        <h2>البيع عبر الرسائل يضيّع الطلبيات والوقت</h2>
+      </div>
+      <div class="pains">
+        <div><b>«هل هذا الكتاب متوفر؟»</b><p class="muted">نفس السؤال عشرات المرات في اليوم على فيسبوك وواتساب، والزبون لا يرى ما عندكم.</p></div>
+        <div><b>طلبيات تضيع</b><p class="muted">الطلب يبقى في محادثة، ولا أحد يعرف ما الذي أُكّد وما الذي شُحن.</p></div>
+        <div><b>المخزون في كرّاس</b><p class="muted">أو في ملف Excel لا يراه إلا شخص واحد، وكل كتاب جديد يحتاج صورة ومنشورًا وردودًا.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">كيف تعمل</span>
+        <h2>من الرفّ إلى الزبون، في مكان واحد</h2>
+        <p>كل الصور التالية من المنظومة نفسها، ببيانات تجريبية.</p>
+      </div>
+      <div class="flow">
+        <figure><div class="shot"><img src="img/admin-quickadd-m.webp" alt="إضافة كتاب بمسح الغلاف" loading="lazy"></div><figcaption><b>تُدخلون الكتاب</b><p>صورة الغلاف بالمسح (قصّ وتقويم تلقائي)، ثم العنوان والتصنيف. بضع ثوانٍ لكل كتاب.</p></figcaption></figure>
+        <figure><div class="shot wide"><img src="img/admin-inventory.webp" alt="المخزون" loading="lazy"></div><figcaption><b>يُسجّل في المخزون</b><p>الكمية، والحالة (متوفر، عند الطلب، نادر)، وتنبيه للكتب التي توشك على النفاد.</p></figcaption></figure>
+        <figure><div class="shot"><img src="img/store-search-m.webp" alt="البحث في المتجر" loading="lazy"></div><figcaption><b>يظهر في المتجر</b><p>الزبون يبحث بالعربية ويجد الكتاب فورًا، من أي هاتف.</p></figcaption></figure>
+        <figure><div class="shot"><img src="img/store-order-m.webp" alt="نموذج الطلب" loading="lazy"></div><figcaption><b>الزبون يطلب</b><p>الاسم، الهاتف، الولاية والعنوان. الطلب يُسجَّل عندكم أولًا، ثم تُفتح محادثة واتساب.</p></figcaption></figure>
+        <figure><div class="shot wide"><img src="img/admin-order.webp" alt="تفاصيل الطلبية" loading="lazy"></div><figcaption><b>تتابعون الطلبية</b><p>قيد الانتظار، مؤكدة، قيد الشحن، مسلّمة. مع المبالغ وتكلفة التوصيل.</p></figcaption></figure>
+        <figure><div class="shot wide"><img src="img/admin-overview.webp" alt="لوحة التحكم" loading="lazy"></div><figcaption><b>ترون كل شيء</b><p>الإيرادات، الطلبيات حسب الحالة، الكتب الأكثر طلبًا، على 7 أو 30 أو 90 يومًا.</p></figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">النظام الأكاديمي</span>
+        <h2>الطالب يجد كتبه حسب تخصصه وسنته ومادته</h2>
+        <p>للمكتبات القريبة من الجامعات ولدور النشر الأكاديمية: ترتيب الكتب حسب التخصص ثم السنة ثم المادة، كما يبحث عنها الطلبة فعلًا.</p>
+      </div>
+      <div class="acad">
+        <div class="browser"><div class="chrome"><span></span><span></span><span></span></div><img src="img/academic-years.webp" alt="سنوات تخصص التفسير وعلوم القرآن" loading="lazy"></div>
+        <div class="side">
+          <ul>
+            <li>التخصصات ← السنوات ← المواد، تُدار من لوحة التحكم.</li>
+            <li>يُربط الكتاب بتخصص كامل، أو بسنة، أو بمادة واحدة أو أكثر.</li>
+            <li>إن لم يجد الطالب كتابه، يطلبه مباشرة فيصلكم كطلب مسجَّل.</li>
+          </ul>
+          <div class="phone"><img src="img/academic-subject-m.webp" alt="كتب مادة دراسية على الهاتف" loading="lazy"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">لوحة التحكم</span>
+        <h2>كل شيء تحت أعينكم، من أي مكان</h2>
+      </div>
+      <div class="dash">
+        <div class="browser"><div class="chrome"><span></span><span></span><span></span></div><img src="img/admin-orders.webp" alt="قائمة الطلبيات" loading="lazy"></div>
+        <div class="facts">
+          <div><b>الطلبيات</b><span>من طلب الزبون إلى التسليم، مع إمكانية جمع عدة كتب في طلبية واحدة.</span></div>
+          <div><b>طلبات العملاء</b><span>كل كتاب يطلبه زبون ولا يوجد عندكم، باسمه ورقمه وولايته.</span></div>
+          <div><b>الكتب والفهرس</b><span>عدة مؤلفين ودور نشر للكتاب، عدة صور، الطبعة وعدد الأجزاء.</span></div>
+          <div><b>محتوى التواصل</b><span>تحميل صور الكتب ونصوصها جاهزة للنشر على فيسبوك وإنستغرام.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">ما تقوم به المنظومة</span>
+        <h2>مصمّمة للكتاب العربي وللبيع في الجزائر</h2>
+      </div>
+      <div class="feats">
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M8 8h8v8H8z"/></svg><b>مسح الأغلفة</b><p>صورة نظيفة للكتاب من الهاتف، بدون مصوّر.</p></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8"/></svg><b>المخزون</b><p>كميات وحالات وتنبيه النفاد.</p></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8ZM7.5 7.5h.01"/></svg><b>أسعار موحّدة</b><p>سعر واحد يظهر في المتجر وفي الطلبيات.</p></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3zM5 7v13h14V7M10 12h4"/></svg><b>الطلبيات</b><p>متابعة كل طلبية حتى التسليم.</p></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><b>بحث بالعربية</b><p>يتجاهل التشكيل والهمزات واختلاف التاء والهاء.</p></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5ZM6 12v5c3 3 9 3 12 0v-5"/></svg><b>النظام الأكاديمي</b><p>تخصص، سنة، مادة.</p></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg><b>69 ولاية</b><p>الدفع عند الاستلام، والتواصل عبر واتساب.</p></div>
+        <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><b>محتوى للنشر</b><p>صور ونصوص الكتب جاهزة لصفحاتكم.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">صور من المنظومة</span>
+        <h2>المنظومة كما هي</h2>
+        <p>اسحبوا لرؤية المزيد. اضغطوا على أي صورة لفتحها بالحجم الكامل.</p>
+      </div>
+      <div class="gallery">
+        <a href="img/store-book.webp" target="_blank" rel="noopener"><img src="img/store-book.webp" alt="" loading="lazy"><span>صفحة الكتاب</span></a>
+        <a class="m" href="img/store-home-m.webp" target="_blank" rel="noopener"><img src="img/store-home-m.webp" alt="" loading="lazy"><span>المتجر على الهاتف</span></a>
+        <a href="img/academic-fields.webp" target="_blank" rel="noopener"><img src="img/academic-fields.webp" alt="" loading="lazy"><span>التخصصات الأكاديمية</span></a>
+        <a href="img/admin-requests.webp" target="_blank" rel="noopener"><img src="img/admin-requests.webp" alt="" loading="lazy"><span>طلبات العملاء</span></a>
+        <a class="m" href="img/store-request-m.webp" target="_blank" rel="noopener"><img src="img/store-request-m.webp" alt="" loading="lazy"><span>طلب كتاب غير متوفر</span></a>
+        <a href="img/admin-academic.webp" target="_blank" rel="noopener"><img src="img/admin-academic.webp" alt="" loading="lazy"><span>إدارة النظام الأكاديمي</span></a>
+        <a href="img/admin-books.webp" target="_blank" rel="noopener"><img src="img/admin-books.webp" alt="" loading="lazy"><span>إدارة الكتب</span></a>
+        <a href="img/admin-social.webp" target="_blank" rel="noopener"><img src="img/admin-social.webp" alt="" loading="lazy"><span>محتوى التواصل</span></a>
+        <a class="m" href="img/admin-overview-m.webp" target="_blank" rel="noopener"><img src="img/admin-overview-m.webp" alt="" loading="lazy"><span>لوحة التحكم على الهاتف</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">لمن هذه المنظومة؟</span>
+        <h2>لمن يبيع الكتب خارج جدران محلّه</h2>
+      </div>
+      <div class="who">
+        <div><h3>المكتبات المستقلة</h3><p>محل أو محلّان، تبيعون عبر فيسبوك والهاتف، وتريدون متجرًا باسمكم.</p></div>
+        <div><h3>دور النشر</h3><p>قناة بيع مباشرة للقرّاء في كل الولايات، دون انتظار المعارض والموزّعين.</p></div>
+        <div><h3>المكتبات المتخصّصة والجامعية</h3><p>كتب مرتّبة حسب التخصص والسنة والمادة.</p></div>
+      </div>
+      <p class="not">للوضوح: المنظومة ليست نظام محاسبة ولا نقطة بيع في المحل، ولا تتضمّن الدفع الإلكتروني.</p>
+    </div>
+  </section>
+
+  <section id="offers">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">العروض</span>
+        <h2>أسعار واضحة، بلا مفاجآت</h2>
+        <p>مبلغ تركيب يُدفع مرة واحدة، وخدمة سنوية تغطي الاستضافة والصيانة والدعم.</p>
+      </div>
+      <div class="offers">
+        <div class="offer">
+          <h3>الأساسي</h3>
+          <p class="price"><b>60.000</b> دج <small>تركيب، ثم 48.000 دج سنويًا</small></p>
+          <ul><li>متجر إلكتروني باسمكم وشعاركم</li><li>لوحة التحكم كاملة</li><li>إدخال حتى 500 كتاب من ملف Excel</li><li>جلسة تدريب</li><li class="no">تطبيق الهاتف للإدارة</li><li class="no">النظام الأكاديمي</li></ul>
+          <a class="btn btn-line" data-wa="الأساسي" href="#contact">اطلب هذا العرض</a>
+        </div>
+        <div class="offer rec">
+          <span class="tag">الأكثر طلبًا</span>
+          <h3>المحترف</h3>
+          <p class="price"><b>120.000</b> دج <small>تركيب، ثم 72.000 دج سنويًا</small></p>
+          <ul><li>كل ما في الأساسي</li><li>تطبيق أندرويد للإدارة مع مسح الأغلفة</li><li>إدخال حتى 2.000 كتاب</li><li>جلستا تدريب، وشهر من التعديلات</li><li>النظام الأكاديمي: خيار بـ30.000 دج</li></ul>
+          <a class="btn btn-ink" data-wa="المحترف" href="#contact">اطلب هذا العرض</a>
+        </div>
+        <div class="offer">
+          <h3>المؤسسات</h3>
+          <p class="price"><b>من 200.000</b> دج <small>تركيب، ثم من 150.000 دج سنويًا</small></p>
+          <ul><li>كل ما في المحترف</li><li>النظام الأكاديمي مع إعداده</li><li>تطبيق للزبائن باسمكم على Google Play</li><li>حتى 3 أيام تطوير خاص، مكتوبة مسبقًا</li><li>تدريب في مقرّكم</li></ul>
+          <a class="btn btn-line" data-wa="المؤسسات" href="#contact">اطلب دراسة</a>
+        </div>
+      </div>
+      <p class="fine">الدفع: نصف المبلغ عند الإمضاء، والنصف عند تشغيل المتجر. اسم النطاق (domain) باسمكم ويُدفع ثمنه مباشرة. أي تطوير خاص إضافي يُقدَّر بالأيام ويُكتب قبل البدء.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap faq">
+      <div class="head"><span class="eyebrow">أسئلة متكرّرة</span><h2>قبل أن تسألوا</h2></div>
+      <details><summary>هل يمكن للزبون الدفع بالبطاقة؟</summary><p>لا. الدفع عند الاستلام، وهو ما يعتمده أغلب مشتري الكتب في الجزائر.</p></details>
+      <details><summary>ومن يتكفّل بالتوصيل؟</summary><p>تحتفظون بشركة التوصيل التي تعملون معها، وتُسجّلون تكلفة التوصيل في كل طلبية.</p></details>
+      <details><summary>عندنا قائمة كتب في Excel، هل نعيد كتابتها؟</summary><p>لا. نُدخل ملفكم مباشرة في المنظومة ضمن حدود العرض.</p></details>
+      <details><summary>كم يستغرق التشغيل؟</summary><p>من أسبوعين إلى ثلاثة أسابيع بعد استلام ملف الكتب والشعار.</p></details>
+      <details><summary>لمن تعود البيانات؟</summary><p>لكم. الكتب والطلبيات وبيانات الزبائن ملككم، ونسلّمكم نسخة منها عند الطلب.</p></details>
+      <details><summary>هل يعمل على الآيفون؟</summary><p>المتجر يعمل على كل الهواتف من المتصفّح. تطبيق الإدارة متوفّر على أندرويد.</p></details>
+      <details><summary>هل يمكن لكل موظف أن يملك حسابًا خاصًا؟</summary><p>حاليًا الدخول إلى لوحة التحكم بكلمة سر مشتركة. الحسابات المنفصلة للموظفين ضمن التطويرات القادمة.</p></details>
+      <details><summary>ماذا بعد السنة الأولى؟</summary><p>تدفعون الخدمة السنوية فقط بالسعر المتّفق عليه، وتستفيدون من التحسينات التي تُضاف للمنظومة.</p></details>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="wrap contact">
+      <div>
+        <span class="eyebrow">الخطوة التالية</span>
+        <h2>شاهدوا المنظومة على كتبكم أنتم</h2>
+        <p class="muted" style="margin-top:12px;font-size:17.5px">أرسلوا لنا 20 عنوانًا من كتبكم أو رابط صفحتكم، ونحضّر لكم عرضًا بمتجر يحمل اسمكم. عشرون دقيقة تكفي.</p>
+      </div>
+      <div class="card">
+        <div class="row"><span>الاسم</span><b data-cfg="name"></b></div>
+        <div class="row"><span>الهاتف وواتساب</span><b data-cfg="phoneDisplay"></b></div>
+        <div class="row"><span>البريد</span><b data-cfg="email"></b></div>
+        <div class="row"><span>المدينة</span><b data-cfg="city" style="direction:rtl"></b></div>
+        <a class="btn btn-wa" data-wa href="#contact">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.3-4.4A9 9 0 1 1 21 12Z"/></svg>
+          راسلنا على واتساب
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><span data-cfg="brand">ورّاق</span> · منظومة رقمية للمكتبات ودور النشر</span>
+    <span>الصور من نسخة تجريبية ببيانات تجريبية. المنظومة تعمل في مكتبة البيان.</span>
+  </div>
+</footer>
+
+<script>
+/* ── Fill these in once; everything on the page updates. ── */
+var CONFIG = {
+  brand: "ورّاق",
+  name: "[اسمك الكامل]",
+  phoneDisplay: "[0X XX XX XX XX]",
+  whatsapp: "",            /* international format without +, e.g. 2136XXXXXXXX */
+  email: "[بريدك@النطاق]",
+  city: "[المدينة]"
+};
+document.querySelectorAll("[data-cfg]").forEach(function (el) {
+  var v = CONFIG[el.getAttribute("data-cfg")];
+  if (v) el.textContent = v;
+});
+document.querySelectorAll("[data-wa]").forEach(function (a) {
+  if (!CONFIG.whatsapp) return;
+  var offer = a.getAttribute("data-wa");
+  var msg = "السلام عليكم، أريد عرضًا مباشرًا لمنظومة " + CONFIG.brand + (offer ? " (عرض " + offer + ")" : "") + ".";
+  a.href = "https://wa.me/" + CONFIG.whatsapp + "?text=" + encodeURIComponent(msg);
+  a.target = "_blank";
+  a.rel = "noopener";
+});
+</script>
+
+</body>
+</html>
