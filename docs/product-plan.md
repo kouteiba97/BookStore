@@ -10,9 +10,9 @@ Excel). Features are then sold in packs.
 | Phase | Status | What it gives a shop |
 |---|---|---|
 | **1. Smart import + export** | ✅ shipped | Upload any book/stock sheet (.xlsx, .xls, .csv, Arabic or French headers). Columns are recognised automatically; the admin checks the mapping, sees a row-by-row preview (new / update / duplicate / error / missing info), imports, gets a "what's missing" report, and can undo. Export of books + stock value, and orders + monthly income, to Excel. |
-| **2. Money module** | planned | Suppliers, purchases (stock in), in-shop sales (stock out), expenses (rent, salaries, transport…), invoices as printable PDF. One sales register: website orders + counter sales + imported sales. Each importable with the same wizard. |
-| **3. Reports** | planned | Income vs. expenses per month, gross margin (sale − purchase price), profit, best/worst sellers, slow stock, stock value. Excel and PDF. |
-| **4. Packs** | planned | Each store has a plan; features outside it are visible but locked, with an "upgrade" prompt. |
+| **2. Money module** | ✅ shipped | Suppliers, purchases (stock in), in-shop sales (stock out), expenses (rent, salaries, transport…), invoices as printable PDF. One sales register: website orders + counter sales + imported sales. Each importable with the same wizard. |
+| **3. Reports** | ✅ shipped | Income vs. expenses per month, gross margin (sale − purchase price), profit, best/worst sellers, slow stock, stock value. Excel and PDF. |
+| **4. Packs** | ✅ shipped | Each store has a plan; features outside it are visible but locked, with an "upgrade" prompt. |
 
 ## Phase 1 — how it works
 
@@ -39,6 +39,61 @@ note), several authors in one cell, availability words (متوفر / Disponible 
 Purchase price (`costPrice`) is stored for margins and stock value; it is admin-only
 and stripped from every public response.
 
+## Phase 2 — money (how it works)
+
+- **One sales register** (`/admin/sales`): website/phone orders, counter sales and
+  imported sales are all `Order` rows with a `channel` (`online` / `shop` / `import`),
+  a `paymentMethod` and an optional `discount`. The **counter** tab is a small POS:
+  search a book, add quantities, discount, payment → saved as a delivered sale.
+- **Stock follows the money.** One helper (`common/stock/stock.ts` → `moveStock`)
+  moves stock atomically and logs every change in `StockMovement` (sale, return,
+  purchase, purchase cancel, manual adjustment, import). An order takes stock when it
+  is confirmed, gives it back when cancelled; a delivered sale can be **returned**
+  (status → cancelled, books back on the shelf). The inventory page shows each book's
+  log («السجل»).
+- **Each sold line freezes its cost** (`OrderItem.unitCost` = the book's purchase price
+  at sale time), so margins stay right when prices change later.
+- **Purchases & suppliers** (`/admin/purchases`): a purchase (supplier, reference,
+  date, lines with quantity + purchase price, shipping, amount paid) adds the copies
+  to stock and updates each book's purchase price. Supplier balances = total − paid;
+  payments can be recorded later. Cancelling takes the copies back out.
+- **Expenses** (`/admin/expenses`): rent, salaries, transport, utilities, marketing,
+  supplies, taxes, other.
+- **Invoices** (`/admin/invoice/:id`): numbered per year (`2026-0001`, via
+  `StoreCounter`), with the store's identity and legal ids (RC, NIF, NIS, ART) from
+  `/admin/settings`. Printed from the browser or saved as PDF.
+- **History import**: the same wizard reads sales, purchases and expenses sheets
+  («ماذا تحتوي هذه الورقة؟»). Lines are grouped into sales/purchases by reference
+  (invoice / BL number), otherwise by date + customer / supplier + date. Unknown
+  books are created. By default stock is **not** touched (past movements are already
+  reflected in today's count); options let the shop apply them. Undo removes
+  everything the import wrote and restores stock.
+
+## Phase 3 — reports (how it works)
+
+`/admin/reports` (and `GET /admin/reports/overview?from&to`): revenue, cost of books
+sold, gross margin (and rate), expenses, **net profit**, orders, books sold, average
+sale, purchases and what is still owed to suppliers; month by month (chart + table),
+by channel, expenses by category, best sellers with their margin, **slow stock** (in
+stock, nothing sold for 90 days), stock value at cost and at sale price. A warning shows
+when part of the sales has no known purchase price. `GET /admin/reports/export` gives
+the same as a 6-sheet Excel file. Sold = confirmed / shipped / delivered, dated by
+`soldAt` (imported sales keep their real date) else `createdAt`.
+
+## Phase 4 — packs (how it works)
+
+- `Store.plan` ∈ `starter | pro | business` (unknown → starter; existing stores were
+  migrated to `business`). Defined in `src/common/plan/plans.ts`; set with
+  `npx ts-node scripts/set-plan.ts <slug> <plan>` (`--list` to see stores).
+- `@RequiresFeature('money' | 'invoices' | 'reports' | 'socialExport' | 'historyImport' | 'academic')`
+  on a controller → **402** with an Arabic message naming the cheapest pack that has it.
+  `PlanService` enforces limits (books per store, imports per month).
+- `GET /admin/plan` → pack, features, limits, usage and the full comparison. The admin
+  shows locked pages with a lock icon and an upgrade card (never hidden); the
+  comparison table lives in **المتجر والباقة** (`/admin/settings`).
+- Core stays in every pack: catalogue, storefront, orders, counter sales, inventory,
+  books Excel import/export (leaving is never a trap).
+
 ## Packs — proposal (prices to be set by the owner)
 
 Packs are cumulative. Names are suggestions.
@@ -53,7 +108,7 @@ Packs are cumulative. Names are suggestions.
 | Social-media content export (ZIP) | — | ✅ | ✅ |
 | Money module: purchases, counter sales, expenses, suppliers | — | ✅ | ✅ |
 | Invoices (PDF) | — | ✅ | ✅ |
-| Reports: income vs. expenses, margins, stock value | basic (orders only) | ✅ | ✅ |
+| Reports: income vs. expenses, margins, stock value | — (overview dashboard only) | ✅ | ✅ |
 | Import of sales / purchases / invoices history | — | — | ✅ |
 | Several staff accounts with roles | — | — | ✅ (needs per-user login) |
 | Academic catalogue (specialities, years, subjects) | — | ✅ | ✅ |
@@ -63,13 +118,9 @@ Packs are cumulative. Names are suggestions.
 (Phase 1 already does this), and "your data stays yours — one click exports
 everything back to Excel".
 
-## What packs need technically (Phase 4)
-
-- `Store.plan` (+ optional per-feature overrides and limits), set by the platform owner.
-- A backend guard `@RequiresFeature('import')` returning 402 with an upgrade message.
-- The admin reads `GET /admin/plan` and shows locked items with a lock icon and an
-  "upgrade" call-to-action instead of hiding them.
-- Usage counters for limits (books per store, imports per month).
+## Still to do
 
 Prerequisite for multi-store sales: per-user accounts (today each deployment has one
 shared admin password) and the platform-owner console to create stores and set plans.
+
+Mobile apps (`store_app`, `admin_app`) do not have the money, reports and packs screens yet; they keep working (the API is unchanged for them) and need a port.

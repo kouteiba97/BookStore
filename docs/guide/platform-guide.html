@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دليل منصة مكتبة البيان</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&display=swap">
+<style>
+  :root {
+    --ink: #1d2a24;
+    --muted: #5b6862;
+    --green: #143d2c;
+    --green-soft: #e7efe9;
+    --gold: #b8892f;
+    --gold-soft: #f6eedc;
+    --paper: #fffdf9;
+    --line: #e6e0d4;
+  }
+  @page { size: A4; margin: 16mm 15mm 18mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 11pt/1.75 "Cairo", Tahoma, sans-serif; }
+  h1, h2, h3 { font-family: "Amiri", "Cairo", serif; color: var(--green); line-height: 1.3; }
+  h2 { font-size: 22pt; margin: 0 0 4mm; padding-bottom: 2mm; border-bottom: 2px solid var(--gold); }
+  h3 { font-size: 14pt; margin: 6mm 0 2mm; }
+  p { margin: 0 0 3mm; }
+  ul, ol { margin: 0 0 3mm; padding-inline-start: 6mm; }
+  li { margin-bottom: 1.2mm; }
+  strong { color: var(--green); }
+  code, .ltr { direction: ltr; unicode-bidi: isolate; font-family: Consolas, monospace; font-size: 9.5pt; background: #f1ede4; padding: 0 1.2mm; border-radius: 1mm; }
+  section { page-break-before: always; }
+  .lead { font-size: 12pt; color: var(--muted); }
+  figure { margin: 4mm 0 5mm; page-break-inside: avoid; }
+  figure img { display: block; max-width: 100%; max-height: 112mm; width: auto; margin-inline: auto; border: 1px solid var(--line); border-radius: 3mm; box-shadow: 0 1mm 4mm rgba(0,0,0,.06); }
+  figure.phone img { width: 40mm; max-height: none; }
+  .phones { display: flex; gap: 6mm; justify-content: center; }
+  .phones figure { flex: 0 0 auto; }
+  figcaption { margin-top: 1.5mm; font-size: 9pt; color: var(--muted); text-align: center; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm 6mm; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 3mm; padding: 3.5mm 4.5mm; page-break-inside: avoid; }
+  .card h4 { margin: 0 0 1.5mm; font-size: 11.5pt; color: var(--green); }
+  .card p, .card li { font-size: 10pt; }
+  .note { background: var(--gold-soft); border-inline-start: 3px solid var(--gold); padding: 3mm 4mm; border-radius: 2mm; font-size: 10pt; page-break-inside: avoid; }
+  .steps { counter-reset: s; list-style: none; padding: 0; }
+  .steps li { counter-increment: s; position: relative; padding-inline-start: 10mm; margin-bottom: 2.5mm; }
+  .steps li::before { content: counter(s); position: absolute; inset-inline-start: 0; top: .3mm; width: 6.5mm; height: 6.5mm; border-radius: 50%; background: var(--green); color: #fff; font-size: 9pt; font-weight: 700; display: grid; place-items: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; page-break-inside: avoid; margin: 2mm 0 4mm; }
+  th, td { border-bottom: 1px solid var(--line); padding: 2mm 2.5mm; text-align: start; vertical-align: top; }
+  th { background: var(--green-soft); color: var(--green); font-weight: 700; }
+  td.c, th.c { text-align: center; }
+  .yes { color: #1f7a4a; font-weight: 700; }
+  .no { color: #b3aca0; }
+  .kicker { color: var(--gold); font-weight: 700; letter-spacing: .5px; font-size: 10pt; }
+
+  /* Cover */
+  .cover { height: 263mm; display: flex; flex-direction: column; justify-content: space-between; padding: 14mm 6mm 6mm; background: linear-gradient(160deg, #143d2c 0%, #0f2e21 70%); color: #f5efe2; border-radius: 4mm; }
+  .cover h1 { color: #fff; font-size: 40pt; margin: 6mm 0 2mm; }
+  .cover .sub { font-size: 15pt; color: #e9dcbc; }
+  .cover .gold { color: #d9b25e; }
+  .cover ul { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 8mm; }
+  .cover li { padding: 1.5mm 0; border-bottom: 1px solid rgba(255,255,255,.12); font-size: 11pt; break-inside: avoid; }
+  .cover li b { color: #d9b25e; }
+  .cover .foot { font-size: 9.5pt; color: #b9c7bf; }
+  .toc { columns: 2; column-gap: 10mm; padding: 0; list-style: none; }
+  .toc li { padding: 1.5mm 0; border-bottom: 1px dotted var(--line); break-inside: avoid; }
+  .toc b { color: var(--gold); display: inline-block; width: 8mm; }
+  @media screen { body { max-width: 210mm; margin: 0 auto; padding: 10mm; } section { margin-top: 14mm; } }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div>
+    <div class="kicker" style="color:#d9b25e">دليل المنصة — أكتوبر 2026</div>
+    <h1>مكتبة البيان</h1>
+    <p class="sub">متجر إلكتروني، لوحة تحكم، وتطبيقات هاتف لإدارة مكتبة كاملة:<br>من الكتالوج إلى البيع في المحل، والمشتريات، والأرباح.</p>
+  </div>
+  <ul>
+    <li><b>المتجر</b> — بحث فوري، صفحة لكل كتاب، طلب عبر واتساب</li>
+    <li><b>الطلبات</b> — مسار واضح من الطلب إلى التسليم</li>
+    <li><b>البيع في المحل</b> — صندوق بيع سريع وفواتير مرقّمة</li>
+    <li><b>المخزون</b> — يتحرك تلقائيًا مع كل بيع وشراء وإرجاع</li>
+    <li><b>المشتريات والموردون</b> — ما دفعته وما بقي عليك</li>
+    <li><b>المصاريف</b> — كراء، أجور، نقل، كهرباء…</li>
+    <li><b>التقارير</b> — رقم الأعمال، الهامش، صافي الربح</li>
+    <li><b>Excel</b> — استيراد ملفاتك كما هي، وتصدير كل شيء</li>
+    <li><b>محتوى التواصل</b> — أغلفة وبيانات جاهزة للنشر</li>
+    <li><b>الباقات</b> — أساسي، مكتبة، مؤسسة</li>
+  </ul>
+  <p class="foot">العنوان: 20، نهج إرنستو تشي غيفارا، 25000 قسنطينة — هذا الدليل يشرح كل ميزة وكيف تعمل، للمستعمل ولصاحب القرار.</p>
+</div>
+
+<section>
+  <h2>المحتويات</h2>
+  <ol class="toc">
+    <li><b>1</b>المنصة في صفحة واحدة</li>
+    <li><b>2</b>المتجر الإلكتروني (للزبائن)</li>
+    <li><b>3</b>لوحة التحكم: الدخول والنظرة العامة</li>
+    <li><b>4</b>الطلبات وطلبات العملاء</li>
+    <li><b>5</b>الكتب، الصور، والإضافة السريعة</li>
+    <li><b>6</b>المخزون وسجل الحركات</li>
+    <li><b>7</b>البيع في المحل وسجل المبيعات</li>
+    <li><b>8</b>الفواتير والإرجاع</li>
+    <li><b>9</b>المشتريات والموردون</li>
+    <li><b>10</b>المصاريف</li>
+    <li><b>11</b>التقارير والأرباح</li>
+    <li><b>12</b>الاستيراد من Excel والتصدير</li>
+    <li><b>13</b>محتوى التواصل الاجتماعي</li>
+    <li><b>14</b>الباقات</li>
+    <li><b>15</b>تطبيقات الهاتف</li>
+    <li><b>16</b>الأمان والتقنية</li>
+    <li><b>17</b>يوم عمل نموذجي وأسئلة شائعة</li>
+  </ol>
+
+  <h3 style="margin-top:10mm">1. المنصة في صفحة واحدة</h3>
+  <p>المنصة مكوّنة من خدمة خلفية واحدة (قاعدة بيانات وواجهة برمجية) تخدم أربع واجهات، كلها بالعربية ومن اليمين إلى اليسار وبنفس الهوية البصرية:</p>
+  <div class="grid2">
+    <div class="card"><h4>المتجر الإلكتروني</h4><p>للزبائن: تصفح الكتب، البحث، صفحة الكتاب، الطلب والاستفسار عبر واتساب، خريطة المكتبة.</p></div>
+    <div class="card"><h4>لوحة التحكم (ويب)</h4><p>لصاحب المكتبة والبائع: الطلبات، الكتب، المخزون، البيع في المحل، المشتريات، المصاريف، التقارير، Excel.</p></div>
+    <div class="card"><h4>تطبيق المتجر (هاتف)</h4><p>نفس تجربة المتجر في تطبيق أندرويد.</p></div>
+    <div class="card"><h4>تطبيق الإدارة (هاتف)</h4><p>متابعة الطلبات، والإضافة السريعة لكتاب بتصوير غلافه بالكاميرا.</p></div>
+  </div>
+  <div class="note"><strong>نسختان من نفس الكود:</strong> نسخة «أساسية» لمكتبة البيان، ونسخة «كاملة» تُعرض على مكتبات أخرى (تضيف الفهرس الأكاديمي: تخصصات ← سنوات ← مواد ← كتب). الميزات المخفية تبقى في الكود وقاعدة البيانات، وتُفعّل بإعداد واحد.</div>
+</section>
+
+<section>
+  <h2>2. المتجر الإلكتروني</h2>
+  <p class="lead">واجهة سريعة وخفيفة على الهاتف، مصممة ليصل الزبون إلى الكتاب في ثوانٍ ثم يطلبه.</p>
+  <figure><img src="img/store-home.webp" alt=""><figcaption>الصفحة الرئيسية: أحدث الكتب، التصنيفات، والبحث في الأعلى.</figcaption></figure>
+  <div class="grid2">
+    <div class="card"><h4>البحث الفوري</h4><p>نتائج تظهر أثناء الكتابة بالعنوان أو المؤلف، مع تجاهل الفروق الإملائية العربية (أ/إ/ا، ة/ه، ى/ي).</p></div>
+    <div class="card"><h4>التصنيفات</h4><p>تصفح حسب تصنيفات المكتبة الحقيقية، مع زر رجوع واضح.</p></div>
+    <div class="card"><h4>صفحة الكتاب</h4><p>الغلاف وكل صور السلسلة، المؤلف، الناشر، السعر، حالة التوفر، وكتب مقترحة.</p></div>
+    <div class="card"><h4>الطلب</h4><p>نموذج قصير (الاسم، الهاتف، الولاية من 69 ولاية، العنوان) يصل مباشرة إلى لوحة التحكم، ثم يكمل الزبون عبر واتساب.</p></div>
+    <div class="card"><h4>طلب كتاب غير موجود</h4><p>«اطلب» كتابًا ليس في المتجر: يُسجّل كطلب عميل يمكن تحويله لاحقًا إلى طلب بيع.</p></div>
+    <div class="card"><h4>مكان المكتبة</h4><p>خريطة وعنوان المحل في قسنطينة لمن يفضّل الحضور.</p></div>
+  </div>
+  <div class="phones">
+    <figure class="phone"><img src="img/store-search-m.webp" alt=""><figcaption>البحث على الهاتف</figcaption></figure>
+    <figure class="phone"><img src="img/store-order-m.webp" alt=""><figcaption>نموذج الطلب</figcaption></figure>
+    <figure class="phone"><img src="img/store-request-m.webp" alt=""><figcaption>طلب كتاب</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2>3. لوحة التحكم: الدخول والنظرة العامة</h2>
+  <p>تُفتح لوحة التحكم على عنوان منفصل (<span class="ltr">/admin</span>) بكلمة سر المكتبة، وتبقى الجلسة صالحة 30 يومًا. القائمة الجانبية تجمع كل الأقسام، وتطوى لتوسيع المساحة، وتتحول إلى قائمة منزلقة على الهاتف.</p>
+  <figure><img src="img/admin-overview.webp" alt=""><figcaption>النظرة العامة: الإيرادات، عدد الطلبات، الرسوم البيانية اليومية، الحالات، الكتب الأكثر طلبًا، آخر النشاطات (7 / 30 / 90 يومًا).</figcaption></figure>
+  <div class="note">الأقسام التي ليست في باقة المتجر تبقى ظاهرة في القائمة مع قفل صغير. فتحها يشرح ما تقدمه ومن أي باقة تتوفر، دون إخفاء أي شيء.</div>
+</section>
+
+<section>
+  <h2>4. الطلبات وطلبات العملاء</h2>
+  <h3>مسار الطلب</h3>
+  <p>كل طلب يمر بحالات واضحة، ولا تسمح المنصة إلا بالانتقالات المنطقية:</p>
+  <p style="text-align:center;font-weight:700">قيد الانتظار ← مؤكدة ← قيد الشحن ← مسلَّمة &nbsp;|&nbsp; ويمكن الإلغاء في أي مرحلة، و«الإرجاع» بعد التسليم</p>
+  <ul>
+    <li><strong>المخزون يتبع الطلب:</strong> عند التأكيد تُخصم الكتب من المخزون، وعند الإلغاء أو الإرجاع تعود إليه تلقائيًا.</li>
+    <li><strong>طلب متعدد الكتب:</strong> تعديل الكتب والكميات والأسعار والتوصيل من نافذة واحدة.</li>
+    <li><strong>الإيرادات</strong> تحسب الطلبات المؤكدة والمشحونة والمسلّمة فقط.</li>
+    <li>زر واتساب للتواصل مع الزبون مباشرة، وزر «إصدار فاتورة».</li>
+  </ul>
+  <figure><img src="img/admin-order.webp" alt=""><figcaption>تفاصيل طلب: مسار الحالة، الكتب، الزبون، والإجراءات.</figcaption></figure>
+  <h3>طلبات العملاء</h3>
+  <p>استفسارات الزبائن عن كتب (من المتجر) تظهر هنا بحالاتها: جديد، تم التواصل، تم البيع. زر «تحويل إلى طلب» يُنشئ طلب بيع بالكتب والأسعار في خطوة واحدة.</p>
+</section>
+
+<section>
+  <h2>5. الكتب، الصور، والإضافة السريعة</h2>
+  <figure><img src="img/admin-books.webp" alt=""><figcaption>قائمة الكتب: بحث، تصفية، وروابط مباشرة للكتب الناقصة (بدون سعر، غلاف، مؤلف، تصنيف، مخزون).</figcaption></figure>
+  <div class="grid2">
+    <div class="card"><h4>بطاقة الكتاب</h4><p>العنوان، المؤلفون، الناشر، التصنيف، البلد، السنة، الطبعة، عدد الأجزاء، ردمك، الوصف، سعر البيع، <strong>سعر الشراء</strong> (لا يظهر للزبائن أبدًا)، الحالة والمخزون.</p></div>
+    <div class="card"><h4>معرض صور</h4><p>عدة صور لكل كتاب (مثلًا كل أجزاء سلسلة). الصورة الأولى هي الغلاف. كل صورة تُدوَّر تلقائيًا وتُحذف منها بيانات الموقع وتُصغّر، مع نسخة مصغّرة سريعة للقوائم.</p></div>
+    <div class="card"><h4>الإضافة السريعة</h4><p>مصممة للهاتف: صوّر الغلاف، اكتب العنوان والتصنيف، «حفظ ومسح التالي». أسرع طريقة لإدخال رفوف كاملة.</p></div>
+    <div class="card"><h4>التصنيفات والمؤلفون والناشرون</h4><p>إدارة القوائم المرجعية، ومنع حذف عنصر مستعمل في كتاب.</p></div>
+  </div>
+  <div class="phones" style="margin-top:4mm">
+    <figure class="phone"><img src="img/admin-quickadd-m.webp" alt=""><figcaption>الإضافة السريعة على الهاتف</figcaption></figure>
+  </div>
+</section>
+
+<section>
+  <h2>6. المخزون وسجل الحركات</h2>
+  <p>جدول سريع لتعديل حالة كل كتاب (متوفر، حسب الطلب، نادر) وكميته، مع تصفية «المخزون المنخفض فقط» (3 نسخ أو أقل).</p>
+  <h3>كيف يتحرك المخزون تلقائيًا</h3>
+  <table>
+    <tr><th>الحدث</th><th>أثره على المخزون</th></tr>
+    <tr><td>تأكيد طلب / بيع في المحل</td><td>− الكميات المباعة</td></tr>
+    <tr><td>إلغاء طلب مؤكد / إرجاع بيع</td><td>+ تعود الكتب</td></tr>
+    <tr><td>تسجيل شراء من مورد</td><td>+ الكميات المشتراة (ويُحدَّث سعر الشراء)</td></tr>
+    <tr><td>إلغاء شراء</td><td>− تُسحب الكميات</td></tr>
+    <tr><td>تعديل يدوي (جرد)</td><td>الفرق بين القديم والجديد</td></tr>
+  </table>
+  <p>لا ينزل المخزون تحت الصفر، وحين يصل إلى صفر تتحول حالة الكتاب إلى «حسب الطلب»، ثم تعود «متوفر» عند وصول نسخ جديدة. كل حركة مسجّلة بتاريخها وسببها: زر <strong>«السجل»</strong> بجانب كل كتاب.</p>
+  <figure><img src="img/admin-stocklog.webp" alt=""><figcaption>سجل مخزون كتاب: شراء، بيع، إرجاع، تعديل يدوي.</figcaption></figure>
+</section>
+
+<section>
+  <h2>7. البيع في المحل وسجل المبيعات</h2>
+  <p class="lead">كل المبيعات في سجل واحد: طلبات الموقع والهاتف، البيع في المحل، والمبيعات المستوردة من Excel. لكل بيع «قناة» وطريقة دفع وتخفيض اختياري.</p>
+  <h3>صندوق البيع (بيع في المحل)</h3>
+  <ol class="steps">
+    <li>اكتب عنوان الكتاب أو مؤلفه ثم Enter، أو اختر من النتائج بالأسهم. كرر للكتب الأخرى.</li>
+    <li>عدّل الكمية أو السعر إن لزم. تنبيه يظهر إن كانت الكمية أكبر من المخزون المسجّل.</li>
+    <li>أدخل التخفيض وطريقة الدفع (نقدًا، بطاقة، تحويل/CCP…) والمبلغ المستلم لحساب الباقي.</li>
+    <li>«تسجيل البيع»: يُسجَّل كبيع مسلَّم، يُخصم المخزون فورًا، ويمكن إصدار فاتورته.</li>
+  </ol>
+  <figure><img src="img/admin-sales-counter.webp" alt=""><figcaption>صندوق البيع في المحل.</figcaption></figure>
+  <figure><img src="img/admin-sales-register.webp" alt=""><figcaption>سجل المبيعات: تصفية حسب القناة والفترة، مع المجاميع.</figcaption></figure>
+</section>
+
+<section>
+  <h2>8. الفواتير والإرجاع</h2>
+  <div class="grid2">
+    <div class="card"><h4>فاتورة مرقّمة</h4><p>من أي طلب أو بيع: «إصدار فاتورة». تأخذ رقمًا تسلسليًا لكل سنة (<span class="ltr">2026-0001</span>، <span class="ltr">2026-0002</span>…) لا يتغير بعدها. تُطبع من المتصفح أو تُحفظ PDF.</p></div>
+    <div class="card"><h4>معلومات المتجر</h4><p>الاسم، العنوان، الهاتف، البريد، والمعلومات القانونية (السجل التجاري RC، NIF، NIS، رقم المادة ART) ونص أسفل الفاتورة، من صفحة «المتجر والباقة».</p></div>
+    <div class="card"><h4>الإرجاع</h4><p>على بيع مسلَّم يظهر زر «إرجاع»: تعود الكتب إلى المخزون ويخرج البيع من الإيرادات والتقارير.</p></div>
+    <div class="card"><h4>تكلفة ثابتة لكل بيع</h4><p>كل سطر بيع يحفظ سعر شراء الكتاب لحظة البيع، فتبقى الأرباح صحيحة حتى لو تغيّرت الأسعار لاحقًا.</p></div>
+  </div>
+  <figure style="width:82%;margin-inline:auto"><img src="img/admin-invoice.webp" alt=""><figcaption>فاتورة جاهزة للطباعة.</figcaption></figure>
+</section>
+
+<section>
+  <h2>9. المشتريات والموردون</h2>
+  <p>كل وصل استلام من مورد يُسجَّل كعملية شراء: المورد، رقم الوصل، التاريخ، الكتب والكميات وسعر الشراء، مصاريف النقل، والمبلغ المدفوع.</p>
+  <ul>
+    <li><strong>يدخل المخزون تلقائيًا</strong> ويُحدَّث سعر الشراء لكل كتاب (ويمكن تعديل سعر البيع في نفس الوقت).</li>
+    <li><strong>كتاب غير موجود؟</strong> اكتب عنوانه في سطر الشراء فيُضاف للكتالوج.</li>
+    <li><strong>الديون:</strong> لكل شراء ما دُفع وما بقي، ولكل مورد مجموع مشترياته ورصيده. سجّل الدفعات لاحقًا.</li>
+    <li><strong>إلغاء شراء</strong> يسحب الكميات من المخزون، ويمكن بعدها حذفه.</li>
+  </ul>
+  <figure><img src="img/admin-purchases.webp" alt=""><figcaption>المشتريات: المبالغ، المدفوع، والمتبقي.</figcaption></figure>
+  <figure><img src="img/admin-suppliers.webp" alt=""><figcaption>الموردون وأرصدتهم.</figcaption></figure>
+</section>
+
+<section>
+  <h2>10. المصاريف</h2>
+  <p>كل ما تصرفه المكتبة غير الكتب: كراء، أجور، نقل وتوصيل، كهرباء وماء وهاتف وإنترنت، إشهار، لوازم، ضرائب ورسوم، وأخرى. لكل مصروف تاريخ ومبلغ وبيان وطريقة دفع. الصفحة تعرض مجموع الفترة وأكبر البنود، وتدخل المصاريف مباشرة في حساب صافي الربح.</p>
+  <figure><img src="img/admin-expenses.webp" alt=""><figcaption>المصاريف حسب الفترة والبند.</figcaption></figure>
+</section>
+
+<section>
+  <h2>11. التقارير والأرباح</h2>
+  <p class="lead">الجواب على السؤال الأهم: هل ربحت هذا الشهر؟ وكم؟</p>
+  <table>
+    <tr><th>المؤشر</th><th>كيف يُحسب</th></tr>
+    <tr><td>رقم الأعمال</td><td>مجموع المبيعات المؤكدة والمشحونة والمسلّمة (بعد التخفيض) في الفترة</td></tr>
+    <tr><td>تكلفة الكتب المباعة</td><td>الكمية × سعر الشراء المحفوظ مع كل سطر بيع</td></tr>
+    <tr><td>الهامش الإجمالي</td><td>رقم الأعمال − تكلفة الكتب (ونسبته)</td></tr>
+    <tr><td>صافي الربح</td><td>الهامش − المصاريف</td></tr>
+    <tr><td>المخزون الراكد</td><td>كتب في المخزون لم يُبع منها شيء منذ 90 يومًا</td></tr>
+    <tr><td>قيمة المخزون</td><td>بسعر الشراء وبسعر البيع</td></tr>
+  </table>
+  <figure><img src="img/admin-reports.webp" alt=""><figcaption>التقارير (بيانات تجريبية): المؤشرات، الرسم الشهري للمداخيل والتكاليف، والجدول الشهري. تحتها: القنوات، المصاريف حسب البند، الأكثر مبيعًا، والمخزون الراكد.</figcaption></figure>
+  <p>فترات جاهزة (هذا الشهر، الشهر الماضي، آخر 3 أشهر، هذه السنة) أو أي فترة. زر «تنزيل التقرير» يعطي ملف Excel من 6 أوراق. إن كانت بعض المبيعات لكتب بلا سعر شراء، يظهر تنبيه بنسبة التغطية حتى لا يُضلَّل صاحب المكتبة بهامش أعلى من الحقيقة.</p>
+</section>
+
+<section>
+  <h2>12. الاستيراد من Excel والتصدير</h2>
+  <p class="lead">أغلب المكتبات تعمل اليوم بملفات Excel. الانتقال إلى المنصة لا يتطلب إعادة كتابة أي شيء: ارفع ملفك كما هو.</p>
+  <ol class="steps">
+    <li><strong>رفع الملف:</strong> ‎.xlsx أو ‎.xls أو CSV أو ODS حتى 10 ميغابايت. لا شيء يُحفظ قبل التأكيد.</li>
+    <li><strong>ماذا تحتوي الورقة؟</strong> قائمة كتب ومخزون، أو سجل مبيعات، أو سجل مشتريات، أو مصاريف. المنصة تقترح النوع تلقائيًا.</li>
+    <li><strong>مطابقة الأعمدة:</strong> تتعرف على نحو 200 اسم عمود بالعربية والفرنسية والإنجليزية (العنوان، Désignation، Qté، P.A، سعر البيع…) أو تخمّن من المحتوى. يمكن تصحيح أي عمود.</li>
+    <li><strong>المعاينة:</strong> ماذا سيحدث لكل سطر (جديد، تحديث، خطأ ولماذا)، مع تقرير Excel كامل.</li>
+    <li><strong>الاستيراد والنتيجة:</strong> ما الذي ينقص الكتب بعدها (سعر، غلاف، مؤلف…)، و<strong>زر تراجع</strong> في السجل يلغي الاستيراد كاملًا.</li>
+  </ol>
+  <figure><img src="img/admin-import-kind.webp" alt=""><figcaption>ملف مبيعات قديم تعرّفت عليه المنصة تلقائيًا: النوع والأعمدة.</figcaption></figure>
+  <div class="grid2">
+    <div class="card"><h4>قيم تفهمها المنصة</h4><p>«1 500 دج»، «١٥٠٠»، ‎1.500,00، تواريخ يوم/شهر/سنة وتواريخ Excel، سنوات هجرية، عدة مؤلفين في خانة واحدة، كلمات التوفر (متوفر / Disponible)، طرق الدفع وبنود المصاريف.</p></div>
+    <div class="card"><h4>سجل المبيعات والمشتريات</h4><p>الأسطر تُجمع في عمليات حسب رقم الفاتورة أو الوصل (أو التاريخ والزبون/المورد). الكتب غير الموجودة تُضاف. المخزون لا يتغير إلا إن طلبت ذلك، لأن الجرد الحالي يعكس الماضي أصلًا.</p></div>
+    <div class="card"><h4>التصدير</h4><p>الكتب مع المخزون وقيمته، والطلبات مع الإيرادات الشهرية، والتقارير: كلها إلى Excel. بياناتك لك دائمًا.</p></div>
+    <div class="card"><h4>جودة البيانات</h4><p>لوحة تعرض كم كتابًا بلا سعر أو غلاف أو مؤلف أو تصنيف أو مخزون، وكل رقم رابط لتلك الكتب.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>13. محتوى التواصل الاجتماعي</h2>
+  <p>اختر كتبًا (أو كل نتائج بحث أو تصنيف) ونزّلها دفعة واحدة في ملف ZIP: مجلد لكل كتاب فيه الغلاف (وكل صور السلسلة إن أردت)، وبياناته، ونص جاهز للنسخ واللصق في منشور (العنوان، المؤلف، السعر، رابط الكتاب في المتجر)، مع فهرس CSV لكل الكتب. حتى 200 كتاب في الملف.</p>
+  <figure><img src="img/admin-social.webp" alt=""><figcaption>اختيار الكتب وتنزيل المحتوى.</figcaption></figure>
+</section>
+
+<section>
+  <h2>14. الباقات</h2>
+  <p>تُباع المنصة لمكتبات أخرى في ثلاث باقات تراكمية. الميزة غير المتوفرة تبقى ظاهرة مع قفل ورسالة تشرح الباقة التي تتضمنها. الأسعار يحددها صاحب المنصة.</p>
+  <table>
+    <tr><th>الميزة</th><th class="c">أساسي</th><th class="c">مكتبة</th><th class="c">مؤسسة</th></tr>
+    <tr><td>المتجر، الطلبات، المخزون، البيع في المحل، تطبيقات الهاتف</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td>استيراد وتصدير الكتب بـ Excel</td><td class="c">مرة في الشهر</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td>المشتريات والموردون والمصاريف</td><td class="c no">—</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td>الفواتير</td><td class="c no">—</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td>التقارير المالية</td><td class="c no">—</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td>محتوى التواصل الاجتماعي</td><td class="c no">—</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td>الفهرس الأكاديمي</td><td class="c no">—</td><td class="c yes">✓</td><td class="c yes">✓</td></tr>
+    <tr><td>استيراد سجل المبيعات والمشتريات والمصاريف</td><td class="c no">—</td><td class="c no">—</td><td class="c yes">✓</td></tr>
+    <tr><td>عدد الكتب</td><td class="c">1.000</td><td class="c">10.000</td><td class="c">غير محدود</td></tr>
+  </table>
+  <figure><img src="img/admin-settings.webp" alt=""><figcaption>«المتجر والباقة»: معلومات الفاتورة، الاستهلاك، ومقارنة الباقات.</figcaption></figure>
+</section>
+
+<section>
+  <h2>15. تطبيقات الهاتف</h2>
+  <div class="grid2">
+    <div class="card"><h4>تطبيق المتجر</h4><p>نفس كتالوج المتجر الإلكتروني وبحثه وصفحات الكتب والطلب، بنفس الألوان والخط والشعار.</p></div>
+    <div class="card"><h4>تطبيق الإدارة</h4><p>تسجيل الدخول، متابعة الطلبات وطلبات العملاء وتغيير حالاتها، والإضافة السريعة: تصوير الغلاف بالكاميرا ورفعه مباشرة.</p></div>
+  </div>
+  <div class="note">التطبيقان يستعملان نفس الخادم، فكل ما يُضاف من الهاتف يظهر في الويب فورًا والعكس. شاشات المال والتقارير والباقات الجديدة متوفرة في لوحة الويب، ولم تُنقل بعد إلى تطبيق الإدارة.</div>
+  <h2 style="margin-top:12mm">16. الأمان والتقنية</h2>
+  <ul>
+    <li><strong>الدخول:</strong> كلمة سر المكتبة تُستبدل برمز موقّع صالح 30 يومًا؛ كل صفحات الإدارة محمية من الخادم نفسه. محاولات الدخول محدودة (10 في الدقيقة).</li>
+    <li><strong>الحماية من الإغراق:</strong> حد عام للطلبات لكل زائر، وحدود خاصة لنماذج الطلب والتصدير.</li>
+    <li><strong>العزل:</strong> كل استعلام إداري مقيّد بمتجره؛ لا يمكن لمتجر رؤية بيانات متجر آخر.</li>
+    <li><strong>الخصوصية:</strong> سعر الشراء والتكاليف لا تظهر أبدًا في المتجر العام. الصور تُنظَّف من بيانات الموقع.</li>
+    <li><strong>الصور:</strong> مخزنة على Cloudflare R2 مع نسخ مصغّرة سريعة.</li>
+    <li><strong>الاستضافة:</strong> الخادم والمتجر ولوحة التحكم على Render، وقاعدة البيانات PostgreSQL على Neon. كل تحديث يُنشر تلقائيًا وتُطبَّق تغييرات قاعدة البيانات عند الإقلاع.</li>
+    <li><strong>التقنيات:</strong> NestJS وPrisma وPostgreSQL للخادم، React وVite للويب، Flutter للهاتف.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>17. يوم عمل نموذجي</h2>
+  <ol class="steps">
+    <li><strong>الصباح:</strong> «نظرة عامة» ثم «الطلبات»: أكّد الطلبات الجديدة (يُخصم المخزون) وتواصل عبر واتساب.</li>
+    <li><strong>وصول بضاعة:</strong> «المشتريات ← شراء جديد» مع الوصل: المخزون وأسعار الشراء تتحدّث، ويُسجّل ما بقي للمورد.</li>
+    <li><strong>زبون في المحل:</strong> «المبيعات ← بيع في المحل»، امسح الكتب، سجّل البيع، واطبع الفاتورة إن طلبها.</li>
+    <li><strong>كتب جديدة على الرف:</strong> «إضافة سريعة» من الهاتف بتصوير الأغلفة.</li>
+    <li><strong>دفع الكراء أو الأجور:</strong> «المصاريف ← مصروف».</li>
+    <li><strong>آخر الشهر:</strong> «التقارير»: صافي الربح، الأكثر مبيعًا، والمخزون الراكد للتخفيض أو الإشهار. نزّل التقرير بـ Excel للمحاسب.</li>
+  </ol>
+  <h3>أسئلة شائعة</h3>
+  <p><strong>عندي سنوات من المبيعات في Excel، هل أبدأ من الصفر؟</strong> لا: استورد سجل المبيعات والمشتريات والمصاريف لتبدأ التقارير بتاريخك الكامل (باقة مؤسسة).</p>
+  <p><strong>أخطأت في استيراد ملف.</strong> «استيراد وتصدير ← سجل الاستيراد ← تراجع» يلغي كل ما أضافه الملف ويعيد المخزون كما كان.</p>
+  <p><strong>بعت كتبًا بالخطأ أو أرجعها زبون.</strong> افتح البيع واضغط «إرجاع».</p>
+  <p><strong>الهامش يبدو مرتفعًا جدًا.</strong> بعض الكتب بلا سعر شراء؛ أضفه من صفحة الكتاب أو بتسجيل مشترياتك، والتنبيه في التقارير يذكر النسبة.</p>
+  <p><strong>هل يمكنني مغادرة المنصة؟</strong> نعم، كل البيانات تُصدَّر إلى Excel في أي باقة.</p>
+</section>
+
+</body>
+</html>
