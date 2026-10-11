@@ -238,9 +238,11 @@ export async function exportSocialContent(
 
 // ── Data import / export ─────────────────────────────────
 
-export type ImportField =
-  | "title" | "author" | "publisher" | "category" | "price" | "costPrice" | "quantity" | "status"
-  | "year" | "edition" | "volumes" | "isbn" | "country" | "description" | "notes" | "imageUrl";
+/** Catalogue fields, or a history kind's fields (date, supplier, amount…). */
+export type ImportField = string;
+
+/** What a sheet holds: the book list, or past sales / purchases / expenses. */
+export type ImportKind = "catalog" | "sales" | "purchases" | "expenses";
 
 export interface ImportColumn {
   index: number;
@@ -260,6 +262,8 @@ export interface ImportSheet {
   columns: ImportColumn[];
   firstRows: string[][];
   looksLikeCatalog: boolean;
+  suggestedKind: ImportKind;
+  byKind: Record<ImportKind, { headerRow: number; columns: ImportColumn[] }>;
 }
 
 export interface ImportAnalysis {
@@ -267,6 +271,7 @@ export interface ImportAnalysis {
   fileName: string;
   expiresAt: string;
   fields: { key: ImportField; label: string }[];
+  kinds: { key: ImportKind; label: string; fields: { key: ImportField; label: string }[] }[];
   sheets: ImportSheet[];
 }
 
@@ -274,6 +279,13 @@ export interface ImportOptions {
   sheet: string;
   headerRow: number;
   mapping: Partial<Record<ImportField, number>>;
+  kind?: ImportKind;
+  /** Sales history: take the sold quantities out of today's stock. */
+  applyStock?: boolean;
+  /** Purchase history: add the bought quantities to stock. */
+  addToStock?: boolean;
+  /** Purchase history: remember the latest purchase price on each book. */
+  updateCostPrice?: boolean;
   existing: "update" | "skip";
   stockMode: "set" | "add";
   defaultCategory?: string | null;
@@ -286,8 +298,11 @@ export interface ImportPreview {
   summary: { rows: number; create: number; update: number; unchanged: number; skip: number; error: number };
   issues: { code: string; message: string; rows: number }[];
   newNames: { authors: number; publishers: number; categories: string[] };
-  rows: { row: number; title: string; action: ImportAction; issues: { code: string; level: "error" | "warning"; message: string }[]; changes: string[] }[];
+  rows: { row: number; title: string; action: ImportAction; issues: { code: string; level: "error" | "warning"; message: string }[]; changes?: string[] }[];
   truncatedRows: boolean;
+  kind?: ImportKind;
+  /** History imports: how many sales/purchases the lines make, and their total. */
+  history?: { groups: number; amount: number; newBooks: number; newSuppliers: number; notices: string[] };
 }
 
 export interface DataQuality {
@@ -302,6 +317,9 @@ export interface DataQuality {
 
 export interface ImportResult {
   jobId: string;
+  kind?: ImportKind;
+  /** History imports: sales / purchases / expenses written. */
+  records?: number;
   created: number;
   updated: number;
   skipped: number;
@@ -311,6 +329,7 @@ export interface ImportResult {
 
 export interface ImportJob {
   id: string;
+  kind?: ImportKind;
   fileName: string;
   sheetName: string;
   status: "completed" | "undone";

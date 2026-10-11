@@ -33,9 +33,20 @@ describe('computeOrderTotals', () => {
   it('returns zeros for an empty cart', () => {
     expect(computeOrderTotals([], 0)).toEqual({
       subtotal: 0,
+      discount: 0,
       shippingCost: 0,
       total: 0,
     });
+  });
+
+  it('applies a discount, never beyond the value of the books', () => {
+    expect(computeOrderTotals([{ unitPrice: 1000, quantity: 2 }], 300, 500).total).toBe(1800);
+    expect(computeOrderTotals([{ unitPrice: 1000, quantity: 1 }], 300, 5000)).toMatchObject({ discount: 1000, total: 300 });
+    expect(computeOrderTotals([{ unitPrice: 1000, quantity: 1 }], 0, -200).discount).toBe(0);
+  });
+
+  it('rounds money to the cent', () => {
+    expect(computeOrderTotals([{ unitPrice: 0.1, quantity: 3 }], 0).total).toBe(0.3);
   });
 });
 
@@ -63,10 +74,14 @@ describe('canTransition', () => {
     expect(canTransition('shipped', 'pending')).toBe(false);
   });
 
-  it('rejects any move out of a terminal state', () => {
+  it('a delivered sale can only be returned (cancelled), never moved back', () => {
     expect(canTransition('delivered', 'shipped')).toBe(false);
+    expect(canTransition('delivered', 'pending')).toBe(false);
+    expect(ORDER_TRANSITIONS.delivered).toEqual(['cancelled']);
+  });
+
+  it('cancelled is final', () => {
     expect(canTransition('cancelled', 'pending')).toBe(false);
-    expect(ORDER_TRANSITIONS.delivered).toEqual([]);
     expect(ORDER_TRANSITIONS.cancelled).toEqual([]);
   });
 });

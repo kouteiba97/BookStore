@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminAcademicService } from './admin-academic.service';
+import { RequiresFeature } from '../../../common/plan/requires-feature';
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
 
 class NameDto {
@@ -25,6 +26,7 @@ class SubjectDto extends NameDto {
   yearId: string;
 }
 
+@RequiresFeature('academic')
 @UseGuards(AdminAuthGuard)
 @Controller('v1/admin/academic')
 export class AdminAcademicController {

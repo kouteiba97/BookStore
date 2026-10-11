@@ -17,6 +17,12 @@ import { SocialContentService } from './social-content/social-content.service';
 import { DataImportController } from './data-import/data-import.controller';
 import { DataExportController } from './data-import/data-export.controller';
 import { DataImportService } from './data-import/data-import.service';
+import { HistoryImport } from './data-import/history-import';
+import { MoneyController, StoreSettingsController } from './money/money.controller';
+import { MoneyService } from './money/money.service';
+import { ReportsController } from './reports/reports.controller';
+import { ReportsService } from './reports/reports.service';
+import { PlanController } from '../../common/plan/plan.controller';
 
 @Module({
   controllers: [
@@ -30,6 +36,10 @@ import { DataImportService } from './data-import/data-import.service';
     SocialContentController,
     DataImportController,
     DataExportController,
+    MoneyController,
+    StoreSettingsController,
+    ReportsController,
+    PlanController,
   ],
   providers: [
     StatsService,
@@ -40,6 +50,9 @@ import { DataImportService } from './data-import/data-import.service';
     InventoryService,
     SocialContentService,
     DataImportService,
+    HistoryImport,
+    MoneyService,
+    ReportsService,
   ],
 })
 export class AdminModule {}

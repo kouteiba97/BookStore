@@ -12,11 +12,14 @@ import {
 import { OrdersService } from './orders.service';
 import {
   ConvertRequestDto,
+  CounterSaleDto,
+  SALE_CHANNELS,
   UpdateOrderStatusDto,
   UpsertOrderDto,
 } from './dto/order.dto';
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
-import { ORDER_STATUSES, optionalEnum, paging } from '../../../common/validation/query';
+import { RequiresFeature } from '../../../common/plan/requires-feature';
+import { ORDER_STATUSES, optionalDate, optionalEnum, paging } from '../../../common/validation/query';
 
 @UseGuards(AdminAuthGuard)
 @Controller('v1/admin/orders')
@@ -26,15 +29,34 @@ export class OrdersController {
   @Get()
   list(
     @Query('status') status?: string,
+    @Query('channel') channel?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
     @Query('search') search?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
   ) {
     return this.service.list({
       status: optionalEnum(status, ORDER_STATUSES, 'status'),
+      channel: optionalEnum(channel, SALE_CHANNELS, 'channel'),
+      from: optionalDate(from, false),
+      to: optionalDate(to, true),
       search,
       ...paging(page, pageSize),
     });
+  }
+
+  /** A sale at the counter — paid now, books leave stock now. */
+  @Post('counter')
+  counter(@Body() dto: CounterSaleDto) {
+    return this.service.counterSale(dto);
+  }
+
+  /** Invoice data (numbers the invoice the first time). */
+  @RequiresFeature('invoices')
+  @Post(':id/invoice')
+  invoice(@Param('id') id: string) {
+    return this.service.invoice(id);
   }
 
   @Get(':id')

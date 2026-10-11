@@ -22,6 +22,8 @@ import {
 } from "@/components/admin/primitives";
 import { useToast } from "@/components/admin/toaster";
 import { Thumb } from "@/components/admin/thumb";
+import { useFeature } from "@/components/admin/plan-gate";
+import { CHANNEL_LABEL, PAYMENT_LABEL } from "@/lib/money-api";
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "قيد الانتظار",
@@ -37,7 +39,7 @@ const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending: ["confirmed", "cancelled"],
   confirmed: ["shipped", "cancelled"],
   shipped: ["delivered", "cancelled"],
-  delivered: [],
+  delivered: ["cancelled"], // a return: the books go back to stock
   cancelled: [],
 };
 
@@ -61,6 +63,7 @@ export default function OrderDetailPage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const canInvoice = useFeature("invoices");
 
   const statusMutation = useMutation({
     mutationFn: (status: OrderStatus) => updateOrderStatus(id!, status),
@@ -77,7 +80,7 @@ export default function OrderDetailPage() {
   const cancelMutation = useMutation({
     mutationFn: () => cancelOrder(id!),
     onSuccess: () => {
-      toast.success("تم إلغاء الطلب");
+      toast.success(order?.status === "delivered" ? "تم تسجيل الإرجاع وأُعيدت الكتب للمخزون" : "تم إلغاء الطلب");
       qc.invalidateQueries({ queryKey: ["admin-order", id] });
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
     },
@@ -96,6 +99,7 @@ export default function OrderDetailPage() {
 
   const allowedNext = TRANSITIONS[order.status];
   const isLocked = order.status === "delivered" || order.status === "cancelled";
+  const isReturn = order.status === "delivered";
 
   return (
     <div className="space-y-5">
@@ -110,6 +114,12 @@ export default function OrderDetailPage() {
               #{order.id.slice(0, 8)}
             </h2>
             <StatusBadge status={order.status} label={STATUS_LABEL[order.status]} />
+            {order.channel && (
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{CHANNEL_LABEL[order.channel]}</span>
+            )}
+            {order.invoiceNumber && (
+              <span className="font-mono text-[11px] text-muted-foreground" dir="ltr">N° {order.invoiceNumber}</span>
+            )}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             أُنشئ في {new Date(order.createdAt).toLocaleString("ar-DZ")}
@@ -117,6 +127,14 @@ export default function OrderDetailPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {order.status !== "cancelled" && canInvoice && (
+            <Link
+              to={`/admin/invoice/${order.id}`}
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-3 text-sm font-semibold hover:bg-muted"
+            >
+              {order.invoiceNumber ? "عرض الفاتورة" : "إصدار فاتورة"}
+            </Link>
+          )}
           {!isLocked && (
             <>
               <Button variant="secondary" onClick={() => setEditOpen(true)}>
@@ -179,7 +197,7 @@ export default function OrderDetailPage() {
                   }}
                   disabled={statusMutation.isPending}
                 >
-                  {STATUS_LABEL[next]}
+                  {next === "cancelled" && isReturn ? "إرجاع" : STATUS_LABEL[next]}
                 </Button>
               ))}
             </div>
@@ -216,7 +234,14 @@ export default function OrderDetailPage() {
 
           <div className="border-t border-border/60 px-5 py-3 text-sm">
             <Row label="المجموع" value={Number(order.subtotal)} />
+            {Number(order.discount ?? 0) > 0 && <Row label="التخفيض" value={-Number(order.discount)} />}
             <Row label="الشحن" value={Number(order.shippingCost)} />
+            {order.paymentMethod && (
+              <p className="flex justify-between py-0.5 text-xs text-muted-foreground">
+                <span>الدفع</span>
+                <span>{PAYMENT_LABEL[order.paymentMethod]}</span>
+              </p>
+            )}
             <Row label="الإجمالي" value={Number(order.total)} bold />
           </div>
         </Surface>
@@ -269,9 +294,13 @@ export default function OrderDetailPage() {
       <ConfirmDialog
         open={confirmCancel}
         onClose={() => setConfirmCancel(false)}
-        title="إلغاء الطلب؟"
-        message="لن يتم احتساب هذا الطلب في الإيرادات. لا يمكن التراجع بسهولة."
-        confirmLabel="إلغاء الطلب"
+        title={isReturn ? "تسجيل إرجاع؟" : "إلغاء الطلب؟"}
+        message={
+          isReturn
+            ? "ستعود الكتب إلى المخزون ولن يُحتسب هذا البيع في الإيرادات."
+            : "لن يتم احتساب هذا الطلب في الإيرادات، وتعود كتبه للمخزون إن كانت خُصمت."
+        }
+        confirmLabel={isReturn ? "تسجيل الإرجاع" : "إلغاء الطلب"}
         cancelLabel="تراجع"
         variant="danger"
         onConfirm={() => cancelMutation.mutate()}

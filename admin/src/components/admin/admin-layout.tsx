@@ -5,6 +5,8 @@ import { LogoMark } from "@/components/logo";
 import { clearToken } from "@/lib/auth";
 import { features } from "@/lib/features";
 import { ToastProvider } from "./toaster";
+import { LockIcon, usePlan } from "./plan-gate";
+import type { Feature } from "@/lib/money-api";
 
 // Where "عرض المتجر" points — the public storefront (separate app/origin).
 const PUBLIC_SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL ?? "http://localhost:5173/";
@@ -14,6 +16,8 @@ interface NavItem {
   label: string;
   icon: ReactElement;
   badge?: number;
+  /** Pack feature the page needs; a lock shows when the pack lacks it. */
+  feature?: Feature;
 }
 
 // ── Icon set (24px stroke, current color) ─────────────────
@@ -72,6 +76,31 @@ const Icon = {
       <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
     </svg>
   ),
+  sales: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M7 20h10M12 16v4M7 9h4" />
+    </svg>
+  ),
+  purchases: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <path d="M1 3h4l2.7 12.4a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L22 7H6" /><circle cx="10" cy="20.5" r="1" /><circle cx="18" cy="20.5" r="1" />
+    </svg>
+  ),
+  expenses: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <rect x="2" y="6" width="20" height="13" rx="2" /><path d="M2 10h20M6 15h4" />
+    </svg>
+  ),
+  reports: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <path d="M3 3v18h18" /><path d="M8 17V11M13 17V7M18 17v-4" />
+    </svg>
+  ),
+  settings: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+    </svg>
+  ),
   chevron: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
       <path d="m9 6 6 6-6 6" />
@@ -96,15 +125,20 @@ const Icon = {
 
 const NAV: NavItem[] = [
   { to: "/admin", label: "نظرة عامة", icon: Icon.home },
+  { to: "/admin/sales", label: "المبيعات", icon: Icon.sales },
   { to: "/admin/orders", label: "الطلبات", icon: Icon.orders },
   { to: "/admin/requests", label: "طلبات العملاء", icon: Icon.requests },
   { to: "/admin/books", label: "الكتب", icon: Icon.books },
   { to: "/admin/quick-add", label: "إضافة سريعة", icon: Icon.quickAdd },
   { to: "/admin/catalog/categories", label: "التصنيفات", icon: Icon.catalog },
-  ...(features.academic ? [{ to: "/admin/academic", label: "الأكاديمي", icon: Icon.academic }] : []),
+  ...(features.academic ? [{ to: "/admin/academic", label: "الأكاديمي", icon: Icon.academic, feature: "academic" as const }] : []),
   { to: "/admin/inventory", label: "المخزون", icon: Icon.inventory },
+  { to: "/admin/purchases", label: "المشتريات والموردون", icon: Icon.purchases, feature: "money" },
+  { to: "/admin/expenses", label: "المصاريف", icon: Icon.expenses, feature: "money" },
+  { to: "/admin/reports", label: "التقارير والأرباح", icon: Icon.reports, feature: "reports" },
   { to: "/admin/data", label: "استيراد وتصدير", icon: Icon.data },
-  { to: "/admin/social-content", label: "محتوى التواصل", icon: Icon.social },
+  { to: "/admin/social-content", label: "محتوى التواصل", icon: Icon.social, feature: "socialExport" },
+  { to: "/admin/settings", label: "المتجر والباقة", icon: Icon.settings },
 ];
 
 const PAGE_TITLES: Record<string, string> = {
@@ -121,6 +155,11 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/inventory": "المخزون",
   "/admin/social-content": "محتوى التواصل الاجتماعي",
   "/admin/data": "استيراد وتصدير البيانات",
+  "/admin/sales": "المبيعات",
+  "/admin/purchases": "المشتريات والموردون",
+  "/admin/expenses": "المصاريف",
+  "/admin/reports": "التقارير والأرباح",
+  "/admin/settings": "المتجر والباقة",
 };
 
 function getPageTitle(pathname: string) {
@@ -221,6 +260,7 @@ function Sidebar({
   pathname: string;
   mobile?: boolean;
 }) {
+  const { data: plan } = usePlan();
   return (
     <div className="flex h-full w-full flex-col bg-card">
       {/* Brand */}
@@ -257,6 +297,11 @@ function Sidebar({
                   )}
                   <span className={active ? "text-primary" : "text-muted-foreground/80"}>{item.icon}</span>
                   {!collapsed && <span className="truncate">{item.label}</span>}
+                  {!collapsed && item.feature && plan && !plan.features[item.feature] && (
+                    <span className="ms-auto text-amber-600" title="غير متوفرة في باقتك">
+                      <LockIcon />
+                    </span>
+                  )}
                 </NavLink>
               </li>
             );

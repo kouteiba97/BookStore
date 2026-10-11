@@ -25,6 +25,14 @@ import {
   text,
 } from './values';
 import { ReadSheet, readWorkbook, writeWorkbook } from './workbook';
+import { kindScore } from './detect';
+import { IMPORT_KINDS, ImportKind, KINDS, KIND_LABELS, kindFields } from './kinds';
+import { HistoryImport, HistoryKind } from './history-import';
+import { PlanService } from '../../../common/plan/plan.service';
+import { PlanRequiredException } from '../../../common/plan/requires-feature';
+import { PLANS, cheapestWith, planOf } from '../../../common/plan/plans';
+
+const isHistory = (o: ImportOptions) => !!o.kind && o.kind !== 'catalog';
 
 // ── Limits ────────────────────────────────────────────────
 
@@ -54,6 +62,14 @@ export interface ImportOptions {
   stockMode: 'set' | 'add';
   defaultCategory?: string | null;
   defaultStatus: InventoryStatus;
+  /** What the sheet is. Default "catalog". */
+  kind?: ImportKind;
+  /** Sales history: take the books out of current stock (default no). */
+  applyStock?: boolean;
+  /** Purchases history: put the books into current stock (default no). */
+  addToStock?: boolean;
+  /** Purchases history: set purchase prices from the sheet (default yes). */
+  updateCostPrice?: boolean;
 }
 
 export type Action = 'create' | 'update' | 'unchanged' | 'skip' | 'error';
@@ -126,6 +142,8 @@ export class DataImportService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stores: StoreResolver,
+    private readonly plans: PlanService,
+    private readonly historyImport: HistoryImport,
   ) {}
 
   // ── 1. Analyse ──────────────────────────────────────────
@@ -142,7 +160,23 @@ export class DataImportService {
       fileName,
       expiresAt: new Date(session.expiresAt).toISOString(),
       fields: FIELD_KEYS.map((key) => ({ key, label: FIELD_LABELS[key] })),
+      kinds: IMPORT_KINDS.map((k) => ({ key: k, label: KIND_LABELS[k], fields: kindFields(k) })),
       sheets: sheets.map((s) => {
+        // Each kind's reading of the sheet; the best-fitting one is suggested.
+        const byKind = Object.fromEntries(
+          IMPORT_KINDS.map((k) => {
+            const h = findHeaderRow(s.rows, k);
+            return [
+              k,
+              {
+                headerRow: h + 1,
+                score: kindScore(s.rows, k),
+                columns: suggestMapping(s.rows, h, k).map((c) => ({ ...c, letter: columnLetter(c.index) })),
+              },
+            ];
+          }),
+        ) as Record<ImportKind, { headerRow: number; score: number; columns: unknown[] }>;
+        const best = [...IMPORT_KINDS].sort((a, b) => byKind[b].score - byKind[a].score || (a === 'catalog' ? -1 : 1))[0];
         const headerIdx = findHeaderRow(s.rows);
         const columns = suggestMapping(s.rows, headerIdx).map((c) => ({ ...c, letter: columnLetter(c.index) }));
         return {
@@ -159,6 +193,8 @@ export class DataImportService {
           looksLikeCatalog:
             columns.some((c) => c.field === 'title' && c.reason === 'header') ||
             (columns.some((c) => c.field === 'title') && columns.filter((c) => c.field).length >= 2),
+          suggestedKind: byKind[best].score > 0 ? best : 'catalog',
+          byKind: Object.fromEntries(Object.entries(byKind).map(([k, v]) => [k, { headerRow: v.headerRow, columns: v.columns }])),
         };
       }),
     };
@@ -169,6 +205,7 @@ export class DataImportService {
   async preview(sessionId: string, opts: ImportOptions) {
     const storeId = await this.stores.getStoreId();
     const session = this.getSession(sessionId, storeId);
+    if (isHistory(opts)) return this.historyPreview(storeId, session, opts);
     const rows = await this.plan(storeId, session, opts);
 
     const count = (a: Action) => rows.filter((r) => r.action === a).length;
@@ -209,7 +246,9 @@ export class DataImportService {
   async issuesReport(sessionId: string, opts: ImportOptions): Promise<{ buffer: Buffer; fileName: string }> {
     const storeId = await this.stores.getStoreId();
     const session = this.getSession(sessionId, storeId);
-    const rows = await this.plan(storeId, session, opts);
+    const rows: { row: number; action: Action; issues: Issue[]; cells: string[] }[] = isHistory(opts)
+      ? (await this.historyPlan(storeId, session, opts)).rows
+      : await this.plan(storeId, session, opts);
     const sheet = session.sheets.find((s) => s.name === opts.sheet)!;
     const header = sheet.rows[opts.headerRow - 1] ?? [];
 
@@ -235,12 +274,15 @@ export class DataImportService {
     this.committing.add(storeId);
     const started = Date.now();
     try {
+      if (isHistory(opts)) return await this.historyCommit(storeId, session, opts);
+      await this.plans.assertCanImport();
       const rows = await this.plan(storeId, session, opts);
       const creates = rows.filter((r) => r.action === 'create');
       const updates = rows.filter((r) => r.action === 'update');
       if (!creates.length && !updates.length) {
         throw new BadRequestException('لا يوجد ما يُستورد: كل الأسطر موجودة أو بها أخطاء.');
       }
+      await this.plans.assertCanAddBooks(creates.length);
 
       const job = await this.prisma.importJob.create({
         data: {
@@ -306,12 +348,123 @@ export class DataImportService {
     if (!job) throw new NotFoundException('Import not found');
     if (job.status === 'undone') throw new BadRequestException('تم التراجع عن هذا الاستيراد مسبقًا.');
 
+    if (job.kind !== 'catalog') {
+      const r = await this.historyImport.undo(storeId, job.id);
+      await this.prisma.importJob.update({ where: { id: job.id }, data: { status: 'undone', undoneAt: new Date() } });
+      return { removed: r.orders + r.purchases + r.expenses, keptBecauseOrdered: 0, details: r };
+    }
+
     const removed = await this.prisma.book.deleteMany({
       where: { storeId, importJobId: job.id, orderItems: { none: {} } },
     });
     const kept = await this.prisma.book.count({ where: { storeId, importJobId: job.id } });
     await this.prisma.importJob.update({ where: { id: job.id }, data: { status: 'undone', undoneAt: new Date() } });
     return { removed: removed.count, keptBecauseOrdered: kept };
+  }
+
+  // ── History sheets (sales / purchases / expenses) ───────
+
+  private async historyPlan(storeId: string, session: Session, opts: ImportOptions) {
+    const plan = planOf(await this.stores.getPlan());
+    if (!plan.features.includes('historyImport')) {
+      throw new PlanRequiredException(
+        `استيراد سجل المبيعات والمشتريات والمصاريف غير متوفر في باقة «${plan.label}». متوفر في باقة «${PLANS[cheapestWith('historyImport')].label}».`,
+        { feature: 'historyImport', plan: plan.key },
+      );
+    }
+    const kind = opts.kind as HistoryKind;
+    const sheet = session.sheets.find((s) => s.name === opts.sheet);
+    if (!sheet) throw new BadRequestException('الورقة المختارة غير موجودة في الملف.');
+    if (!Number.isInteger(opts.headerRow) || opts.headerRow < 0 || opts.headerRow > sheet.rows.length) {
+      throw new BadRequestException('رقم سطر العناوين غير صحيح.');
+    }
+    const allowed = new Set(KINDS[kind].fields);
+    const used = new Set<number>();
+    for (const [f, i] of Object.entries(opts.mapping)) {
+      if (i === undefined || i === null) continue;
+      if (!allowed.has(f)) throw new BadRequestException(`حقل غير معروف لهذا النوع: ${f}`);
+      if (!Number.isInteger(i) || i < 0 || i >= 60) throw new BadRequestException('رقم عمود غير صحيح.');
+      if (used.has(i)) throw new BadRequestException(`العمود ${columnLetter(i)} مربوط بأكثر من حقل.`);
+      used.add(i);
+    }
+    for (const req of KINDS[kind].required) {
+      if ((opts.mapping as Record<string, number | undefined>)[req] === undefined) {
+        throw new BadRequestException(`اختر عمود «${KINDS[kind].labels[req]}».`);
+      }
+    }
+    return this.historyImport.plan(storeId, sheet, { ...opts, kind, mapping: opts.mapping as Record<string, number | undefined> });
+  }
+
+  private async historyPreview(storeId: string, session: Session, opts: ImportOptions) {
+    const p = await this.historyPlan(storeId, session, opts);
+    const count = (a: Action) => p.rows.filter((r) => r.action === a).length;
+    const warnings = new Map<string, { message: string; rows: number }>();
+    for (const r of p.rows) {
+      for (const i of r.issues) {
+        const w = warnings.get(i.code) ?? { message: ISSUE_TITLES[i.code] ?? i.message, rows: 0 };
+        w.rows++;
+        warnings.set(i.code, w);
+      }
+    }
+    const rank = (r: { action: string; issues: unknown[] }) => (r.action === 'error' ? 0 : r.issues.length ? 1 : 2);
+    return {
+      kind: opts.kind,
+      summary: { rows: p.rows.length, create: count('create'), update: 0, unchanged: 0, skip: 0, error: count('error') },
+      issues: [...warnings.entries()].map(([code, v]) => ({ code, ...v })).sort((a, b) => b.rows - a.rows),
+      newNames: { authors: 0, publishers: 0, categories: [] as string[] },
+      history: { groups: p.groups, amount: p.amount, newBooks: p.newBooks, newSuppliers: p.newSuppliers, notices: p.notices },
+      rows: [...p.rows]
+        .sort((a, b) => rank(a) - rank(b) || a.row - b.row)
+        .slice(0, PREVIEW_ROWS)
+        .map(({ line: _l, cells: _c, ...r }) => r),
+      truncatedRows: p.rows.length > PREVIEW_ROWS,
+    };
+  }
+
+  private async historyCommit(storeId: string, session: Session, opts: ImportOptions) {
+    const p = await this.historyPlan(storeId, session, opts);
+    const kind = opts.kind as HistoryKind;
+    if (kind !== 'expenses') await this.plans.assertCanAddBooks(p.newBooks);
+    const job = await this.prisma.importJob.create({
+      data: {
+        storeId,
+        fileName: session.fileName.slice(0, 255),
+        sheetName: opts.sheet.slice(0, 255),
+        kind,
+        mapping: {
+          kind,
+          mapping: opts.mapping,
+          headerRow: opts.headerRow,
+          applyStock: !!opts.applyStock,
+          addToStock: !!opts.addToStock,
+        } as Prisma.InputJsonValue,
+      },
+    });
+    try {
+      const r = await this.historyImport.commit(storeId, job.id, p.rows, {
+        ...opts,
+        kind,
+        mapping: opts.mapping as Record<string, number | undefined>,
+      });
+      const errors = p.rows.filter((x) => x.action === 'error').length;
+      await this.prisma.importJob.update({ where: { id: job.id }, data: { created: r.lines, errors, skipped: 0 } });
+      this.sessions.delete(session.id);
+      return {
+        jobId: job.id,
+        kind,
+        created: r.lines,
+        records: r.records,
+        updated: 0,
+        skipped: 0,
+        errors,
+        missing: await this.quality(storeId, job.id),
+      };
+    } catch (e) {
+      // Leave nothing half-imported: remove whatever this job wrote.
+      await this.historyImport.undo(storeId, job.id).catch(() => undefined);
+      await this.prisma.importJob.delete({ where: { id: job.id } }).catch(() => undefined);
+      throw e;
+    }
   }
 
   // ── Data quality ────────────────────────────────────────
@@ -784,6 +937,11 @@ const ISSUE_TITLES: Record<string, string> = {
   duplicate_in_file: 'أسطر مكررة داخل الملف',
   ambiguous: 'عناوين تطابق أكثر من كتاب',
   exists: 'كتب موجودة مسبقًا (متجاهلة)',
+  missing_date: 'أسطر بدون تاريخ',
+  invalid_date: 'تاريخ غير مفهوم',
+  missing_amount: 'أسطر بدون مبلغ',
+  invalid_amount: 'مبلغ غير مفهوم',
+  missing_cost: 'أسطر بدون سعر شراء',
 };
 
 export type { ColumnSuggestion, Row };

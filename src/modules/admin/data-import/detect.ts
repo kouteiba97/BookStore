@@ -1,5 +1,13 @@
-import { FieldKey, matchHeader } from './fields';
-import { INVALID, latinDigits, parseAmount, text } from './values';
+import { matchHeader } from './fields';
+import { ImportKind, matchKindHeader } from './kinds';
+import { INVALID, latinDigits, parseAmount, parseDate, text } from './values';
+
+type FieldKey = string;
+
+/** Header matcher for a kind of sheet. */
+function matcher(kind: ImportKind) {
+  return kind === 'catalog' ? (raw: unknown) => matchHeader(raw) : (raw: unknown) => matchKindHeader(raw, kind);
+}
 
 /** A row of cells as read from the sheet (formatted text). */
 export type Row = string[];
@@ -8,7 +16,7 @@ export interface ColumnSuggestion {
   index: number;
   header: string;
   samples: string[];
-  field: FieldKey | null;
+  field: string | null;
   /** 0–1. ≥0.8 = recognised by its header; ~0.4 = guessed from the values. */
   confidence: number;
   reason: 'header' | 'content' | 'none';
@@ -21,13 +29,14 @@ const SCAN_ROWS = 15;
  * column names. Sheets often open with a shop name, a date or a blank line.
  * Returns a 0-based index, or -1 when no row looks like headers.
  */
-export function findHeaderRow(rows: Row[]): number {
+export function findHeaderRow(rows: Row[], kind: ImportKind = 'catalog'): number {
+  const match = matcher(kind);
   let best = -1;
   let bestScore = 0;
   for (let r = 0; r < Math.min(rows.length, SCAN_ROWS); r++) {
     let score = 0;
     for (const cell of rows[r] ?? []) {
-      const m = matchHeader(cell);
+      const m = match(cell);
       if (m.score >= 0.6) score += m.score;
       else if (m.ignored) score += 0.3;
     }
@@ -39,13 +48,31 @@ export function findHeaderRow(rows: Row[]): number {
   return bestScore >= 1 ? best : -1;
 }
 
+/** How well a kind's vocabulary fits a sheet's headers (to suggest the kind). */
+export function kindScore(rows: Row[], kind: ImportKind): number {
+  const r = findHeaderRow(rows, kind);
+  if (r < 0) return 0;
+  const match = matcher(kind);
+  const fields = new Set<string>();
+  let score = 0;
+  for (const cell of rows[r]) {
+    const m = match(cell);
+    if (m.field && m.score >= 0.6 && !fields.has(m.field)) {
+      fields.add(m.field);
+      score += m.score;
+    }
+  }
+  return score;
+}
+
 /**
  * One suggestion per column. Headers decide first; for columns whose header
  * says nothing, the values are inspected (prices, counts, years, links, the
  * longest text = the title). Each field is given to at most one column — the
  * most confident one.
  */
-export function suggestMapping(rows: Row[], headerRow: number): ColumnSuggestion[] {
+export function suggestMapping(rows: Row[], headerRow: number, kind: ImportKind = 'catalog'): ColumnSuggestion[] {
+  const match = matcher(kind);
   const header = headerRow >= 0 ? rows[headerRow] ?? [] : [];
   const data = rows.slice(headerRow + 1).filter((r) => r.some((c) => text(c)));
   const width = Math.max(header.length, ...data.slice(0, 200).map((r) => r.length), 0);
@@ -53,7 +80,7 @@ export function suggestMapping(rows: Row[], headerRow: number): ColumnSuggestion
   const cols: ColumnSuggestion[] = [];
   const ignored = new Set<number>();
   for (let i = 0; i < width; i++) {
-    const m = matchHeader(header[i]);
+    const m = match(header[i]);
     if (m.ignored) ignored.add(i);
     cols.push({
       index: i,
@@ -73,11 +100,11 @@ export function suggestMapping(rows: Row[], headerRow: number): ColumnSuggestion
   for (const col of open) {
     const values = sample.map((r) => text(r[col.index])).filter(Boolean);
     if (values.length < Math.min(3, sample.length)) continue;
-    const g = guessFromValues(values);
+    const g = guessFromValues(values, kind);
     if (g) guesses.push({ col, ...g });
   }
   // Longest-text column as the title, if the title is still missing.
-  if (!taken.has('title')) {
+  if (!taken.has('title') && kind !== 'expenses') {
     const textual = open
       .map((col) => {
         const vals = sample.map((r) => text(r[col.index])).filter(Boolean);
@@ -115,8 +142,12 @@ export function suggestMapping(rows: Row[], headerRow: number): ColumnSuggestion
   return cols;
 }
 
-function guessFromValues(values: string[]): { field: FieldKey; conf: number } | null {
+function guessFromValues(values: string[], kind: ImportKind): { field: FieldKey; conf: number } | null {
   const share = (pred: (v: string) => boolean) => values.filter(pred).length / values.length;
+
+  if (kind !== 'catalog' && share((v) => { const d = parseDate(v); return d !== null && d !== INVALID; }) > 0.8) {
+    return { field: 'date', conf: 0.5 };
+  }
 
   if (share((v) => /^https?:\/\/\S+\.(jpe?g|png|webp)(\?.*)?$/i.test(v)) > 0.7) return { field: 'imageUrl', conf: 0.5 };
   if (share((v) => /^(97[89])?\d{9}[\dxX]$/.test(v.replace(/[-\s]/g, ''))) > 0.7) return { field: 'isbn', conf: 0.5 };
@@ -129,7 +160,8 @@ function guessFromValues(values: string[]): { field: FieldKey; conf: number } | 
   if (yearish) return { field: 'year', conf: 0.45 };
   const max = Math.max(...nums);
   const median = [...nums].sort((a, b) => a - b)[Math.floor(nums.length / 2)];
+  if (kind === 'expenses') return median > 0 ? { field: 'amount', conf: 0.4 } : null;
   if (isInt && max <= 500 && median <= 50) return { field: 'quantity', conf: 0.4 };
-  if (median >= 100) return { field: 'price', conf: 0.4 };
+  if (median >= 100) return { field: kind === 'catalog' ? 'price' : kind === 'sales' ? 'unitPrice' : 'unitCost', conf: 0.4 };
   return null;
 }

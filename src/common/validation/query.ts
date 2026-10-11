@@ -27,3 +27,12 @@ export function paging(page?: string, pageSize?: string, defaults = { size: 25, 
   const s = Math.min(defaults.max, Math.max(1, Math.floor(Number(pageSize)) || defaults.size));
   return { page: p, pageSize: s };
 }
+
+/** "YYYY-MM-DD" from the query string → start (or end) of that day, UTC. */
+export function optionalDate(value: string | undefined, endOfDay: boolean): Date | undefined {
+  if (!value) return undefined;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new BadRequestException('Dates must be YYYY-MM-DD');
+  const d = new Date(`${value}T${endOfDay ? '23:59:59.999' : '00:00:00.000'}Z`);
+  if (Number.isNaN(d.getTime())) throw new BadRequestException('Invalid date');
+  return d;
+}

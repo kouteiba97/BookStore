@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { StoreResolver } from '../../../common/tenant/store-resolver.service';
+import { PlanService } from '../../../common/plan/plan.service';
 import { normalizeArabic } from '../../../common/utils/normalize-arabic';
 import {
   bookInclude,
@@ -28,6 +29,7 @@ export class AdminBooksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storeResolver: StoreResolver,
+    private readonly plans: PlanService,
   ) {}
 
   async list(opts: {
@@ -100,6 +102,7 @@ export class AdminBooksService {
 
   async create(dto: UpsertBookDto) {
     const storeId = await this.storeResolver.getStoreId();
+    await this.plans.assertCanAddBooks(1);
 
     const categoryId = await this.resolveCategoryId(
       dto.categoryId,

@@ -124,3 +124,62 @@ export function columnLetter(i: number): string {
   for (let n = i + 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
   return s;
 }
+
+/**
+ * A date as shops write it: ISO (2026-09-12, also what Excel date cells become),
+ * day-first (12/09/2026, 12-09-26, 12.09.2026), or an Excel serial number.
+ */
+export function parseDate(raw: unknown): Parsed<Date> {
+  const s = latinDigits(text(raw));
+  if (!s) return null;
+  let y: number, m: number, d: number;
+  let match: RegExpMatchArray | null;
+  if ((match = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[ T].*)?$/))) {
+    [y, m, d] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  } else if ((match = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2}|\d{4})(?:\s.*)?$/))) {
+    [d, m, y] = [Number(match[1]), Number(match[2]), Number(match[3])];
+    if (y < 100) y += 2000;
+  } else if (/^\d{5}(\.\d+)?$/.test(s) && Number(s) > 20000 && Number(s) < 80000) {
+    // Excel serial date (days since 1899-12-30).
+    const date = new Date(Date.UTC(1899, 11, 30) + Math.floor(Number(s)) * 86_400_000);
+    return date;
+  } else {
+    return INVALID;
+  }
+  const date = new Date(Date.UTC(y, m - 1, d, 12));
+  if (date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) return INVALID; // 31/02 etc.
+  if (y < 1990 || date.getTime() > Date.now() + 366 * 86_400_000) return INVALID;
+  return date;
+}
+
+export type PaymentKey = 'cash' | 'card' | 'transfer' | 'cod' | 'other';
+
+/** Payment words in Arabic, French and English. Unknown words → "other". */
+export function parsePayment(raw: unknown): Parsed<PaymentKey> {
+  const s = text(raw).toLowerCase();
+  if (!s) return null;
+  if (/(نقد|كاش|cash|especes|espèces|liquide)/.test(s)) return 'cash';
+  if (/(استلام|cod|livraison|عند التسليم)/.test(s)) return 'cod';
+  if (/(بطاق|carte|card|cib|edahabia|الذهبية|tpe)/.test(s)) return 'card';
+  if (/(تحويل|virement|ccp|بريد|baridi|transfer|cheque|chèque|صك)/.test(s)) return 'transfer';
+  return 'other';
+}
+
+export type ExpenseKey = 'rent' | 'salaries' | 'transport' | 'utilities' | 'marketing' | 'supplies' | 'taxes' | 'other';
+
+/** An expense line's category from its wording; "other" when unclear. */
+export function parseExpenseCategory(raw: unknown): ExpenseKey {
+  const s = text(raw).toLowerCase();
+  if (!s) return 'other';
+  const rules: [ExpenseKey, RegExp][] = [
+    ['rent', /(إيجار|ايجار|كراء|loyer|location|rent)/],
+    ['salaries', /(أجر|اجر|رواتب|راتب|أجور|اجور|منحة|salaire|paie|salary|wage)/],
+    ['transport', /(نقل|توصيل|شحن|بنزين|وقود|مازوت|transport|livraison|carburant|essence|yalidine|ياليدين|zr ?express)/],
+    ['utilities', /(كهرباء|ماء|غاز|هاتف|انترنت|إنترنت|سونلغاز|electricit|sonelgaz|eau|gaz|internet|telephone|téléphone|algerie telecom|mobilis|djezzy|ooredoo)/],
+    ['marketing', /(إشهار|اشهار|إعلان|اعلان|تسويق|فيسبوك|publicit|marketing|facebook|instagram|sponsor)/],
+    ['taxes', /(ضريب|رسوم|ضرائب|impot|impôt|taxe|tva|cnas|casnos|g50)/],
+    ['supplies', /(لوازم|أدوات|ادوات|تجهيز|تغليف|أكياس|اكياس|ورق|fourniture|emballage|sachet|materiel|matériel|supplies)/],
+  ];
+  for (const [key, re] of rules) if (re.test(s)) return key;
+  return 'other';
+}

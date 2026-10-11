@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { StoreResolver } from './store-resolver.service';
+import { PlanService } from '../plan/plan.service';
 
 /**
  * The store this deployment serves. Global so the admin guard — which runs in
@@ -8,7 +9,7 @@ import { StoreResolver } from './store-resolver.service';
  */
 @Global()
 @Module({
-  providers: [StoreResolver],
-  exports: [StoreResolver],
+  providers: [StoreResolver, PlanService],
+  exports: [StoreResolver, PlanService],
 })
 export class TenantModule {}

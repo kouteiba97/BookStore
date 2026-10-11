@@ -30,19 +30,20 @@ export function readWorkbook(buffer: Buffer, fileName: string): ReadSheet[] {
     throw new BadRequestException('صيغة الملف غير مدعومة. استعمل Excel (.xlsx/.xls) أو CSV.');
   }
 
+  const isText = ext === 'csv' || ext === 'txt' || ext === 'tsv';
   let wb: XLSX.WorkBook;
   try {
-    wb = XLSX.read(buffer, {
-      type: 'buffer',
+    const opts: XLSX.ParsingOptions = {
       dense: true,
       sheetRows: MAX_SHEET_ROWS + 1,
       cellFormula: false,
       cellHTML: false,
       cellStyles: false,
       cellDates: false,
-      // CSV exported by Excel on Arabic Windows is often Windows-1256.
-      codepage: ext === 'csv' || ext === 'txt' || ext === 'tsv' ? detectCsvCodepage(buffer) : undefined,
-    });
+    };
+    // Text files are decoded here (UTF-8, or Windows-1256 from Arabic Excel)
+    // and handed over as a string: SheetJS's own byte decoding garbles UTF-8.
+    wb = isText ? XLSX.read(decodeText(buffer), { ...opts, type: 'string' }) : XLSX.read(buffer, { ...opts, type: 'buffer' });
   } catch {
     throw new BadRequestException('تعذّرت قراءة الملف. تأكد أنه ملف Excel أو CSV سليم.');
   }
@@ -56,6 +57,8 @@ export function readWorkbook(buffer: Buffer, fileName: string): ReadSheet[] {
       raw: false,
       defval: '',
       blankrows: true,
+      // Date cells as ISO text; Excel's default display (m/d/yy) is ambiguous.
+      dateNF: 'yyyy-mm-dd',
     });
     const rows = raw.slice(0, MAX_SHEET_ROWS).map((r) =>
       (Array.isArray(r) ? r : []).slice(0, MAX_COLS).map((c) => (c == null ? '' : String(c))),
@@ -70,14 +73,12 @@ export function readWorkbook(buffer: Buffer, fileName: string): ReadSheet[] {
   return sheets;
 }
 
-/** UTF-8 (with or without BOM) unless the bytes are not valid UTF-8. */
-function detectCsvCodepage(buffer: Buffer): number {
-  if (buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) return 65001;
+/** UTF-8 (with or without BOM), or Windows-1256 when the bytes are not valid UTF-8. */
+export function decodeText(buffer: Buffer): string {
   try {
-    new TextDecoder('utf-8', { fatal: true }).decode(buffer.subarray(0, 64 * 1024));
-    return 65001;
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer).replace(/^﻿/, '');
   } catch {
-    return 1256; // Arabic Windows
+    return new TextDecoder('windows-1256').decode(buffer);
   }
 }
 

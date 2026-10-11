@@ -33,6 +33,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // Pull the message/error out of HttpException; hide details otherwise.
     let message: string | string[] = 'Internal server error';
+    let extra: Record<string, unknown> = {};
     let error = 'Internal Server Error';
     if (isHttp) {
       const body = exception.getResponse();
@@ -42,8 +43,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (typeof body === 'string') {
         message = body;
       } else if (body && typeof body === 'object') {
-        message = (body as any).message ?? message;
-        error = (body as any).error ?? error;
+        const { message: m, error: e, statusCode: _s, ...rest } = body as Record<string, unknown>;
+        message = (m as string | string[]) ?? message;
+        error = (e as string) ?? error;
+        // Structured details our own exceptions add (e.g. requiredPlan on a 402).
+        extra = rest;
       }
     }
 
@@ -57,6 +61,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     res.status(status).json({
+      ...extra,
       statusCode: status,
       error,
       message,

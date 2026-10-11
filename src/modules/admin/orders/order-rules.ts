@@ -13,7 +13,9 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending: ['confirmed', 'cancelled'],
   confirmed: ['shipped', 'cancelled'],
   shipped: ['delivered', 'cancelled'],
-  delivered: [],
+  // A delivered sale can still be returned: cancelling it puts the books back
+  // in stock and takes it out of the income.
+  delivered: ['cancelled'],
   cancelled: [],
 };
 
@@ -25,20 +27,30 @@ export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
 
 export interface OrderTotals {
   subtotal: number;
+  discount: number;
   shippingCost: number;
   total: number;
 }
 
-/** Sum line items and clamp shipping to >= 0. Money is computed once here. */
+const cents = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Sum line items, apply a discount (never more than the books are worth, never
+ * negative) and add shipping (never negative). Money is computed once, here,
+ * and rounded to the cent so floating-point dust never reaches the database.
+ */
 export function computeOrderTotals(
   items: { unitPrice: number; quantity: number }[],
   shipping: number,
+  discount = 0,
 ): OrderTotals {
-  const subtotal = items.reduce((s, it) => s + it.unitPrice * it.quantity, 0);
-  const shippingCost = Math.max(0, shipping);
+  const subtotal = cents(items.reduce((s, it) => s + it.unitPrice * it.quantity, 0));
+  const d = cents(Math.min(Math.max(0, discount || 0), subtotal));
+  const shippingCost = cents(Math.max(0, shipping || 0));
   return {
     subtotal,
+    discount: d,
     shippingCost,
-    total: subtotal + shippingCost,
+    total: cents(subtotal - d + shippingCost),
   };
 }

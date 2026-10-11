@@ -13,6 +13,8 @@ import {
 } from "@/components/admin/primitives";
 import { useToast } from "@/components/admin/toaster";
 import { Thumb } from "@/components/admin/thumb";
+import { Modal } from "@/components/admin/primitives";
+import { STOCK_REASON_LABEL, fetchStockMovements } from "@/lib/money-api";
 
 const INV_LABEL: Record<InventoryStatus, string> = {
   available: "متوفر",
@@ -31,6 +33,7 @@ export default function InventoryPage() {
   }, [search]);
   const [status, setStatus] = useState("");
   const [lowStock, setLowStock] = useState(params.get("lowStock") === "true");
+  const [logFor, setLogFor] = useState<AdminBook | null>(null);
 
   useEffect(() => {
     const next = new URLSearchParams(params);
@@ -106,17 +109,59 @@ export default function InventoryPage() {
             </thead>
             <tbody>
               {books.map((b) => (
-                <InventoryRow key={b.id} book={b} />
+                <InventoryRow key={b.id} book={b} onLog={() => setLogFor(b)} />
               ))}
             </tbody>
           </table>
         </Surface>
       )}
+      {logFor && <StockLog book={logFor} onClose={() => setLogFor(null)} />}
     </div>
   );
 }
 
-function InventoryRow({ book }: { book: AdminBook }) {
+/** Every change to one book's count: sales, returns, purchases, hand edits, imports. */
+function StockLog({ book, onClose }: { book: AdminBook; onClose: () => void }) {
+  const { data, isLoading } = useQuery({ queryKey: ["stock-log", book.id], queryFn: () => fetchStockMovements(book.id) });
+  return (
+    <Modal open onClose={onClose} title={`سجل المخزون — ${book.title}`} size="md">
+      {isLoading || !data ? (
+        <TableSkeleton rows={4} cols={3} />
+      ) : data.movements.length === 0 ? (
+        <p className="py-6 text-center text-sm text-muted-foreground">لا توجد حركات مسجّلة لهذا الكتاب بعد.</p>
+      ) : (
+        <div className="max-h-[60vh] overflow-y-auto">
+          <table className="w-full text-sm">
+            <thead className="text-xs text-muted-foreground">
+              <tr className="border-b border-border/60">
+                <th className="py-2 text-start font-semibold">التاريخ</th>
+                <th className="py-2 text-start font-semibold">السبب</th>
+                <th className="py-2 text-end font-semibold">التغيير</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.movements.map((m) => (
+                <tr key={m.id} className="border-b border-border/30 last:border-0">
+                  <td className="py-2 text-xs">{new Date(m.createdAt).toLocaleString("ar-DZ")}</td>
+                  <td className="py-2">
+                    {STOCK_REASON_LABEL[m.reason] ?? m.reason}
+                    {m.note && <span className="ms-1 text-xs text-muted-foreground">({m.note})</span>}
+                  </td>
+                  <td className={`py-2 text-end font-semibold tabular-nums ${m.delta < 0 ? "text-rose-700" : "text-emerald-700"}`} dir="ltr">
+                    {m.delta > 0 ? `+${m.delta}` : m.delta}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="mt-3 text-xs text-muted-foreground">المخزون الحالي: <span className="font-semibold tabular-nums">{data?.book.inventory?.stock ?? "—"}</span></p>
+    </Modal>
+  );
+}
+
+function InventoryRow({ book, onLog }: { book: AdminBook; onLog: () => void }) {
   const qc = useQueryClient();
   const toast = useToast();
   const [status, setStatus] = useState<InventoryStatus>(book.inventory?.status ?? "available");
@@ -139,6 +184,7 @@ function InventoryRow({ book }: { book: AdminBook }) {
     onSuccess: () => {
       toast.success("تم التحديث");
       qc.invalidateQueries({ queryKey: ["admin-inventory"] });
+      qc.invalidateQueries({ queryKey: ["stock-log", book.id] });
     },
     onError: (e: any) =>
       toast.error(e?.response?.data?.message || "تعذّر التحديث"),
@@ -195,6 +241,9 @@ function InventoryRow({ book }: { book: AdminBook }) {
               {mutation.isPending ? "..." : "حفظ"}
             </button>
           )}
+          <button type="button" onClick={onLog} className="text-xs text-muted-foreground hover:text-primary hover:underline">
+            السجل
+          </button>
         </div>
       </td>
     </tr>

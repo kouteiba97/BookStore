@@ -11,6 +11,7 @@ import {
   type ImportAction,
   type ImportAnalysis,
   type ImportField,
+  type ImportKind,
   type ImportOptions,
   type ImportPreview,
   type ImportResult,
@@ -19,6 +20,8 @@ import type { CatalogItem } from "@/lib/admin-types";
 import { Button, Surface, selectClass } from "@/components/admin/primitives";
 import { useToast } from "@/components/admin/toaster";
 import { QualityGrid } from "@/components/admin/quality-grid";
+import { useFeature } from "@/components/admin/plan-gate";
+import { money } from "@/lib/money-api";
 
 type Step = "upload" | "map" | "preview" | "done";
 
@@ -36,6 +39,29 @@ const ACTION_STYLE: Record<ImportAction, string> = {
   skip: "bg-amber-50 text-amber-700 ring-amber-200",
   error: "bg-rose-50 text-rose-700 ring-rose-200",
 };
+
+/** The column a kind cannot do without. */
+const REQUIRED: Record<ImportKind, { field: string; label: string }> = {
+  catalog: { field: "title", label: "العنوان" },
+  sales: { field: "title", label: "الكتاب" },
+  purchases: { field: "title", label: "الكتاب" },
+  expenses: { field: "amount", label: "المبلغ" },
+};
+const KIND_HINT: Record<ImportKind, string> = {
+  catalog: "قائمة الكتب: العنوان، المؤلف، السعر، الكمية…",
+  sales: "سجل المبيعات: التاريخ، الكتاب، الكمية، السعر، الزبون…",
+  purchases: "سجل المشتريات: التاريخ، المورد، الكتاب، الكمية، سعر الشراء…",
+  expenses: "المصاريف: التاريخ، البند، المبلغ…",
+};
+/** What one preview line becomes, per kind. */
+const UNIT: Record<ImportKind, string> = { catalog: "كتاب", sales: "سطر بيع", purchases: "سطر شراء", expenses: "مصروف" };
+const DONE_LINK: Record<ImportKind, { to: string; label: string }> = {
+  catalog: { to: "/admin/books", label: "عرض الكتب" },
+  sales: { to: "/admin/sales", label: "عرض المبيعات" },
+  purchases: { to: "/admin/purchases", label: "عرض المشتريات" },
+  expenses: { to: "/admin/expenses", label: "عرض المصاريف" },
+};
+const RECORD: Record<ImportKind, string> = { catalog: "كتاب", sales: "عملية بيع", purchases: "عملية شراء", expenses: "مصروف" };
 
 const errMsg = (e: any) => {
   const m = e?.response?.data?.message;
@@ -66,14 +92,23 @@ export default function ImportWizard() {
     staleTime: 5 * 60_000,
   });
 
-  const optionsFor = (a: ImportAnalysis, sheetName: string): ImportOptions => {
+  const canHistory = useFeature("historyImport");
+
+  /** The sheet as read for one kind: its header row and recognised columns. */
+  const optionsFor = (a: ImportAnalysis, sheetName: string, kind?: ImportKind): ImportOptions => {
     const sheet = a.sheets.find((s) => s.name === sheetName)!;
+    const k = kind ?? sheet.suggestedKind ?? "catalog";
+    const reading = sheet.byKind?.[k] ?? { headerRow: sheet.headerRow, columns: sheet.columns };
     const mapping: ImportOptions["mapping"] = {};
-    for (const c of sheet.columns) if (c.field) mapping[c.field] = c.index;
+    for (const c of reading.columns) if (c.field) mapping[c.field] = c.index;
     return {
       sheet: sheet.name,
-      headerRow: sheet.headerRow,
+      headerRow: reading.headerRow,
       mapping,
+      kind: k,
+      applyStock: false,
+      addToStock: false,
+      updateCostPrice: true,
       existing: "update",
       stockMode: "set",
       defaultCategory: null,
@@ -85,7 +120,7 @@ export default function ImportWizard() {
     mutationFn: analyzeImport,
     onSuccess: (a) => {
       setAnalysis(a);
-      const first = a.sheets.find((s) => s.looksLikeCatalog) ?? a.sheets[0];
+      const first = a.sheets.find((s) => s.suggestedKind !== "catalog" || s.looksLikeCatalog) ?? a.sheets[0];
       setOpts(optionsFor(a, first.name));
       setPreview(null);
       setResult(null);
@@ -109,8 +144,9 @@ export default function ImportWizard() {
     onSuccess: (r) => {
       setResult(r);
       setStep("done");
-      toast.success(`تم: ${r.created} كتاب جديد، ${r.updated} تحديث`);
+      toast.success(r.kind && r.kind !== "catalog" ? `تم: ${r.created} ${UNIT[r.kind]}` : `تم: ${r.created} كتاب جديد، ${r.updated} تحديث`);
       qc.invalidateQueries({ queryKey: ["admin-books"] });
+      for (const k of ["admin-orders", "purchases", "expenses", "report", "suppliers"]) qc.invalidateQueries({ queryKey: [k] });
       qc.invalidateQueries({ queryKey: ["import-history"] });
       qc.invalidateQueries({ queryKey: ["data-quality"] });
       qc.invalidateQueries({ queryKey: ["catalog"] });
@@ -139,6 +175,14 @@ export default function ImportWizard() {
   };
 
   const sheet = analysis && opts ? analysis.sheets.find((s) => s.name === opts.sheet)! : null;
+  const kind: ImportKind = opts?.kind ?? "catalog";
+  const isHistory = kind !== "catalog";
+  const columns = sheet ? sheet.byKind?.[kind]?.columns ?? sheet.columns : [];
+  const kindFields = analysis?.kinds?.find((k) => k.key === kind)?.fields ?? analysis?.fields ?? [];
+  const required = REQUIRED[kind];
+  const missingRequired = !!opts && opts.mapping[required.field] === undefined;
+  const locked = isHistory && !canHistory;
+  const resultKind: ImportKind = result?.kind ?? "catalog";
   const fieldOfColumn = useMemo(() => {
     const m = new Map<number, ImportField>();
     if (opts) for (const [f, i] of Object.entries(opts.mapping)) if (i !== undefined) m.set(i, f as ImportField);
@@ -226,7 +270,12 @@ export default function ImportWizard() {
                   >
                     {analysis.sheets.map((s) => (
                       <option key={s.name} value={s.name}>
-                        {s.name} ({s.totalRows} سطر){s.looksLikeCatalog ? "" : " — لا تبدو قائمة كتب"}
+                        {s.name} ({s.totalRows} سطر)
+                        {s.suggestedKind && s.suggestedKind !== "catalog"
+                          ? ` — ${analysis.kinds.find((k) => k.key === s.suggestedKind)?.label ?? ""}`
+                          : s.looksLikeCatalog
+                            ? ""
+                            : " — لا تبدو قائمة كتب"}
                       </option>
                     ))}
                   </select>
@@ -251,6 +300,38 @@ export default function ImportWizard() {
                 ملف آخر
               </Button>
             </div>
+            {analysis.kinds?.length > 0 && (
+              <div className="space-y-2 border-t border-border/50 pt-4">
+                <p className="text-sm font-semibold">ماذا تحتوي هذه الورقة؟</p>
+                <div className="grid gap-2 sm:grid-cols-4">
+                  {analysis.kinds.map((k) => {
+                    const active = k.key === kind;
+                    const needsPack = k.key !== "catalog" && !canHistory;
+                    return (
+                      <button
+                        key={k.key}
+                        type="button"
+                        onClick={() => setOpts(optionsFor(analysis, opts.sheet, k.key))}
+                        className={`rounded-xl p-3 text-start ring-1 transition-colors ${active ? "bg-primary/10 ring-primary" : "bg-card ring-border hover:bg-muted"}`}
+                      >
+                        <span className="flex items-center justify-between gap-2 text-sm font-bold">
+                          {k.label}
+                          {sheet.suggestedKind === k.key && <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] text-emerald-700">مقترح</span>}
+                          {needsPack && <span className="text-[10px] font-semibold text-amber-700">باقة أعلى</span>}
+                        </span>
+                        <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">{KIND_HINT[k.key]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {locked && (
+                  <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-900">
+                    استيراد سجل المبيعات والمشتريات والمصاريف غير متوفر في باقتك.{" "}
+                    <Link to="/admin/settings" className="font-semibold underline">عرض الباقات</Link>
+                  </p>
+                )}
+              </div>
+            )}
             {sheet.truncated && (
               <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-800">
                 الورقة طويلة جدًا: تُقرأ أول 10,000 سطر فقط. قسّمها على عدة ملفات.
@@ -266,7 +347,7 @@ export default function ImportWizard() {
               </p>
             </div>
             <div className="divide-y divide-border/40">
-              {sheet.columns.map((c) => {
+              {columns.map((c) => {
                 const field = fieldOfColumn.get(c.index) ?? "";
                 const auto = c.field && c.field === field;
                 return (
@@ -286,7 +367,7 @@ export default function ImportWizard() {
                         aria-label={`محتوى العمود ${c.letter}`}
                       >
                         <option value="">تجاهل</option>
-                        {analysis.fields.map((f) => (
+                        {kindFields.map((f) => (
                           <option key={f.key} value={f.key}>
                             {f.label}
                           </option>
@@ -309,6 +390,39 @@ export default function ImportWizard() {
             </div>
           </Surface>
 
+          {kind === "sales" && (
+            <Surface className="space-y-2 p-5 text-sm">
+              <label className="flex items-start gap-2">
+                <input type="checkbox" className="mt-1" checked={!!opts.applyStock} onChange={(e) => setOpts({ ...opts, applyStock: e.target.checked })} />
+                <span>
+                  <span className="font-semibold">خصم الكميات المباعة من المخزون الحالي</span>
+                  <span className="block text-xs text-muted-foreground">
+                    اتركه دون تحديد إذا كان مخزونك الحالي صحيحًا (المبيعات القديمة حدثت قبل الجرد). الكتب غير الموجودة تُضاف تلقائيًا.
+                  </span>
+                </span>
+              </label>
+            </Surface>
+          )}
+          {kind === "purchases" && (
+            <Surface className="space-y-3 p-5 text-sm">
+              <label className="flex items-start gap-2">
+                <input type="checkbox" className="mt-1" checked={!!opts.addToStock} onChange={(e) => setOpts({ ...opts, addToStock: e.target.checked })} />
+                <span>
+                  <span className="font-semibold">إضافة الكميات المشتراة إلى المخزون</span>
+                  <span className="block text-xs text-muted-foreground">اتركه دون تحديد إذا كان مخزونك الحالي يشمل هذه المشتريات.</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2">
+                <input type="checkbox" className="mt-1" checked={opts.updateCostPrice !== false} onChange={(e) => setOpts({ ...opts, updateCostPrice: e.target.checked })} />
+                <span>
+                  <span className="font-semibold">تحديث سعر الشراء لكل كتاب بآخر سعر</span>
+                  <span className="block text-xs text-muted-foreground">يُستعمل لحساب الأرباح في التقارير.</span>
+                </span>
+              </label>
+            </Surface>
+          )}
+
+          {!isHistory && (
           <Surface className="grid gap-4 p-5 sm:grid-cols-2">
             <label className="space-y-1 text-sm">
               <span className="font-semibold">الكتب الموجودة مسبقًا</span>
@@ -352,10 +466,11 @@ export default function ImportWizard() {
               </select>
             </label>
           </Surface>
+          )}
 
           <div className="flex items-center justify-end gap-2">
-            {opts.mapping.title === undefined && <span className="text-xs text-rose-600">اختر عمود العنوان أولًا</span>}
-            <Button onClick={() => runPreview.mutate()} disabled={opts.mapping.title === undefined || runPreview.isPending}>
+            {missingRequired && <span className="text-xs text-rose-600">اختر عمود «{required.label}» أولًا</span>}
+            <Button onClick={() => runPreview.mutate()} disabled={missingRequired || locked || runPreview.isPending}>
               {runPreview.isPending ? "جاري الفحص..." : "معاينة قبل الاستيراد"}
             </Button>
           </div>
@@ -365,6 +480,34 @@ export default function ImportWizard() {
       {/* ── 3. Preview ── */}
       {step === "preview" && preview && (
         <>
+          {preview.history ? (
+            <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <SummaryCard label={`${UNIT[kind]} جاهز`} value={preview.summary.create} tone="emerald" />
+                <SummaryCard label={RECORD[kind]} value={preview.history.groups} tone="blue" />
+                <SummaryCard label="كتاب جديد سيُضاف" value={preview.history.newBooks} tone="slate" />
+                <SummaryCard label="أخطاء" value={preview.summary.error} tone="rose" />
+              </div>
+              <Surface className="space-y-1 p-4 text-sm">
+                <p>
+                  المبلغ الإجمالي: <span className="font-bold tabular-nums">{money(preview.history.amount)}</span>
+                  {kind === "purchases" && preview.history.newSuppliers > 0 && (
+                    <span className="text-muted-foreground"> • {preview.history.newSuppliers} مورد جديد</span>
+                  )}
+                </p>
+                {preview.history.notices.map((n) => (
+                  <p key={n} className="text-xs text-amber-800">{n}</p>
+                ))}
+                <p className="text-xs text-muted-foreground">
+                  {kind === "sales"
+                    ? opts?.applyStock ? "ستُخصم الكميات من المخزون." : "لن يتغيّر المخزون."
+                    : kind === "purchases"
+                      ? opts?.addToStock ? "ستُضاف الكميات إلى المخزون." : "لن يتغيّر المخزون."
+                      : "تظهر المصاريف في التقارير وصافي الربح."}
+                </p>
+              </Surface>
+            </>
+          ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <SummaryCard label="كتب جديدة" value={preview.summary.create} tone="emerald" />
             <SummaryCard label="تحديث" value={preview.summary.update} tone="blue" />
@@ -372,8 +515,9 @@ export default function ImportWizard() {
             <SummaryCard label="متجاهلة" value={preview.summary.skip} tone="amber" />
             <SummaryCard label="أخطاء" value={preview.summary.error} tone="rose" />
           </div>
+          )}
 
-          {(preview.issues.length > 0 || preview.newNames.authors + preview.newNames.publishers + preview.newNames.categories.length > 0) && (
+          {(preview.issues.length > 0 || (!preview.history && preview.newNames.authors + preview.newNames.publishers + preview.newNames.categories.length > 0)) && (
             <Surface className="grid gap-4 p-5 sm:grid-cols-2">
               {preview.issues.length > 0 && (
                 <div>
@@ -388,6 +532,7 @@ export default function ImportWizard() {
                   </ul>
                 </div>
               )}
+              {!preview.history && (
               <div>
                 <p className="mb-2 text-sm font-bold">سيُضاف للمتجر أيضًا</p>
                 <ul className="space-y-1 text-sm text-muted-foreground">
@@ -399,12 +544,13 @@ export default function ImportWizard() {
                   </li>
                 </ul>
               </div>
+              )}
             </Surface>
           )}
 
           <Surface className="overflow-hidden">
             <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3">
-              {(["issues", "all", "create", "update", "skip", "error"] as const).map((f) => (
+              {(isHistory ? (["issues", "all", "create", "error"] as const) : (["issues", "all", "create", "update", "skip", "error"] as const)).map((f) => (
                 <button
                   key={f}
                   type="button"
@@ -413,7 +559,7 @@ export default function ImportWizard() {
                     rowFilter === f ? "bg-primary text-primary-foreground ring-primary" : "bg-card ring-border hover:bg-muted"
                   }`}
                 >
-                  {f === "issues" ? "بها ملاحظات" : f === "all" ? "الكل" : ACTION_LABEL[f]}
+                  {f === "issues" ? "بها ملاحظات" : f === "all" ? "الكل" : isHistory && f === "create" ? "جاهز" : ACTION_LABEL[f]}
                 </button>
               ))}
               <button
@@ -430,7 +576,7 @@ export default function ImportWizard() {
                 <thead className="sticky top-0 bg-card text-xs text-muted-foreground">
                   <tr className="border-b border-border/60">
                     <th className="px-4 py-2 text-start font-semibold">السطر</th>
-                    <th className="px-2 py-2 text-start font-semibold">العنوان</th>
+                    <th className="px-2 py-2 text-start font-semibold">{kind === "expenses" ? "البيان" : "العنوان"}</th>
                     <th className="px-2 py-2 text-start font-semibold">الإجراء</th>
                     <th className="px-4 py-2 text-start font-semibold">التفاصيل</th>
                   </tr>
@@ -453,7 +599,7 @@ export default function ImportWizard() {
                               {i.message}
                             </p>
                           ))}
-                          {r.changes.map((c, k) => (
+                          {(r.changes ?? []).map((c, k) => (
                             <p key={`c${k}`} className="text-blue-700">
                               {c}
                             </p>
@@ -481,7 +627,9 @@ export default function ImportWizard() {
             >
               {commit.isPending
                 ? "جاري الاستيراد..."
-                : `استيراد ${preview.summary.create} جديد${preview.summary.update ? ` + ${preview.summary.update} تحديث` : ""}`}
+                : isHistory
+                  ? `استيراد ${preview.summary.create} ${UNIT[kind]}`
+                  : `استيراد ${preview.summary.create} جديد${preview.summary.update ? ` + ${preview.summary.update} تحديث` : ""}`}
             </Button>
           </div>
         </>
@@ -493,22 +641,28 @@ export default function ImportWizard() {
           <Surface className="space-y-2 p-5 text-center">
             <p className="text-lg font-bold text-emerald-700">تم الاستيراد بنجاح ✓</p>
             <p className="text-sm text-muted-foreground">
-              {result.created} كتاب جديد • {result.updated} تحديث • {result.skipped} متجاهل • {result.errors} خطأ
+              {resultKind !== "catalog"
+                ? `${result.created} ${UNIT[resultKind]} • ${result.records ?? 0} ${RECORD[resultKind]} • ${result.errors} خطأ`
+                : `${result.created} كتاب جديد • ${result.updated} تحديث • ${result.skipped} متجاهل • ${result.errors} خطأ`}
             </p>
             <p className="text-xs text-muted-foreground">
-              يمكنك التراجع عن هذا الاستيراد من «سجل الاستيراد» (تُحذف الكتب التي أضافها، ما لم تُطلب).
+              {resultKind !== "catalog"
+                ? "يمكنك التراجع عن هذا الاستيراد كاملًا من «سجل الاستيراد»."
+                : "يمكنك التراجع عن هذا الاستيراد من «سجل الاستيراد» (تُحذف الكتب التي أضافها، ما لم تُطلب)."}
             </p>
           </Surface>
-          <Surface className="p-5">
-            <p className="mb-3 text-sm font-bold">ما الذي ينقص الكتب المستوردة؟</p>
-            <QualityGrid quality={result.missing} />
-          </Surface>
+          {resultKind !== "expenses" && (
+            <Surface className="p-5">
+              <p className="mb-3 text-sm font-bold">ما الذي ينقص الكتب المستوردة؟</p>
+              <QualityGrid quality={result.missing} />
+            </Surface>
+          )}
           <div className="flex justify-center gap-2">
             <Button variant="secondary" onClick={reset}>
               استيراد ملف آخر
             </Button>
-            <Link to="/admin/books" className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground">
-              عرض الكتب
+            <Link to={DONE_LINK[resultKind].to} className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground">
+              {DONE_LINK[resultKind].label}
             </Link>
           </div>
         </>

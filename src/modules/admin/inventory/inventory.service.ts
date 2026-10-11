@@ -81,18 +81,19 @@ export class InventoryService {
     });
     if (!book) throw new NotFoundException('Book not found');
 
-    return this.prisma.inventory.upsert({
-      where: { bookId },
-      create: {
-        bookId,
-        storeId,
-        status: dto.status,
-        stock: dto.stock ?? null,
-      },
-      update: {
-        status: dto.status,
-        stock: dto.stock ?? null,
-      },
+    // A hand edit of the count is logged like any other stock change.
+    return this.prisma.$transaction(async (tx) => {
+      const before = await tx.inventory.findUnique({ where: { bookId }, select: { stock: true } });
+      const row = await tx.inventory.upsert({
+        where: { bookId },
+        create: { bookId, storeId, status: dto.status, stock: dto.stock ?? null },
+        update: { status: dto.status, stock: dto.stock ?? null },
+      });
+      const delta = (dto.stock ?? 0) - (before?.stock ?? 0);
+      if (dto.stock != null && delta !== 0) {
+        await tx.stockMovement.create({ data: { storeId, bookId, delta, reason: 'adjustment' } });
+      }
+      return row;
     });
   }
 }

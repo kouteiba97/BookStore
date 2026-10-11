@@ -2,6 +2,7 @@ import { Body, Controller, Get, Logger, Post, Query, Res, UseGuards } from '@nes
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
+import { RequiresFeature } from '../../../common/plan/requires-feature';
 import { INVENTORY_STATUSES, optionalEnum, paging } from '../../../common/validation/query';
 import { ExportSocialContentDto } from './social-content.dto';
 import { SocialContentService } from './social-content.service';
@@ -10,6 +11,7 @@ import { SocialContentService } from './social-content.service';
  * Social-media content: browse the catalogue as post material and download
  * covers + metadata as a ZIP, one folder per book.
  */
+@RequiresFeature('socialExport')
 @UseGuards(AdminAuthGuard)
 @Controller('v1/admin/social-content')
 export class SocialContentController {

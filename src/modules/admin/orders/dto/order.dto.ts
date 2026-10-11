@@ -4,6 +4,7 @@ import {
   IsArray,
   IsIn,
   IsInt,
+  MaxLength,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -12,6 +13,9 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { ORDER_STATUSES } from '../../../../common/validation/query';
+
+export const SALE_CHANNELS = ['online', 'shop', 'import'] as const;
+export const PAYMENT_METHODS = ['cash', 'card', 'transfer', 'cod', 'other'] as const;
 
 export class OrderItemInputDto {
   @IsString()
@@ -53,6 +57,20 @@ export class UpsertOrderDto {
   notes?: string | null;
 
   @IsOptional()
+  @IsIn(SALE_CHANNELS)
+  channel?: (typeof SALE_CHANNELS)[number];
+
+  @IsOptional()
+  @IsIn(PAYMENT_METHODS)
+  paymentMethod?: (typeof PAYMENT_METHODS)[number];
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  discount?: number;
+
+  @IsOptional()
   @IsIn(ORDER_STATUSES)
   status?:
     | 'pending'
@@ -81,5 +99,39 @@ export class ConvertRequestDto {
 
   @IsOptional()
   @IsString()
+  notes?: string | null;
+}
+
+/** A sale at the counter: books and payment; the customer is optional. */
+export class CounterSaleDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemInputDto)
+  items: OrderItemInputDto[];
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  discount?: number;
+
+  @IsOptional()
+  @IsIn(PAYMENT_METHODS)
+  paymentMethod?: (typeof PAYMENT_METHODS)[number];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  customerName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
   notes?: string | null;
 }

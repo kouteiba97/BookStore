@@ -15,7 +15,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
-import { IsIn, IsInt, IsObject, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IMPORT_KINDS } from './kinds';
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
 import { INVENTORY_STATUSES } from '../../../common/validation/query';
 import { DataImportService, ImportOptions } from './data-import.service';
@@ -36,11 +37,19 @@ class ImportOptionsDto implements ImportOptions {
   @IsObject()
   mapping: ImportOptions['mapping'];
 
+  @IsOptional()
+  @IsIn(IMPORT_KINDS)
+  kind?: (typeof IMPORT_KINDS)[number];
+
   @IsIn(['update', 'skip'])
-  existing: 'update' | 'skip';
+  existing: 'update' | 'skip' = 'update';
 
   @IsIn(['set', 'add'])
-  stockMode: 'set' | 'add';
+  stockMode: 'set' | 'add' = 'set';
+
+  @IsOptional() @IsBoolean() applyStock?: boolean;
+  @IsOptional() @IsBoolean() addToStock?: boolean;
+  @IsOptional() @IsBoolean() updateCostPrice?: boolean;
 
   @IsOptional()
   @IsString()
@@ -48,7 +57,7 @@ class ImportOptionsDto implements ImportOptions {
   defaultCategory?: string | null;
 
   @IsIn(INVENTORY_STATUSES)
-  defaultStatus: (typeof INVENTORY_STATUSES)[number];
+  defaultStatus: (typeof INVENTORY_STATUSES)[number] = 'available';
 }
 
 /**

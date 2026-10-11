@@ -1,4 +1,4 @@
-import { lazy, useEffect, type ReactElement } from "react";
+import { lazy, Suspense, useEffect, type ReactElement } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { isAuthed } from "@/lib/auth";
@@ -18,6 +18,12 @@ const AcademicAdminPage = lazy(() => import("@/pages/admin/academic"));
 const InventoryPage = lazy(() => import("@/pages/admin/inventory"));
 const SocialContentPage = lazy(() => import("@/pages/admin/social-content"));
 const DataPage = lazy(() => import("@/pages/admin/data"));
+const SalesPage = lazy(() => import("@/pages/admin/sales"));
+const PurchasesPage = lazy(() => import("@/pages/admin/purchases"));
+const ExpensesPage = lazy(() => import("@/pages/admin/expenses"));
+const ReportsPage = lazy(() => import("@/pages/admin/reports"));
+const SettingsPage = lazy(() => import("@/pages/admin/settings"));
+const InvoicePage = lazy(() => import("@/pages/admin/invoice"));
 import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({
@@ -50,6 +56,17 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           <Route path="admin/login" element={<LoginPage />} />
+          {/* Printable invoice: outside the dashboard shell so only the page prints. */}
+          <Route
+            path="admin/invoice/:id"
+            element={
+              <RequireAuth>
+                <Suspense fallback={null}>
+                  <InvoicePage />
+                </Suspense>
+              </RequireAuth>
+            }
+          />
           <Route
             path="admin"
             element={
@@ -73,6 +90,11 @@ export default function App() {
             <Route path="inventory" element={<InventoryPage />} />
             <Route path="social-content" element={<SocialContentPage />} />
             <Route path="data" element={<DataPage />} />
+            <Route path="sales" element={<SalesPage />} />
+            <Route path="purchases" element={<PurchasesPage />} />
+            <Route path="expenses" element={<ExpensesPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
 
           {/* Anything outside /admin → send to the dashboard home */}

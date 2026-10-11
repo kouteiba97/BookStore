@@ -33,21 +33,66 @@ enum OrderStatus {
   cancelled
 }
 
+/// Where a sale came from. All sales live in one register.
+enum SaleChannel {
+  online // storefront / phone / WhatsApp orders
+  shop // sold at the counter
+  import // brought in from a spreadsheet (history)
+}
+
+enum PaymentMethod {
+  cash
+  card
+  transfer
+  cod // cash on delivery
+  other
+}
+
+/// Why a book's stock changed — every change is logged.
+enum StockReason {
+  sale
+  sale_cancel
+  purchase
+  purchase_cancel
+  adjustment
+  import
+}
+
 // ================= CORE =================
 
 model Store {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  phone     String?
+  id    String  @id @default(uuid())
+  name  String
+  slug  String  @unique
+  phone String?
+
+  // Shown on invoices. Algerian invoices carry the trade register (RC),
+  // tax id (NIF), statistical id (NIS) and article (AI) numbers.
+  address       String?
+  email         String?
+  rc            String?
+  nif           String?
+  nis           String?
+  art           String?
+  invoiceFooter String?
+
+  /// Subscription pack: "starter" | "pro" | "business". Decides which
+  /// features the store's admin can use (see src/common/plan/plans.ts).
+  plan String @default("business")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  books       Book[]
-  inventories Inventory[]
-  importJobs  ImportJob[]
-  requests    Request[]
-  orders      Order[]
+  books          Book[]
+  inventories    Inventory[]
+  importJobs     ImportJob[]
+  requests       Request[]
+  orders         Order[]
+  suppliers      Supplier[]
+  purchases      Purchase[]
+  expenses       Expense[]
+  stockMovements StockMovement[]
+  counters       StoreCounter[]
 }
 
 // ================= BOOK =================
@@ -104,8 +149,10 @@ model Book {
   /// Every picture of the book in display order — a series shows each volume.
   images BookImage[]
 
-  inventory  Inventory?
-  orderItems OrderItem[]
+  inventory      Inventory?
+  orderItems     OrderItem[]
+  purchaseItems  PurchaseItem[]
+  stockMovements StockMovement[]
 
   @@index([storeId, title])
   @@index([titleNormalized])
@@ -318,12 +365,30 @@ model Order {
 
   status OrderStatus @default(pending)
 
+  channel       SaleChannel    @default(online)
+  paymentMethod PaymentMethod?
+
   // Money — denormalized totals so historical orders aren't affected by price changes
   subtotal     Decimal @default(0) @db.Decimal(10, 2)
+  discount     Decimal @default(0) @db.Decimal(10, 2)
   shippingCost Decimal @default(0) @db.Decimal(10, 2)
   total        Decimal @default(0) @db.Decimal(10, 2)
 
   notes String?
+
+  /// True while this order's books are taken out of stock. Set when it is
+  /// confirmed (or sold at the counter), cleared when it is cancelled.
+  stockApplied Boolean @default(false)
+
+  /// Sequential invoice number ("2026-0007"), given the first time an
+  /// invoice is printed. Unique per store.
+  invoiceNumber String?
+  invoicedAt    DateTime?
+
+  /// Date of the sale when it differs from when it was recorded (imports).
+  soldAt DateTime?
+
+  importJobId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -332,8 +397,10 @@ model Order {
   items   OrderItem[]
   request Request?
 
+  @@unique([storeId, invoiceNumber])
   @@index([storeId, status])
   @@index([storeId, createdAt])
+  @@index([storeId, channel])
 }
 
 model OrderItem {
@@ -343,8 +410,11 @@ model OrderItem {
 
   // Snapshot fields so item rows don't break if a book is renamed/deleted
   bookTitle String
-  unitPrice Decimal @db.Decimal(10, 2)
+  unitPrice Decimal  @db.Decimal(10, 2)
   quantity  Int
+  /// The book's purchase price when sold — keeps past profit right when
+  /// prices change later. Null when the purchase price was unknown.
+  unitCost  Decimal? @db.Decimal(10, 2)
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   book  Book  @relation(fields: [bookId], references: [id])
@@ -381,4 +451,120 @@ model ImportJob {
   books Book[]
 
   @@index([storeId, createdAt])
+}
+
+// ================= MONEY =================
+
+model Supplier {
+  id      String  @id @default(uuid())
+  storeId String
+  name    String
+  phone   String?
+  email   String?
+  address String?
+  notes   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store     Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  purchases Purchase[]
+
+  @@unique([storeId, name])
+}
+
+/// Books bought from a supplier. Receiving it adds the books to stock.
+model Purchase {
+  id         String   @id @default(uuid())
+  storeId    String
+  supplierId String?
+  /// The supplier's invoice / delivery note number.
+  reference  String?
+  date       DateTime @default(now())
+
+  subtotal     Decimal @default(0) @db.Decimal(12, 2)
+  shippingCost Decimal @default(0) @db.Decimal(12, 2)
+  total        Decimal @default(0) @db.Decimal(12, 2)
+  paidAmount   Decimal @default(0) @db.Decimal(12, 2)
+
+  notes        String?
+  /// False for history imported from a spreadsheet without touching stock.
+  stockApplied Boolean @default(false)
+  cancelled    Boolean @default(false)
+  importJobId  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store    Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  supplier Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  items    PurchaseItem[]
+
+  @@index([storeId, date])
+}
+
+model PurchaseItem {
+  id         String  @id @default(uuid())
+  purchaseId String
+  bookId     String?
+  /// Snapshot, so the line stays readable if the book is renamed or deleted.
+  bookTitle  String
+  quantity   Int
+  unitCost   Decimal @db.Decimal(10, 2)
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  book     Book?    @relation(fields: [bookId], references: [id], onDelete: SetNull)
+
+  @@index([purchaseId])
+  @@index([bookId])
+}
+
+model Expense {
+  id            String         @id @default(uuid())
+  storeId       String
+  date          DateTime       @default(now())
+  /// rent | salaries | transport | utilities | marketing | supplies | taxes | other
+  category      String
+  amount        Decimal        @db.Decimal(12, 2)
+  description   String?
+  paymentMethod PaymentMethod?
+  importJobId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, date])
+}
+
+/// One change to a book's stock and why. The audit trail behind every number.
+model StockMovement {
+  id      String      @id @default(uuid())
+  storeId String
+  bookId  String
+  delta   Int
+  reason  StockReason
+  /// The order / purchase that caused it.
+  refId   String?
+  note    String?
+
+  createdAt DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, createdAt])
+  @@index([bookId, createdAt])
+}
+
+/// Per-store sequences (invoice numbers per year).
+model StoreCounter {
+  storeId String
+  key     String
+  value   Int    @default(0)
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@id([storeId, key])
 }

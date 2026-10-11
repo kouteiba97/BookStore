@@ -52,6 +52,8 @@ export default function DataPage() {
   );
 }
 
+const KIND_TAG: Record<string, string> = { sales: "مبيعات", purchases: "مشتريات", expenses: "مصاريف" };
+
 function History() {
   const toast = useToast();
   const qc = useQueryClient();
@@ -61,9 +63,13 @@ function History() {
   const undo = useMutation({
     mutationFn: (id: string) => undoImport(id),
     onSuccess: (r) => {
+      const historyUndo = confirm?.kind && confirm.kind !== "catalog";
       toast.success(
-        `حُذف ${r.removed} كتاب` + (r.keptBecauseOrdered ? ` — وبقي ${r.keptBecauseOrdered} لأنها في طلبات` : ""),
+        historyUndo
+          ? `حُذفت ${r.removed} عملية وأُعيد المخزون كما كان`
+          : `حُذف ${r.removed} كتاب` + (r.keptBecauseOrdered ? ` — وبقي ${r.keptBecauseOrdered} لأنها في طلبات` : ""),
       );
+      for (const k of ["admin-orders", "purchases", "expenses", "report", "suppliers"]) qc.invalidateQueries({ queryKey: [k] });
       qc.invalidateQueries({ queryKey: ["import-history"] });
       qc.invalidateQueries({ queryKey: ["admin-books"] });
       qc.invalidateQueries({ queryKey: ["data-quality"] });
@@ -82,10 +88,16 @@ function History() {
           <li key={j.id} className="flex flex-wrap items-center gap-3 px-5 py-4">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold" dir="auto">
+                {j.kind && KIND_TAG[j.kind] && (
+                  <span className="me-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">{KIND_TAG[j.kind]}</span>
+                )}
                 {j.fileName} <span className="font-normal text-muted-foreground">— {j.sheetName}</span>
               </p>
               <p className="text-xs text-muted-foreground">
-                {new Date(j.createdAt).toLocaleString("ar-DZ")} • {j.created} جديد • {j.updated} تحديث • {j.skipped} متجاهل • {j.errors} خطأ
+                {new Date(j.createdAt).toLocaleString("ar-DZ")} •{" "}
+                {j.kind && j.kind !== "catalog"
+                  ? `${j.created} سطر • ${j.errors} خطأ`
+                  : `${j.created} جديد • ${j.updated} تحديث • ${j.skipped} متجاهل • ${j.errors} خطأ`}
               </p>
             </div>
             {j.status === "undone" ? (
@@ -104,7 +116,9 @@ function History() {
         onConfirm={() => confirm && undo.mutate(confirm.id)}
         title="التراجع عن الاستيراد؟"
         message={
-          confirm
+          confirm?.kind && confirm.kind !== "catalog"
+            ? `ستُحذف كل ${KIND_TAG[confirm.kind]} هذا الملف، ويُعاد المخزون كما كان قبله، وتُحذف الكتب التي أضافها ما لم تُستعمل في عمليات أخرى.`
+            : confirm
             ? `ستُحذف ${confirm.booksStillLinked} كتب أضافها هذا الملف (ما عدا المطلوبة في طلبات). التحديثات على الكتب الموجودة مسبقًا لا تُلغى.`
             : ""
         }

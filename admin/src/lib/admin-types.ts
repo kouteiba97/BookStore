@@ -86,6 +86,11 @@ export interface AdminOrder {
   notes: string | null;
   items: OrderItem[];
   request?: { id: string } | null;
+  channel?: "online" | "shop" | "import";
+  paymentMethod?: "cash" | "card" | "transfer" | "cod" | "other" | null;
+  discount?: string;
+  invoiceNumber?: string | null;
+  soldAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

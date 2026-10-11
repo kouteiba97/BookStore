@@ -29,6 +29,22 @@ export class StoreResolver {
     return (await this.getStore()).id;
   }
 
+  private planCache: { plan: string; at: number } | null = null;
+
+  /** The store's pack, re-read at most once a minute (packs change rarely). */
+  async getPlan(): Promise<string> {
+    if (this.planCache && Date.now() - this.planCache.at < 60_000) return this.planCache.plan;
+    const { id } = await this.getStore();
+    const row = await this.prisma.store.findUnique({ where: { id }, select: { plan: true } });
+    this.planCache = { plan: row?.plan ?? 'starter', at: Date.now() };
+    return this.planCache.plan;
+  }
+
+  /** Forget the cached pack (after the owner changes it). */
+  invalidatePlan() {
+    this.planCache = null;
+  }
+
   /** slug → store, remembered briefly; unknown slugs are remembered too. */
   private readonly bySlugCache = new Map<string, { store: { id: string; slug: string; name: string } | null; at: number }>();
 
