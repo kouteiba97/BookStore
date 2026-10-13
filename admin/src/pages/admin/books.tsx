@@ -35,6 +35,7 @@ import {
   textareaClass,
 } from "@/components/admin/primitives";
 import { useToast } from "@/components/admin/toaster";
+import { CountSelect } from "@/components/admin/count-select";
 import GalleryEditor, {
   galleryFromUrls,
   uploadGallery,
@@ -135,16 +136,14 @@ export default function BooksAdminPage() {
             className={`${inputClass} pr-9`}
           />
         </div>
-        <select
+        <CountSelect
           value={categoryId}
-          onChange={(e) => { setCategoryId(e.target.value); setPage(1); }}
-          className={`${selectClass} h-10 w-auto`}
-        >
-          <option value="">كل التصنيفات</option>
-          {catalogData?.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+          onChange={(v) => { setCategoryId(v); setPage(1); }}
+          allLabel="كل التصنيفات"
+          ariaLabel="التصنيف"
+          options={(catalogData ?? []).map((c) => ({ value: c.id, label: c.name, count: c.booksCount }))}
+          className="w-56"
+        />
         <select
           value={invStatus}
           onChange={(e) => { setInvStatus(e.target.value); setPage(1); }}

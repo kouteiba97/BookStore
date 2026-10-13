@@ -17,6 +17,7 @@ import {
   selectClass,
 } from "@/components/admin/primitives";
 import { useToast } from "@/components/admin/toaster";
+import { CountSelect } from "@/components/admin/count-select";
 import type { CatalogItem } from "@/lib/admin-types";
 
 const PAGE_SIZE = 24;
@@ -187,12 +188,14 @@ export default function SocialContentPage() {
               aria-label="بحث"
             />
           </div>
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={`${selectClass} h-10 w-auto max-w-[12rem]`} aria-label="التصنيف">
-            <option value="">كل التصنيفات</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <CountSelect
+            value={categoryId}
+            onChange={setCategoryId}
+            allLabel="كل التصنيفات"
+            ariaLabel="التصنيف"
+            options={categories.map((c) => ({ value: c.id, label: c.name, count: c.booksCount }))}
+            className="w-56"
+          />
           <select value={publisherId} onChange={(e) => setPublisherId(e.target.value)} className={`${selectClass} h-10 w-auto max-w-[12rem]`} aria-label="دار النشر">
             <option value="">كل دور النشر</option>
             {publishers.map((p) => (

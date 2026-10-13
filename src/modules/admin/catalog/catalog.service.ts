@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { StoreResolver } from '../../../common/tenant/store-resolver.service';
 import { UpsertCatalogDto } from './dto/upsert-catalog.dto';
 
 export type CatalogResource =
@@ -14,7 +15,10 @@ export type CatalogResource =
 
 @Injectable()
 export class CatalogService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly stores: StoreResolver,
+  ) {}
 
   private model(resource: CatalogResource) {
     switch (resource) {
@@ -30,9 +34,15 @@ export class CatalogService {
   }
 
   async list(resource: CatalogResource) {
+    // Names are shared between stores; the counts are this store's books only.
+    const storeId = await this.stores.getStoreId();
+    const books =
+      resource === 'authors' || resource === 'publishers'
+        ? { where: { book: { storeId } } } // join rows
+        : { where: { storeId } };
     const rows = await (this.model(resource) as any).findMany({
       orderBy: { name: 'asc' },
-      include: { _count: { select: { books: true } } },
+      include: { _count: { select: { books } } },
     });
     return rows.map((r: any) => ({
       id: r.id,
