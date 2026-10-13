@@ -56,7 +56,7 @@ export default function HomePage() {
     queryFn: () => fetchBooks(16),
   });
 
-  // The store's real categories (only those with books), most stocked first.
+  // Every category, most stocked first; empty ones say so on their card.
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: fetchCategories,
@@ -124,7 +124,9 @@ export default function HomePage() {
                 {categoryIcons[cat.name] ?? "📚"}
               </span>
               <span className="text-sm font-bold">{cat.name}</span>
-              <span className="-mt-2 text-xs text-muted-foreground">{cat.bookCount} كتاب</span>
+              <span className="-mt-2 text-xs text-muted-foreground">
+                {cat.bookCount > 0 ? `${cat.bookCount} كتاب` : "لا توجد كتب في هذا التصنيف بعد"}
+              </span>
             </Link>
           ))}
         </div>

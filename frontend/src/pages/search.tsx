@@ -123,9 +123,9 @@ export default function SearchPage() {
             </svg>
           </div>
           <div>
-            <p className="text-lg font-bold">لم يتم العثور على نتائج</p>
+            <p className="text-lg font-bold">{inCategory ? "لا توجد كتب في هذا التصنيف بعد" : "لم يتم العثور على نتائج"}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              جرّب كلمات أخرى، أو اطلب الكتاب منّا مباشرة
+              {inCategory ? "نضيف كتبًا جديدة باستمرار، ويمكنك أن تطلب الكتاب الذي تبحث عنه" : "جرّب كلمات أخرى، أو اطلب الكتاب منّا مباشرة"}
             </p>
           </div>
           <RequestDialog

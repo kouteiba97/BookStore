@@ -100,21 +100,20 @@ export class BooksService {
   }
 
   /**
-   * The categories this store actually has books in, with how many — what the
-   * home page offers to browse. Empty categories are never shown.
+   * Every category, with how many books this store has in each — what the
+   * home page offers to browse. Stocked categories first; empty ones are
+   * listed too (the storefront marks them "no books yet").
    */
   async categories(storeSlug: string) {
     const store = await this.resolveStore(storeSlug);
-    const counts = await this.prisma.book.groupBy({
-      by: ['categoryId'],
-      where: { storeId: store.id },
-      _count: { _all: true },
-    });
-    if (!counts.length) return [];
-    const cats = await this.prisma.category.findMany({
-      where: { id: { in: counts.map((c) => c.categoryId) } },
-      select: { id: true, name: true },
-    });
+    const [counts, cats] = await Promise.all([
+      this.prisma.book.groupBy({
+        by: ['categoryId'],
+        where: { storeId: store.id },
+        _count: { _all: true },
+      }),
+      this.prisma.category.findMany({ select: { id: true, name: true } }),
+    ]);
     const n = new Map(counts.map((c) => [c.categoryId, c._count._all]));
     return cats
       .map((c) => ({ ...c, bookCount: n.get(c.id) ?? 0 }))
