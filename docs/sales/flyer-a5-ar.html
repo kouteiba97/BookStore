@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warraq Flyer A5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* One A5 sheet (148 × 210 mm), RTL. Printed ink-on-paper with one stamp-red accent,
+   same identity as sila-kit-ar.html. Edit the [placeholders] before printing. */
+@page { size: A5; margin: 0; }
+:root {
+  --paper: #ffffff;
+  --ink: #17212b;
+  --graphite: #4f5a65;
+  --rule: #d9dcd8;
+  --stamp: #8e2f2a;
+  --stamp-soft: #f3e6e4;
+  --wash: #f7f7f4;
+  --head: "Noto Naskh Arabic", "Traditional Arabic", serif;
+  --body: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --latin: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: #e9e9e4; color: var(--ink); font-family: var(--body); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.sheet {
+  width: 148mm; height: 210mm; margin: 10mm auto; background: var(--paper);
+  padding: 9mm 9mm 7mm; display: flex; flex-direction: column; gap: 3.4mm;
+  overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.12);
+}
+@media print { body { background: none; } .sheet { margin: 0; box-shadow: none; } }
+@media screen and (max-width: 600px) { .sheet { transform-origin: top right; zoom: .62; } }
+.ltr { direction: ltr; unicode-bidi: isolate; font-family: var(--latin); }
+
+.top { display: flex; justify-content: space-between; align-items: center; }
+.brand { display: flex; align-items: center; gap: 2.4mm; }
+.brand .sq { width: 8mm; height: 8mm; border: 1.6px solid var(--stamp); color: var(--stamp); display: grid; place-items: center; font-family: var(--head); font-weight: 700; font-size: 15px; border-radius: 1mm; line-height: 1; }
+.brand b { font-family: var(--head); font-size: 17px; }
+.brand span { font-size: 9px; color: var(--graphite); display: block; line-height: 1.3; }
+.fair { font-size: 9.5px; font-weight: 600; color: var(--stamp); border: 1px solid var(--stamp); padding: .6mm 2.4mm; border-radius: 1mm; }
+
+h1 { font-family: var(--head); font-size: 25px; line-height: 1.35; margin: 1mm 0 0; text-wrap: balance; }
+h1 em { font-style: normal; color: var(--stamp); }
+.lede { font-size: 11.5px; line-height: 1.7; color: var(--graphite); margin: 0; }
+
+.benefits { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.6mm; }
+.benefits li { display: grid; grid-template-columns: 6mm 1fr; gap: 2mm; align-items: start; font-size: 11px; line-height: 1.55; }
+.benefits li b { font-size: 11.5px; }
+.benefits .ic { width: 6mm; height: 6mm; border-radius: 1mm; background: var(--stamp-soft); color: var(--stamp); display: grid; place-items: center; margin-top: .4mm; }
+.benefits svg { width: 3.8mm; height: 3.8mm; }
+
+.ref { font-size: 10.5px; border-inline-start: 2.5px solid var(--stamp); padding: .8mm 3mm; background: var(--wash); }
+.ref b { font-family: var(--head); }
+
+.packs { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4mm; }
+.pack { border: 1px solid var(--rule); border-radius: 1.4mm; padding: 2.6mm 3mm; }
+.pack.rec { border: 1.5px solid var(--ink); }
+.pack h2 { font-family: var(--head); font-size: 13px; margin: 0 0 .6mm; line-height: 1.4; }
+.pack .price { font-size: 10px; color: var(--graphite); margin: 0 0 1.2mm; line-height: 1.5; }
+.pack .price b { font-size: 16px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.pack ul { margin: 0; padding-inline-start: 3.6mm; font-size: 9.5px; line-height: 1.55; }
+.pack li::marker { color: var(--stamp); }
+.yearly { font-size: 9px; color: var(--graphite); margin: 0; line-height: 1.5; }
+.yearly b { color: var(--ink); }
+
+.offer { background: var(--ink); color: #f7f7f4; border-radius: 1.4mm; padding: 2.8mm 3.4mm; display: flex; justify-content: space-between; align-items: center; gap: 3mm; }
+.offer .big { font-family: var(--head); font-size: 14.5px; line-height: 1.4; }
+.offer .big em { font-style: normal; color: #e0b0aa; }
+.offer .small { font-size: 9.5px; line-height: 1.5; color: #d6d9d6; }
+.offer .seal { flex: none; width: 15mm; height: 15mm; border: 1.4px solid #e0b0aa; border-radius: 50%; display: grid; place-items: center; text-align: center; font-size: 8.5px; line-height: 1.25; color: #e0b0aa; font-weight: 700; }
+.offer .seal b { display: block; font-size: 15px; font-family: var(--latin); }
+
+.foot { margin-top: auto; display: grid; grid-template-columns: 1fr auto; gap: 4mm; align-items: end; border-top: 1px solid var(--rule); padding-top: 3mm; }
+.contact { font-size: 10.5px; line-height: 1.75; }
+.contact .row { display: flex; gap: 2mm; }
+.contact .k { color: var(--graphite); min-width: 13mm; }
+.custom { font-size: 9px; color: var(--graphite); margin-top: 1mm; line-height: 1.5; }
+.qr { width: 26mm; text-align: center; font-size: 8.5px; color: var(--graphite); line-height: 1.4; }
+.qr .box { width: 26mm; height: 26mm; border: 1.2px dashed var(--ink); display: grid; place-items: center; font-family: var(--latin); font-size: 9px; color: var(--ink); margin-bottom: 1mm; background: var(--wash); }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="top">
+    <div class="brand"><span class="sq">و</span><div><b>ورّاق</b><span>منظومة تسيير وبيع للمكتبات</span></div></div>
+    <div class="fair">SILA 2026 · عرض المعرض</div>
+  </div>
+
+  <div>
+    <h1>مكتبتكم على الإنترنت، <em>باسمكم أنتم</em></h1>
+    <p class="lede">منصة خاصة بمكتبتكم: اسمكم، شعاركم، ألوانكم ونطاقكم. متجر للزبائن، ولوحة تحكم لكم، تُركَّب في أسبوعين.</p>
+  </div>
+
+  <ul class="benefits">
+    <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14Z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg></span><div><b>كتبكم على الإنترنت مع المخزون.</b> الزبون يرى السعر وهل الكتاب متوفر، قبل أن يسأل.</div></li>
+    <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5Z"/></svg></span><div><b>الطلبيات تصلكم مباشرة على واتساب،</b> وتُسجَّل في لوحة التحكم فلا تضيع. 69 ولاية، والدفع عند الاستلام.</div></li>
+    <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg></span><div><b>امسحوا الغلاف، والكتاب مُضاف.</b> صورة الغلاف تُقصّ وتُقوَّم وحدها، ثم العنوان والسعر.</div></li>
+    <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></span><div><b>كل شيء من الهاتف:</b> الكتب، المخزون والطلبيات، حتى وأنتم خارج المحل.</div></li>
+    <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></span><div><b>بياناتكم ملككم:</b> صدّروا الكتب والطلبيات إلى Excel في أي وقت، بنقرة.</div></li>
+  </ul>
+
+  <div class="ref">تعمل يوميًا في <b>مكتبة البيان، قسنطينة</b>.</div>
+
+  <div class="packs">
+    <div class="pack rec">
+      <h2>النسخة القياسية</h2>
+      <p class="price"><b>30.000</b> دج تركيب<br><b>50.000</b> دج في السنة</p>
+      <ul><li>منصة باسمكم وشعاركم وألوانكم</li><li>المتجر + لوحة التحكم + تطبيق الهاتف</li><li>حتى 1.000 كتاب</li></ul>
+    </div>
+    <div class="pack">
+      <h2>القياسية + المحترف</h2>
+      <p class="price"><b>50.000</b> دج تركيب<br><b>65.000</b> دج في السنة</p>
+      <ul><li>الفواتير والمشتريات والمصاريف</li><li>التقارير المالية والأرباح</li><li>النظام الأكاديمي · حتى 10.000 كتاب</li></ul>
+    </div>
+  </div>
+  <p class="yearly"><b>الاشتراك السنوي:</b> استضافة + تحديثات + دعم + نسخ احتياطي. اسم النطاق باسمكم.</p>
+
+  <div class="offer">
+    <div>
+      <div class="big">أول 10 مكتبات: <em>التركيب بنصف السعر</em></div>
+      <div class="small">احجزوا مكانكم بعربون 10.000 دج، يُخصم من التركيب.</div>
+    </div>
+    <div class="seal"><div><b>50%</b>التركيب</div></div>
+  </div>
+
+  <div class="foot">
+    <div>
+      <div class="contact">
+        <div class="row"><span class="k">الاسم</span><span>[الاسم واللقب]</span></div>
+        <div class="row"><span class="k">واتساب</span><span class="ltr">+213 [XXX XX XX XX]</span></div>
+        <div class="row"><span class="k">البريد</span><span class="ltr">[contact@…]</span></div>
+        <div class="row"><span class="k">الموقع</span><span class="ltr">[warraq.…]</span></div>
+      </div>
+      <div class="custom">ميزة خاصة؟ نقدّرها بالأيام ونكتبها قبل البدء.</div>
+    </div>
+    <div class="qr"><div class="box">QR · DEMO</div>جرّبوا المتجر التجريبي</div>
+  </div>
+
+</div>
+</body>
+</html>
