@@ -93,6 +93,46 @@ model Store {
   expenses       Expense[]
   stockMovements StockMovement[]
   counters       StoreCounter[]
+  homeSections   HomeSection[]
+}
+
+// ================= STOREFRONT HOME =================
+
+/// One block of the storefront home page, below the search hero (which is
+/// fixed). Either a built-in block — `kind` "categories" | "academic" |
+/// "latest" | "popular" | "request", at most one each, can be hidden and
+/// renamed but not deleted — or a shelf of hand-picked books (`kind` "books",
+/// e.g. «جديد معرض الكتاب 2026»). A store with no rows shows the default layout.
+model HomeSection {
+  id       String  @id @default(uuid())
+  storeId  String
+  kind     String
+  /// null → the built-in block's default title.
+  title    String?
+  subtitle String?
+  position Int     @default(0)
+  visible  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  books HomeSectionBook[]
+
+  @@index([storeId, position])
+}
+
+/// A book placed on a hand-picked shelf, in display order.
+model HomeSectionBook {
+  sectionId String
+  bookId    String
+  position  Int    @default(0)
+
+  section HomeSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  book    Book        @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@id([sectionId, bookId])
+  @@index([bookId])
 }
 
 // ================= BOOK =================
@@ -153,6 +193,7 @@ model Book {
   orderItems     OrderItem[]
   purchaseItems  PurchaseItem[]
   stockMovements StockMovement[]
+  homeSections   HomeSectionBook[]
 
   @@index([storeId, title])
   @@index([titleNormalized])

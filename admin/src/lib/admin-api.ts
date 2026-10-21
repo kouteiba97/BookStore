@@ -394,3 +394,48 @@ export const downloadBooksExport = () =>
 
 export const downloadOrdersExport = (params: { from?: string; to?: string; status?: string }) =>
   download(adminApi.get("/export/orders", { params, responseType: "blob" }), "orders.xlsx");
+
+// ── Storefront home page sections ────────────────────────
+
+export type HomeSectionKind = "categories" | "academic" | "latest" | "popular" | "request" | "books";
+
+export interface AdminHomeShelfBook {
+  id: string;
+  title: string;
+  imageUrl: string | null;
+  thumbUrl: string | null;
+  price: string | null;
+  inventory: { status: string; stock: number | null } | null;
+}
+
+export interface AdminHomeSection {
+  id: string;
+  kind: HomeSectionKind;
+  /** null → the built-in block's default title. */
+  title: string | null;
+  subtitle: string | null;
+  visible: boolean;
+  position: number;
+  /** Only for "books" shelves. */
+  books?: AdminHomeShelfBook[];
+}
+
+export const fetchHomeSections = () =>
+  adminApi.get("/home-sections").then((r) => r.data as AdminHomeSection[]);
+
+export const createHomeSection = (data: { title: string; subtitle?: string | null }) =>
+  adminApi.post("/home-sections", data).then((r) => r.data as { id: string });
+
+export const updateHomeSection = (
+  id: string,
+  data: { title?: string | null; subtitle?: string | null; visible?: boolean },
+) => adminApi.patch(`/home-sections/${id}`, data).then((r) => r.data);
+
+export const deleteHomeSection = (id: string) =>
+  adminApi.delete(`/home-sections/${id}`).then((r) => r.data);
+
+export const reorderHomeSections = (ids: string[]) =>
+  adminApi.put("/home-sections/order", { ids }).then((r) => r.data);
+
+export const setHomeShelfBooks = (id: string, bookIds: string[]) =>
+  adminApi.put(`/home-sections/${id}/books`, { bookIds }).then((r) => r.data as { count: number });

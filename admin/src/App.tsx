@@ -23,6 +23,7 @@ const PurchasesPage = lazy(() => import("@/pages/admin/purchases"));
 const ExpensesPage = lazy(() => import("@/pages/admin/expenses"));
 const ReportsPage = lazy(() => import("@/pages/admin/reports"));
 const SettingsPage = lazy(() => import("@/pages/admin/settings"));
+const StorefrontPage = lazy(() => import("@/pages/admin/storefront"));
 const InvoicePage = lazy(() => import("@/pages/admin/invoice"));
 import { features } from "@/lib/features";
 
@@ -95,6 +96,7 @@ export default function App() {
             <Route path="expenses" element={<ExpensesPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="storefront" element={<StorefrontPage />} />
           </Route>
 
           {/* Anything outside /admin → send to the dashboard home */}

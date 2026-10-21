@@ -22,6 +22,8 @@ import { MoneyController, StoreSettingsController } from './money/money.controll
 import { MoneyService } from './money/money.service';
 import { ReportsController } from './reports/reports.controller';
 import { ReportsService } from './reports/reports.service';
+import { AdminHomeSectionsController } from './home-sections/home-sections.controller';
+import { AdminHomeSectionsService } from './home-sections/home-sections.service';
 import { PlanController } from '../../common/plan/plan.controller';
 
 @Module({
@@ -40,6 +42,7 @@ import { PlanController } from '../../common/plan/plan.controller';
     StoreSettingsController,
     ReportsController,
     PlanController,
+    AdminHomeSectionsController,
   ],
   providers: [
     StatsService,
@@ -53,6 +56,7 @@ import { PlanController } from '../../common/plan/plan.controller';
     HistoryImport,
     MoneyService,
     ReportsService,
+    AdminHomeSectionsService,
   ],
 })
 export class AdminModule {}

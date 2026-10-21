@@ -1,5 +1,5 @@
 import api from "./api";
-import type { Book, AutocompleteItem, Suggestions, Field, AcademicYear, Subject, StoreCategory } from "./types";
+import type { Book, AutocompleteItem, Suggestions, Field, AcademicYear, Subject, StoreCategory, HomeSection, HomeShelf } from "./types";
 
 /** Newest books as cards. Pass `limit` — the home page shows 16, not the catalogue. */
 export const fetchBooks = (limit?: number, categoryId?: string) =>
@@ -69,3 +69,11 @@ export const fetchRequests = (params?: {
 
 export const updateRequestStatus = (id: string, status: string) =>
   api.patch(`/requests/${id}/status`, { status }).then((r) => r.data);
+
+/** The home page layout the admin arranged (built-in blocks and shelves). */
+export const fetchHomeSections = () =>
+  api.get<HomeSection[]>("/home-sections").then((r) => r.data);
+
+/** One hand-picked shelf with all its books. */
+export const fetchHomeShelf = (id: string) =>
+  api.get<HomeShelf>(`/home-sections/${id}`).then((r) => r.data);

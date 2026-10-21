@@ -121,3 +121,22 @@ export interface StoreCategory {
   name: string;
   bookCount: number;
 }
+
+/** One block of the home page, in the order the admin arranged. Built-in
+ *  blocks carry no data; a "books" shelf carries its first books and total. */
+export interface HomeSection {
+  id: string;
+  kind: "categories" | "academic" | "latest" | "popular" | "request" | "books";
+  /** null → the block's default title. */
+  title: string | null;
+  subtitle: string | null;
+  total?: number;
+  books?: Book[];
+}
+
+export interface HomeShelf {
+  id: string;
+  title: string | null;
+  subtitle: string | null;
+  books: Book[];
+}

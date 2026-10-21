@@ -23,6 +23,11 @@ interface NavItem {
 // ── Icon set (24px stroke, current color) ─────────────────
 
 const Icon = {
+  storefront: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M8 13h8M8 16h5" />
+    </svg>
+  ),
   home: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
       <path d="M3 12 12 4l9 8" /><path d="M5 10v10h14V10" />
@@ -131,6 +136,7 @@ const NAV: NavItem[] = [
   { to: "/admin/books", label: "الكتب", icon: Icon.books },
   { to: "/admin/quick-add", label: "إضافة سريعة", icon: Icon.quickAdd },
   { to: "/admin/catalog/categories", label: "التصنيفات", icon: Icon.catalog },
+  { to: "/admin/storefront", label: "واجهة المتجر", icon: Icon.storefront },
   ...(features.academic ? [{ to: "/admin/academic", label: "الأكاديمي", icon: Icon.academic, feature: "academic" as const }] : []),
   { to: "/admin/inventory", label: "المخزون", icon: Icon.inventory },
   { to: "/admin/purchases", label: "المشتريات والموردون", icon: Icon.purchases, feature: "money" },
@@ -160,6 +166,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/expenses": "المصاريف",
   "/admin/reports": "التقارير والأرباح",
   "/admin/settings": "المتجر والباقة",
+  "/admin/storefront": "أقسام الصفحة الرئيسية للمتجر",
 };
 
 function getPageTitle(pathname: string) {

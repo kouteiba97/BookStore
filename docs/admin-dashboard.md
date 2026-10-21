@@ -45,6 +45,7 @@ Open **http://localhost:5173/admin** to land on the overview page.
 | `/admin/data` | Excel import wizard (books, **or** sales / purchases / expenses history), import history with undo, Excel exports, data quality. |
 | `/admin/requests` | Customer leads from the public site. Status = `جديد / تم التواصل / تم البيع`. **Convert to order** button. |
 | `/admin/books` | CRUD for books. Inline inventory toggle (status + stock) inside the form. |
+| `/admin/storefront` | «واجهة المتجر»: the storefront home page below the search box. Reorder, hide/show and rename the built-in blocks (categories, academic, latest, most requested, «request a book» banner), and add **shelves of hand-picked books** (e.g. «جديد معرض الكتاب SILA 2026»): name, short description, books added by search, reordered, removed. The home page shows a shelf’s first 8 books and links «عرض الكل» to `/collections/:id`. An empty or hidden shelf does not show. |
 | `/admin/catalog/:resource` | Tabs for Categories / Authors / Publishers / Countries. Add/edit/delete. Refuses delete if any book references the row. |
 | `/admin/academic` | Field → Year → Subject tree. Inline create/edit/delete at every level. |
 | `/admin/inventory` | Quick-edit table. Filter by status or "low stock only" (≤3 or rare). Save per-row when dirty. «السجل» opens the book's stock log (every sale, return, purchase, hand edit). Shows the first 300 matches (search to narrow). |
@@ -191,6 +192,19 @@ GET  /admin/plan                         → { plan, features, limits, usage, pl
 ```
 
 A feature outside the pack answers **402** `{ message (Arabic), feature, plan }`.
+
+### Home page sections
+
+```
+GET    /admin/home-sections                 → every section, hidden ones too; shelves with their books (first call writes the default layout)
+POST   /admin/home-sections                 { title, subtitle? } → a new shelf, placed first
+PATCH  /admin/home-sections/:id             { title?, subtitle?, visible? }  (empty title on a built-in → its default)
+PUT    /admin/home-sections/order           { ids: string[] }  display order
+PUT    /admin/home-sections/:id/books       { bookIds: string[] }  replaces a shelf’s books, in order (≤ 500; other stores’ ids dropped)
+DELETE /admin/home-sections/:id             shelves only; a built-in block can only be hidden (400)
+```
+
+Public: `GET /:storeSlug/home-sections` (visible sections in order; shelves with their first 8 books and `total`) and `GET /:storeSlug/home-sections/:id` (one shelf, all books).
 
 ### Social content
 
