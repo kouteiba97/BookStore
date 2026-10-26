@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchRequests, updateRequestStatus } from "@/lib/queries";
+import { deleteRequest, fetchRequests, updateRequestStatus } from "@/lib/queries";
 import { convertRequestToOrder, fetchAdminBook } from "@/lib/admin-api";
 import type { OrderRequest, RequestStatus, RequestsResponse } from "@/lib/types";
 import {
   Button,
+  ConfirmDialog,
   EmptyState,
   Field,
   Modal,
@@ -33,6 +34,7 @@ export default function AdminRequestsPage() {
   const [search, setSearch] = useState("");
 
   const [convertTarget, setConvertTarget] = useState<OrderRequest | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<OrderRequest | null>(null);
 
   const { data, isLoading } = useQuery<RequestsResponse>({
     queryKey: ["admin-requests", statusFilter, wilayaFilter, search],
@@ -53,6 +55,16 @@ export default function AdminRequestsPage() {
     },
     onError: (e: any) =>
       toast.error(e?.response?.data?.message || "تعذّر التحديث"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteRequest(id),
+    onSuccess: () => {
+      toast.success("تم حذف الطلب");
+      qc.invalidateQueries({ queryKey: ["admin-requests"] });
+    },
+    onError: (e: any) =>
+      toast.error(e?.response?.data?.message || "تعذّر الحذف"),
   });
 
   const requests = data?.requests ?? [];
@@ -182,6 +194,7 @@ export default function AdminRequestsPage() {
                         <Button size="sm" variant="secondary" onClick={() => setConvertTarget(req)} disabled={req.status === "done"}>
                           {req.status === "done" ? "تم التحويل" : "تحويل إلى طلب"}
                         </Button>
+                        <DeleteButton onClick={() => setDeleteTarget(req)} />
                       </div>
                     </td>
                   </tr>
@@ -214,9 +227,12 @@ export default function AdminRequestsPage() {
                   >
                     {STATUS_ORDER.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
                   </select>
-                  <Button size="sm" variant="secondary" onClick={() => setConvertTarget(req)} disabled={req.status === "done"}>
-                    {req.status === "done" ? "تم التحويل" : "تحويل إلى طلب"}
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button size="sm" variant="secondary" onClick={() => setConvertTarget(req)} disabled={req.status === "done"}>
+                      {req.status === "done" ? "تم التحويل" : "تحويل إلى طلب"}
+                    </Button>
+                    <DeleteButton onClick={() => setDeleteTarget(req)} />
+                  </div>
                 </div>
               </Surface>
             ))}
@@ -234,7 +250,42 @@ export default function AdminRequestsPage() {
           qc.invalidateQueries({ queryKey: ["admin-stats"] });
         }}
       />
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        title="حذف طلب العميل؟"
+        message={
+          deleteTarget
+            ? `سيُحذف طلب «${deleteTarget.bookName}» من ${deleteTarget.firstName} ${deleteTarget.lastName} نهائيًا.` +
+              (deleteTarget.convertedOrderId ? " الطلب الذي أُنشئ منه يبقى كما هو." : "")
+            : ""
+        }
+        confirmLabel="حذف نهائي"
+        cancelLabel="تراجع"
+        variant="danger"
+        onConfirm={() => {
+          if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
+  );
+}
+
+function DeleteButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="حذف"
+      aria-label="حذف"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition-colors hover:bg-rose-100"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+        <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      </svg>
+    </button>
   );
 }
 

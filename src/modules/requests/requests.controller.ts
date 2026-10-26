@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -54,5 +55,14 @@ export class RequestsController {
     @Body() dto: UpdateRequestStatusDto,
   ) {
     return this.requestsService.updateStatus(storeSlug, id, dto.status);
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Delete(':id')
+  remove(
+    @Param('storeSlug') storeSlug: string,
+    @Param('id') id: string,
+  ) {
+    return this.requestsService.remove(storeSlug, id);
   }
 }

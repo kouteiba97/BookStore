@@ -96,6 +96,7 @@ export interface OrderRequest {
   bookId: string | null;
   bookName: string;
   status: RequestStatus;
+  convertedOrderId: string | null;
   createdAt: string;
 }
 

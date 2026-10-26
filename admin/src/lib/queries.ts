@@ -62,3 +62,6 @@ export const fetchRequests = (params?: {
 
 export const updateRequestStatus = (id: string, status: string) =>
   api.patch(`/requests/${id}/status`, { status }).then((r) => r.data);
+
+export const deleteRequest = (id: string) =>
+  api.delete(`/requests/${id}`).then((r) => r.data);

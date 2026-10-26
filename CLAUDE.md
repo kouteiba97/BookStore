@@ -17,7 +17,7 @@ Islamic / academic bookstore platform. NestJS backend + React (Vite) frontend, P
 Public storefront:
 - `books/` — book catalog reads; also `GET :storeSlug/home-sections` (+ `/:id`): the home page layout the admin arranges (`home-sections.service.ts`)
 - `academic/` — fields → years → subjects → books taxonomy
-- `requests/` — customer book-request leads (with WhatsApp redirect)
+- `requests/` — customer book-request leads (with WhatsApp redirect); admin can delete one (`DELETE :storeSlug/requests/:id`, spam/tests — an order made from it is kept)
 - `import/` — legacy curl-only CSV/XLSX bulk import (the admin wizard is `admin/data-import/`) (≤5000 rows/file; dedupe in memory on title+primary author, bulk name resolution, chunked transactional writes; one import per store at a time; `?images=false` skips the slow online cover lookup)
 - `images/` — book cover image serving
 - `image-sync/` — match phone photos to books via filename + OCR
@@ -44,7 +44,7 @@ Shared infra:
 - `src/modules/storage/` — `StorageService` wraps Cloudflare R2 (S3 SDK). Global module; `enabled` is false unless all `R2_*` env vars are set, then falls back to local disk. Env loaded via `@nestjs/config`.
 
 Auth & hardening:
-- `auth/` (`src/modules/admin/auth/`) — `POST /api/v1/admin/auth/login` exchanges the shared `ADMIN_PASSWORD` (env) for a 30-day JWT (`JWT_SECRET`). `AdminAuthGuard` (`src/common/guards/`) protects ALL admin controllers plus the operational endpoints (`import`, `images/fill`, `image-sync`, `clean`, and requests list/status). Public: catalog reads, academic reads, request **create**.
+- `auth/` (`src/modules/admin/auth/`) — `POST /api/v1/admin/auth/login` exchanges the shared `ADMIN_PASSWORD` (env) for a 30-day JWT (`JWT_SECRET`). `AdminAuthGuard` (`src/common/guards/`) protects ALL admin controllers plus the operational endpoints (`import`, `images/fill`, `image-sync`, `clean`, and requests list/status/delete). Public: catalog reads, academic reads, request **create**.
 - Global rate limit 300 req/min/IP (`@nestjs/throttler`); login 10/min; public request create 5/min; social export 10/min. `trust proxy` is set (one hop, `TRUST_PROXY_HOPS`) so limits are per visitor behind Render's proxy, not shared.
 - Tenancy: admin tokens belong to the deployment's store (`common/tenant/StoreResolver`: `STORE_SLUG` or first store). `AdminAuthGuard` refuses any `/:storeSlug/` route for another store (403); every admin query filters by `storeId` (orders can only contain this store's books). Authors/publishers/categories/countries/academic tree are shared reference tables.
 - Shared helpers: `common/validation/query.ts` (enum + paging validation → 400, never 500), `common/utils/book-cover.ts` (`setBookCover` keeps `Book.imageUrl` and gallery picture 0 in step — use it for any server-side cover change). `helmet` + env-driven CORS (`CORS_ORIGINS`) in `main.ts`. Health probe at `GET /api/v1/health`.

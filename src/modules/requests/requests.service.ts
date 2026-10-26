@@ -101,6 +101,23 @@ export class RequestsService {
     });
   }
 
+  // ── Delete ───────────────────────────────────────────────
+
+  /**
+   * Remove a lead for good (spam, duplicates, tests). An order made from it
+   * stays: the link lives on the request row, so the order just loses it.
+   */
+  async remove(storeSlug: string, id: string) {
+    const store = await this.resolveStore(storeSlug);
+
+    const { count } = await this.prisma.request.deleteMany({
+      where: { id, storeId: store.id },
+    });
+    if (count === 0) throw new NotFoundException('Request not found');
+
+    return { ok: true };
+  }
+
   // ── Helpers ──────────────────────────────────────────────
 
   private resolveStore(slug: string) {
