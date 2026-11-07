@@ -1,0 +1,1445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Al-Bayan Platform Technical Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
+<style>
+  :root {
+    --ink: #1d2a24;
+    --muted: #5b6862;
+    --green: #143d2c;
+    --green-mid: #2f6b4f;
+    --green-soft: #e7efe9;
+    --gold: #b8892f;
+    --gold-soft: #f6eedc;
+    --paper: #fffdf9;
+    --line: #e6e0d4;
+    --code-bg: #f7f4ed;
+  }
+  @page {
+    size: A4;
+    margin: 15mm 15mm 17mm;
+    @bottom-center { content: counter(page); font: 500 8.5pt "Inter", sans-serif; color: #9aa59f; }
+  }
+  @page :first { @bottom-center { content: none; } }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 400 10.2pt/1.62 "Inter", system-ui, sans-serif; }
+  h1, h2, h3, h4 { font-family: "Source Serif 4", Georgia, serif; color: var(--green); line-height: 1.25; }
+  h2 { font-size: 21pt; margin: 0 0 1.5mm; }
+  h2 + .lead { margin-top: 0; }
+  .chapter { break-before: page; }
+  .chapter > .num { font: 700 9pt "Inter"; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; }
+  .chapter > h2 { padding-bottom: 2mm; border-bottom: 2px solid var(--gold); margin-bottom: 4mm; }
+  h3 { font-size: 13.5pt; margin: 6mm 0 2mm; break-after: avoid; }
+  h4 { font-size: 11pt; margin: 4mm 0 1.5mm; break-after: avoid; }
+  p { margin: 0 0 2.6mm; }
+  ul, ol { margin: 0 0 3mm; padding-inline-start: 5.5mm; }
+  li { margin-bottom: 1.1mm; }
+  strong { color: var(--green); font-weight: 600; }
+  code { font: 400 8.6pt "JetBrains Mono", Menlo, monospace; background: #efeadf; padding: .2mm 1.1mm; border-radius: 1mm; white-space: nowrap; }
+  .ar { font-family: "Cairo", "Amiri", sans-serif; direction: rtl; unicode-bidi: isolate; }
+  .ar.ltr, bdi[dir="ltr"] { direction: ltr; }
+  .lead { font-size: 11.2pt; color: var(--muted); }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.8pt; }
+
+  /* Code blocks */
+  .codebox { margin: 3mm 0 4.5mm; border: 1px solid var(--line); border-radius: 2.5mm; overflow: hidden; background: var(--code-bg); break-inside: auto; }
+  .codebox .file { display: flex; justify-content: space-between; gap: 4mm; background: var(--green); color: #e9f1ec; padding: 1.6mm 3.5mm; font: 600 8.2pt "JetBrains Mono", monospace; break-after: avoid; }
+  .codebox .file span:last-child { color: #d9b25e; font-weight: 400; }
+  .codebox pre { font-variant-ligatures: none; font-feature-settings: "calt" 0, "liga" 0; margin: 0; padding: 2.4mm 0; font: 400 8.05pt/1.5 "JetBrains Mono", Menlo, monospace; white-space: pre-wrap; word-break: break-word; }
+  .codebox .ln { display: block; padding: 0 3.5mm; min-height: 1.5em; }
+  .codebox .ann { display: block; margin: .8mm 0; padding: 1.1mm 3.5mm 1.1mm 3mm; background: var(--gold-soft); border-left: 3px solid var(--gold); color: #6b4e14; font: 500 8.4pt/1.45 "Inter", sans-serif; break-inside: avoid; }
+  .codebox .ann::before { content: "▸ "; color: var(--gold); font-weight: 700; }
+  .tok-c { color: #8a948f; font-style: italic; }
+  .tok-s { color: #2f6b4f; }
+  .tok-k { color: #7a3f8f; font-weight: 600; }
+  .tok-n { color: #b0562a; }
+
+  /* Blocks */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5mm 5mm; margin: 2mm 0 4mm; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm 4mm; margin: 2mm 0 4mm; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 2.5mm; padding: 3mm 4mm; break-inside: avoid; }
+  .card h4 { margin: 0 0 1.2mm; font-size: 10.6pt; }
+  .card p, .card li { font-size: 9.2pt; margin-bottom: 1mm; }
+  .card ul { margin: 0; }
+  .note { background: var(--green-soft); border-left: 3px solid var(--green-mid); padding: 2.6mm 4mm; border-radius: 1.5mm; font-size: 9.4pt; margin: 3mm 0 4mm; break-inside: avoid; }
+  .note.gold { background: var(--gold-soft); border-left-color: var(--gold); }
+  .note b { color: var(--green); }
+  table { width: 100%; border-collapse: collapse; font-size: 9.1pt; margin: 2mm 0 4mm; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th, td { border-bottom: 1px solid var(--line); padding: 1.7mm 2.2mm; text-align: left; vertical-align: top; }
+  th { background: var(--green-soft); color: var(--green); font-weight: 600; }
+  td:first-child { font-weight: 600; color: var(--green); }
+  td code { white-space: normal; }
+  figure { margin: 3mm 0 4mm; break-inside: avoid; }
+  figure img { display: block; max-width: 100%; max-height: 95mm; margin: 0 auto; border: 1px solid var(--line); border-radius: 2.5mm; }
+  figcaption { margin-top: 1.4mm; font-size: 8.6pt; color: var(--muted); text-align: center; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm 5mm; }
+  .shots figure { margin: 0; }
+  .shots img { max-height: 62mm; }
+  .phones { display: flex; gap: 5mm; justify-content: center; }
+  .phones img { width: 38mm; max-height: none; }
+  .tree { font: 400 8.3pt/1.55 "JetBrains Mono", monospace; background: var(--code-bg); border: 1px solid var(--line); border-radius: 2.5mm; padding: 3mm 4mm; white-space: pre; break-inside: avoid; }
+  .tree b { color: var(--green); }
+  .tree i { color: #8a6a22; font-style: normal; font-family: "Inter", sans-serif; font-size: 8.3pt; }
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 1.5mm; margin: 3mm 0 4mm; }
+  .flow .step { flex: 1 1 0; min-width: 24mm; background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--green-mid); border-radius: 2mm; padding: 2mm 2.5mm; font-size: 8.5pt; break-inside: avoid; }
+  .flow .step b { display: block; color: var(--green); font-size: 9pt; margin-bottom: .6mm; }
+  .flow .arrow { align-self: center; color: var(--gold); font-weight: 700; }
+  .pill { display: inline-block; font: 600 7.8pt "Inter"; padding: .3mm 2mm; border-radius: 10mm; background: var(--green-soft); color: var(--green); margin-right: 1mm; }
+  .pill.gold { background: var(--gold-soft); color: #8a6a22; }
+  .pill.grey { background: #eceae4; color: #6b716d; }
+  .why { margin-top: 2mm; }
+  .why li::marker { color: var(--gold); }
+
+  /* Cover */
+  .cover { height: 265mm; display: flex; flex-direction: column; justify-content: space-between; padding: 16mm 12mm 10mm; background: linear-gradient(160deg, #143d2c 0%, #0f2e21 72%); color: #f5efe2; border-radius: 4mm; }
+  .cover .kicker { color: #d9b25e; font: 700 9.5pt "Inter"; letter-spacing: 2px; text-transform: uppercase; }
+  .cover h1 { color: #fff; font-size: 38pt; margin: 6mm 0 1mm; }
+  .cover .arname { font: 700 26pt "Amiri", serif; color: #d9b25e; direction: rtl; margin: 0 0 6mm; }
+  .cover .sub { font-size: 13pt; color: #e9dcbc; max-width: 150mm; }
+  .cover .stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+  .cover .stack div { border: 1px solid rgba(255,255,255,.16); border-radius: 2mm; padding: 2.5mm 3mm; font-size: 9pt; color: #d6e0da; }
+  .cover .stack b { display: block; color: #fff; font-size: 10pt; margin-bottom: .5mm; }
+  .cover .foot { font-size: 9pt; color: #b9c7bf; display: flex; justify-content: space-between; }
+  .toc { columns: 2; column-gap: 10mm; padding: 0; list-style: none; margin-top: 4mm; }
+  .toc li { padding: 1mm 0; border-bottom: 1px dotted var(--line); break-inside: avoid; font-size: 9.8pt; }
+  .toc b { color: var(--gold); display: inline-block; width: 7mm; }
+  .toc .part { color: var(--muted); font: 600 8pt "Inter"; letter-spacing: 1px; text-transform: uppercase; border: 0; padding-top: 2.2mm; }
+
+  /* Roadmap */
+  .road { position: relative; margin: 4mm 0 2mm; padding-left: 8mm; }
+  .road::before { content: ""; position: absolute; left: 2.6mm; top: 1mm; bottom: 1mm; width: 2px; background: var(--line); }
+  .road .stop { position: relative; margin-bottom: 4mm; break-inside: avoid; }
+  .road .stop::before { content: ""; position: absolute; left: -7.2mm; top: 1.2mm; width: 3.6mm; height: 3.6mm; border-radius: 50%; background: var(--paper); border: 2px solid var(--gold); }
+  .road .stop.done::before { background: var(--green-mid); border-color: var(--green-mid); }
+  .road .stop.now::before { background: var(--gold); }
+  .road .stop h4 { margin: 0 0 1mm; }
+  .road .stop p, .road .stop li { font-size: 9.3pt; }
+
+  @media screen { body { max-width: 210mm; margin: 0 auto; padding: 10mm; } .chapter { margin-top: 16mm; } }
+</style>
+</head>
+<body>
+
+<!-- ═════════════════════════════ COVER ═════════════════════════════ -->
+<div class="cover">
+  <div>
+    <div class="kicker">Technical guide · November 2026</div>
+    <h1>The Al-Bayan Platform</h1>
+    <p class="arname">مكتبة البيان</p>
+    <p class="sub">How the whole platform works, from the dev stack to the code to the screens. You'll also see the decisions that make it fast, safe and simple to use. Every code excerpt is real code from the repository, with notes explaining it line by line.</p>
+  </div>
+  <div class="stack">
+    <div><b>Backend</b>NestJS 11 · TypeScript · Prisma 5 · PostgreSQL</div>
+    <div><b>Web apps</b>React 19 · Vite 8 · Tailwind 4 · TanStack Query</div>
+    <div><b>Mobile</b>Flutter · two apps, same API</div>
+    <div><b>Files</b>Cloudflare R2 · sharp image pipeline</div>
+    <div><b>Hosting</b>Render (Docker + static) · Neon Postgres</div>
+    <div><b>Quality</b>151 unit tests · strict types · 0 known vulnerabilities</div>
+  </div>
+  <p class="foot"><span>github.com/kouteiba97/BookStore</span><span>20, rue Ernesto Che Guevara · 25000 Constantine</span></p>
+</div>
+
+<!-- ═════════════════════════════ CONTENTS ═════════════════════════════ -->
+<section class="chapter">
+  <h2>Contents</h2>
+  <ol class="toc">
+    <li class="part">Part I: The big picture</li>
+    <li><b>1</b>How to read this guide</li>
+    <li><b>2</b>The platform on one page</li>
+    <li><b>3</b>The dev stack, and why each piece</li>
+    <li><b>4</b>Map of the repository</li>
+    <li class="part">Part II: The backend, in code</li>
+    <li><b>5</b>Life of a request</li>
+    <li><b>6</b>Modules and routing order</li>
+    <li><b>7</b>The data model</li>
+    <li><b>8</b>One store per deployment, and caching</li>
+    <li><b>9</b>Security</li>
+    <li><b>10</b>Orders: the state machine</li>
+    <li><b>11</b>The stock engine</li>
+    <li><b>12</b>Invoices</li>
+    <li><b>13</b>Money and reports</li>
+    <li><b>14</b>The Excel import wizard</li>
+    <li><b>15</b>Cover pictures</li>
+    <li><b>16</b>Packs (plans)</li>
+    <li><b>17</b>Arabic search</li>
+    <li class="part">Part III: The interfaces</li>
+    <li><b>18</b>The storefront</li>
+    <li><b>19</b>The admin dashboard</li>
+    <li><b>20</b>The mobile apps</li>
+    <li><b>21</b>Editions: one codebase, two products</li>
+    <li class="part">Part IV: Running it</li>
+    <li><b>22</b>Deployment and operations</li>
+    <li><b>23</b>Testing and quality</li>
+    <li class="part">Part V: Why it works, and what's next</li>
+    <li><b>24</b>What makes this platform good</li>
+    <li><b>25</b>Roadmap</li>
+    <li><b>26</b>Glossary</li>
+  </ol>
+
+  <h3 style="margin-top:5mm">1. How to read this guide</h3>
+  <p>Each chapter starts in plain words: what the part does and why it exists. Then it shows the real code behind it. The code boxes use three visual styles:</p>
+  <div class="codebox">
+    <div class="file"><span>path/to/file.ts</span><span>where the code lives in the repository</span></div>
+    <pre data-legend><span class="ln"><span class="tok-c">// Grey italic: a comment that is already in the source code.</span></span><span class="ln"><span class="tok-k">const</span> answer = <span class="tok-n">42</span>;   <span class="tok-c">// normal colour = the real code</span></span><span class="ann">A gold note is added for this guide only. It explains the line(s) above it in plain words. It is not in the source file.</span></pre>
+  </div>
+  <p>Excerpts are trimmed to the part that matters. A line with <code>// …</code> means code was skipped. Paths are relative to the repository root, so you can open the file and read the rest.</p>
+  <div class="note"><b>Who is this for?</b> You, the owner and developer. The Arabic <span class="ar">دليل المنصة</span> (<code>docs/platform-guide.pdf</code>) explains the features for shop staff and buyers. This guide explains how those features are built.</div>
+  <p class="muted small">Generated from the repository at commit <code>749627f</code> (November 2026). The source is <code>docs/guide/technical-guide.html</code>: edit it and print it again to update this PDF.</p>
+</section>
+
+<!-- ═════════════════════════════ 2 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part I · Chapter 2</div>
+  <h2>The platform on one page</h2>
+  <p class="lead">One API and one database serve four apps. All four are in Arabic (right to left) and share the same green-and-gold identity.</p>
+
+  <svg viewBox="0 0 760 360" width="100%" style="margin:2mm 0 4mm" font-family="Inter, sans-serif">
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b8892f"/></marker>
+    </defs>
+    <!-- clients -->
+    <g font-size="12">
+      <rect x="10" y="10" width="170" height="70" rx="10" fill="#fff" stroke="#e6e0d4"/>
+      <text x="95" y="38" text-anchor="middle" font-weight="700" fill="#143d2c">Storefront (web)</text>
+      <text x="95" y="56" text-anchor="middle" fill="#5b6862" font-size="10.5">frontend/ · customers</text>
+      <rect x="200" y="10" width="170" height="70" rx="10" fill="#fff" stroke="#e6e0d4"/>
+      <text x="285" y="38" text-anchor="middle" font-weight="700" fill="#143d2c">Admin (web)</text>
+      <text x="285" y="56" text-anchor="middle" fill="#5b6862" font-size="10.5">admin/ · /admin/</text>
+      <rect x="390" y="10" width="170" height="70" rx="10" fill="#fff" stroke="#e6e0d4"/>
+      <text x="475" y="38" text-anchor="middle" font-weight="700" fill="#143d2c">store_app (Flutter)</text>
+      <text x="475" y="56" text-anchor="middle" fill="#5b6862" font-size="10.5">customer mobile app</text>
+      <rect x="580" y="10" width="170" height="70" rx="10" fill="#fff" stroke="#e6e0d4"/>
+      <text x="665" y="38" text-anchor="middle" font-weight="700" fill="#143d2c">admin_app (Flutter)</text>
+      <text x="665" y="56" text-anchor="middle" fill="#5b6862" font-size="10.5">orders · Quick-Add camera</text>
+    </g>
+    <g stroke="#b8892f" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+      <path d="M95,80 L300,148"/><path d="M285,80 L350,148"/><path d="M475,80 L410,148"/><path d="M665,80 L460,148"/>
+    </g>
+    <text x="380" y="122" text-anchor="middle" font-size="10.5" fill="#8a6a22">HTTPS · JSON · /api/v1 · JWT for admin</text>
+    <!-- API -->
+    <rect x="200" y="150" width="360" height="110" rx="12" fill="#143d2c"/>
+    <text x="380" y="176" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">NestJS API (Docker on Render)</text>
+    <g font-size="10.5" fill="#d6e0da" text-anchor="middle">
+      <text x="380" y="198">helmet · CORS · rate limit · validation · AdminAuthGuard · FeatureGuard</text>
+      <text x="380" y="216">books · academic · requests · orders · stock · money · reports</text>
+      <text x="380" y="234">data-import · uploads · social-content · home-sections · plans</text>
+    </g>
+    <!-- storage -->
+    <g stroke="#b8892f" stroke-width="1.6" fill="none" marker-end="url(#ar)">
+      <path d="M300,260 L180,300"/><path d="M460,260 L580,300"/>
+    </g>
+    <rect x="20" y="300" width="300" height="52" rx="10" fill="#e7efe9" stroke="#2f6b4f"/>
+    <text x="170" y="322" text-anchor="middle" font-size="12.5" font-weight="700" fill="#143d2c">PostgreSQL (Neon) via Prisma</text>
+    <text x="170" y="340" text-anchor="middle" font-size="10.5" fill="#5b6862">books · orders · stock · money · 11 migrations</text>
+    <rect x="440" y="300" width="300" height="52" rx="10" fill="#f6eedc" stroke="#b8892f"/>
+    <text x="590" y="322" text-anchor="middle" font-size="12.5" font-weight="700" fill="#143d2c">Cloudflare R2 (object storage)</text>
+    <text x="590" y="340" text-anchor="middle" font-size="10.5" fill="#5b6862">covers + 480 px thumbnails</text>
+  </svg>
+
+  <div class="grid2">
+    <div class="card"><h4>Storefront: <span class="ar">المتجر</span></h4><p>Home page laid out by the admin, instant search, a page for each book, categories, collections (shelves), and orders and book requests that end in WhatsApp. Customers don't need an account.</p></div>
+    <div class="card"><h4>Admin: <span class="ar">لوحة التحكم</span></h4><p>Orders, counter sales (POS), books, stock, purchases and suppliers, expenses, reports, Excel import and export, social-media export, store settings and packs.</p></div>
+    <div class="card"><h4>Mobile store app</h4><p>The storefront as a native Android/iOS app. It reads the same public endpoints.</p></div>
+    <div class="card"><h4>Mobile admin app</h4><p>The back office in your pocket. Its standout feature is <b>Quick-Add</b>: photograph a cover, type the title, save, and scan the next book.</p></div>
+  </div>
+
+  <h3>The features at a glance</h3>
+  <table>
+    <thead><tr><th style="width:24%">Area</th><th>What it does</th><th style="width:20%">Where in code</th></tr></thead>
+    <tbody>
+      <tr><td>Catalogue</td><td>Books with authors, publishers, category, country, year, price, cost price, gallery, notes. Academic tree (field → year → subject).</td><td><code>books/</code>, <code>academic/</code></td></tr>
+      <tr><td>Storefront layout</td><td>Admin reorders, renames or hides home blocks, and builds hand-picked shelves.</td><td><code>home-sections/</code></td></tr>
+      <tr><td>Leads</td><td>"Request a book" form → admin inbox → can become an order.</td><td><code>requests/</code></td></tr>
+      <tr><td>Sales register</td><td>Website orders, phone orders, counter sales and imported sales in one table.</td><td><code>admin/orders/</code></td></tr>
+      <tr><td>Stock</td><td>Moves automatically with sales, purchases, returns and imports. Every move is logged.</td><td><code>common/stock/</code></td></tr>
+      <tr><td>Invoices</td><td>Numbered <code>2026-0001</code>, with the legal IDs (RC/NIF/NIS/ART), printable.</td><td><code>orders/:id/invoice</code></td></tr>
+      <tr><td>Money</td><td>Suppliers, purchases (stock in), payments and balance, expenses.</td><td><code>admin/money/</code></td></tr>
+      <tr><td>Reports</td><td>Revenue, cost of goods sold, margin, expenses, net profit, top and slow books, stock value.</td><td><code>admin/reports/</code></td></tr>
+      <tr><td>Excel</td><td>Import a shop's own spreadsheets (catalogue or sales/purchase/expense history) with preview and undo. Exports.</td><td><code>admin/data-import/</code></td></tr>
+      <tr><td>Covers</td><td>Upload → normalised JPEG + thumbnail in R2. Matching phone photos to books by OCR.</td><td><code>uploads/</code>, <code>image-sync/</code></td></tr>
+      <tr><td>Social content</td><td>ZIP of covers + captions + metadata, ready to post.</td><td><code>social-content/</code></td></tr>
+      <tr><td>Packs</td><td>Starter / Pro / Business: features locked or unlocked, with limits.</td><td><code>common/plan/</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═════════════════════════════ 3 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part I · Chapter 3</div>
+  <h2>The dev stack, and why each piece</h2>
+  <p class="lead">Every layer is a mainstream, well-documented choice. That keeps the platform easy to hire for, easy to host cheaply, and easy for an AI assistant to work on safely.</p>
+
+  <table>
+    <thead><tr><th style="width:20%">Layer</th><th style="width:28%">Technology</th><th>Why it was chosen</th></tr></thead>
+    <tbody>
+      <tr><td>Language</td><td>TypeScript 6, everywhere on the web</td><td>One language for server and browsers. Types catch mistakes (a missing field, a wrong status) before they reach a customer.</td></tr>
+      <tr><td>API framework</td><td>NestJS 11 on Express 5</td><td>Gives the server a fixed shape: <i>modules</i> group a feature, <i>controllers</i> receive HTTP calls, <i>services</i> hold the logic, <i>guards</i> decide who may enter. Every feature looks the same, so the code stays readable as it grows.</td></tr>
+      <tr><td>Database</td><td>PostgreSQL (Neon in production)</td><td>Reliable transactions (a sale and its stock move succeed or fail together), exact <code>Decimal</code> money, and powerful SQL for reports.</td></tr>
+      <tr><td>ORM</td><td>Prisma 5 (<code>relationJoins</code>)</td><td>The schema file is the single source of truth. Prisma generates typed queries and versioned migrations. <code>relationJoins</code> turns an <code>include</code> into one SQL query instead of one per relation.</td></tr>
+      <tr><td>Validation</td><td>class-validator DTOs + global <code>ValidationPipe</code></td><td>Every incoming body is checked and cleaned before any code runs. Unknown fields are dropped (<code>whitelist</code>).</td></tr>
+      <tr><td>Auth</td><td>JWT (<code>@nestjs/jwt</code>)</td><td>Stateless 30-day admin token. Nothing to store on the server.</td></tr>
+      <tr><td>Hardening</td><td>helmet, @nestjs/throttler, CORS allowlist</td><td>Security headers, per-IP rate limits, and only known origins may call the API from a browser.</td></tr>
+      <tr><td>Files</td><td>Cloudflare R2 (S3 API) + sharp</td><td>R2 has no download (egress) fees, so covers are cheap to serve. sharp shrinks phone photos about 20× and strips GPS data.</td></tr>
+      <tr><td>Excel</td><td>SheetJS (<code>xlsx</code> 0.20.3 from the official CDN)</td><td>Reads .xlsx, .xls and .csv. The CDN build is the patched one; the npm copy is stuck on an old, vulnerable version.</td></tr>
+      <tr><td>OCR</td><td>tesseract.js</td><td>Reads cover text to match phone photos to books, with no paid API.</td></tr>
+      <tr><td>Web UI</td><td>React 19 + Vite 8</td><td>Instant dev reloads and small, hashed production bundles.</td></tr>
+      <tr><td>Styling</td><td>Tailwind CSS 4 + Base UI primitives (shadcn style)</td><td>Accessible dialogs, menus and focus handling, with styles written next to the markup. RTL works with logical properties.</td></tr>
+      <tr><td>Data fetching</td><td>TanStack Query 5 + axios</td><td>Caching, background refresh and loading/error states for free. Pages stay simple.</td></tr>
+      <tr><td>Routing</td><td>React Router 7</td><td>Pages, redirects, and lazy-loaded admin screens.</td></tr>
+      <tr><td>Mobile</td><td>Flutter (separate repo)</td><td>One codebase for Android and iOS. Talks to the same API over HTTP.</td></tr>
+      <tr><td>Hosting</td><td>Render Blueprint (<code>render.yaml</code>) + Docker</td><td>The API, storefront and admin are deployed from one file. Pushing to <code>master</code> redeploys.</td></tr>
+      <tr><td>Tests</td><td>Jest + ts-jest</td><td>Fast unit tests for the pure business rules: money, stock statuses, parsing.</td></tr>
+    </tbody>
+  </table>
+  <div class="note gold"><b>Design rule behind the stack:</b> no exotic tools. Each piece is the most common way to do that job in 2026. Any developer you hire, and Claude, already knows them.</div>
+</section>
+
+<!-- ═════════════════════════════ 4 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part I · Chapter 4</div>
+  <h2>Map of the repository</h2>
+  <p class="lead">Where everything lives. Each top-level folder has one job.</p>
+<div class="tree"><b>bookstore/</b>
+├── <b>src/</b>                        <i>the NestJS API</i>
+│   ├── main.ts                 <i>boot: security headers, CORS, validation, start listening</i>
+│   ├── app.module.ts           <i>wires every module together (order matters!)</i>
+│   ├── <b>common/</b>                 <i>shared building blocks used by many modules</i>
+│   │   ├── guards/             <i>AdminAuthGuard: "is this a valid admin token?"</i>
+│   │   ├── tenant/             <i>StoreResolver: "which store is this deployment?"</i>
+│   │   ├── stock/              <i>moveStock(): the only way stock changes from money flows</i>
+│   │   ├── plan/               <i>packs: features, limits, @RequiresFeature</i>
+│   │   ├── home/               <i>the storefront home-layout block kinds</i>
+│   │   ├── validation/         <i>query-string checks → 400, never 500</i>
+│   │   └── utils/              <i>covers (sharp), safe image fetch, ZIP writer, Arabic normaliser…</i>
+│   ├── <b>modules/</b>                <i>one folder per feature</i>
+│   │   ├── books/ academic/ requests/ images/          <i>public storefront API</i>
+│   │   ├── import/ image-sync/ clean/                  <i>operational tools (admin-only)</i>
+│   │   ├── storage/                                    <i>Cloudflare R2 wrapper</i>
+│   │   └── <b>admin/</b>                                      <i>the back office, /api/v1/admin/*</i>
+│   │       ├── auth/ stats/ orders/ books/ catalog/ academic/ inventory/
+│   │       ├── uploads/ data-import/ money/ reports/
+│   │       └── home-sections/ social-content/
+│   └── prisma/                 <i>PrismaService (the database connection)</i>
+├── <b>prisma/</b>
+│   ├── schema.prisma           <i>THE data model: 27 tables + 7 enums</i>
+│   └── migrations/             <i>11 versioned SQL migrations, applied on boot</i>
+├── <b>frontend/</b>                   <i>public storefront (React + Vite) · :5173</i>
+│   └── src/ pages/ components/ lib/
+├── <b>admin/</b>                      <i>admin dashboard (React + Vite) · :5175/admin/</i>
+│   └── src/ pages/admin/ components/admin/ lib/
+├── <b>scripts/</b>                    <i>one-off tools: set-plan, setup-store, backfill-thumbnails, perf/</i>
+├── <b>docs/</b>                       <i>guides (this one), product plan, sales kit</i>
+├── Dockerfile               <i>how the API image is built for production</i>
+├── render.yaml              <i>deploys API + storefront + admin on Render</i>
+└── CLAUDE.md                <i>project briefing for Claude Code</i></div>
+
+  <h3>Conventions that repeat everywhere</h3>
+  <div class="grid2">
+    <div class="card"><h4>A feature module looks like this</h4><ul><li><code>x.module.ts</code>: declares the pieces</li><li><code>x.controller.ts</code>: URLs → method calls</li><li><code>x.service.ts</code>: the logic and the database calls</li><li><code>dto/</code>: shapes of incoming bodies, validated</li><li><code>*-rules.ts</code> / <code>*.spec.ts</code>: pure logic + its tests</li></ul></div>
+    <div class="card"><h4>Rules of thumb</h4><ul><li>Every admin query filters by <code>storeId</code>.</li><li>Money is <code>Decimal(10,2)</code>, rounded to the cent once.</li><li>Stock changes only through <code>moveStock()</code> (or a logged hand adjustment).</li><li>Public routes never return <code>costPrice</code>.</li><li>Errors shown to staff are in Arabic.</li></ul></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════ 5 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 5</div>
+  <h2>Life of a request</h2>
+  <p class="lead">Take a staff member clicking "Confirm" on an order. Here is every stop that click passes through.</p>
+
+  <div class="flow">
+    <div class="step"><b>1 · Browser</b>axios adds <code>Bearer</code> token</div><div class="arrow">→</div>
+    <div class="step"><b>2 · Render proxy</b>HTTPS ends; real IP forwarded</div><div class="arrow">→</div>
+    <div class="step"><b>3 · main.ts</b>helmet, CORS, <code>/api</code> prefix</div><div class="arrow">→</div>
+    <div class="step"><b>4 · Throttler</b>≤ 300 req/min per IP</div><div class="arrow">→</div>
+    <div class="step"><b>5 · Guards</b>admin token, then pack feature</div><div class="arrow">→</div>
+    <div class="step"><b>6 · Pipe</b>DTO validated + cleaned</div><div class="arrow">→</div>
+    <div class="step"><b>7 · Service</b>rules + transaction</div><div class="arrow">→</div>
+    <div class="step"><b>8 · Prisma → Postgres</b>commit, JSON back</div>
+  </div>
+
+  <p>Steps 3 and 6 are configured once, at boot, in <code>main.ts</code>:</p>
+<div class="codebox"><div class="file"><span>src/main.ts</span><span>server start-up</span></div><script type="text/plain">
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+>> Build the whole app from the root module (AppModule, next chapter): every controller, service and guard.
+
+  app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS ?? 1));
+>> Render sits in front of the API. Without this line, every visitor would look like the same IP (Render's), so one busy customer could use up everyone's rate limit. "Trust one hop" means: read the real visitor's IP from the proxy header.
+
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+>> helmet adds about a dozen security headers to every response (blocks click-jacking, MIME sniffing…). Cover images are loosened to "cross-origin" because the storefront, on another domain, displays them.
+
+  const corsOrigins = process.env.CORS_ORIGINS?.split(',').map((s) => s.trim()).filter(Boolean);
+  app.enableCors({
+    origin: corsOrigins?.length ? corsOrigins : false,
+    credentials: true,
+    exposedHeaders: ['Content-Disposition', 'X-Export-Books', 'X-Export-Truncated'],
+  });
+>> CORS: only the origins listed in CORS_ORIGINS (your storefront and admin URLs) may call the API from a browser. With no list, cross-origin calls are refused, which is the safe default. "exposedHeaders" lets the admin read the file name of an Excel/ZIP export.
+
+  app.setGlobalPrefix('api');
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+>> Every route starts with /api. The ValidationPipe checks each body against its DTO class: wrong types → 400 error; unknown fields are dropped (whitelist); "transform" turns the JSON into the DTO class so clean-up rules (e.g. phone-number formatting) really run.
+
+  app.useGlobalFilters(new AllExceptionsFilter());
+>> One place that turns every error into the same JSON shape { statusCode, error, message, path, timestamp } and logs real server errors.
+
+  app.enableShutdownHooks();
+>> During a deploy Render sends SIGTERM: finish requests in flight and close the database pool cleanly instead of cutting them.
+
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  keepAwake();
+>> Start listening, then start the "keep awake" ping (chapter 22) so the free Render plan never puts the API to sleep.
+}
+</script></div>
+</section>
+
+<!-- ═════════════════════════════ 6 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 6</div>
+  <h2>Modules and routing order</h2>
+  <p class="lead"><code>app.module.ts</code> is the table of contents of the server. It plugs every feature in, and the order it lists them in matters.</p>
+<div class="codebox"><div class="file"><span>src/app.module.ts</span><span>root module</span></div><script type="text/plain">
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+>> Reads the .env file once and makes the values (DATABASE_URL, R2_*, ADMIN_PASSWORD…) available everywhere.
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
+>> Rate limit: 300 requests per 60 seconds per IP. Individual routes tighten it (login 10/min, request form 5/min).
+    AuthModule,
+    StorageModule,
+    ServeStaticModule.forRoot({ rootPath: join(process.cwd(), 'public'), serveRoot: '/', serveStaticOptions: { index: false } }),
+>> Serves files from /public (local covers in development, when R2 isn't configured).
+    PrismaModule,
+    TenantModule,
+    // AdminModule first: its literal routes (v1/admin/books) must register
+    // before the public wildcard routes (v1/:storeSlug/books), otherwise
+    // ":storeSlug" swallows "admin" and admin GETs 404 with "Store not found".
+    AdminModule,
+>> The most important line in the file. Public routes look like /v1/:storeSlug/books, where :storeSlug can be ANY word, including "admin". Express matches routes in the order they were added, so the admin routes must be added first or /v1/admin/books would be read as "store named admin".
+    BooksModule,
+    RequestsModule,
+    AcademicModule,
+    ImportModule,
+    ImagesModule,
+    CleanModule,
+    ImageSyncModule,
+  ],
+  controllers: [HealthController],
+>> GET /api/v1/health returns {status, db, uptime}. Render calls it to know the API is alive.
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+>> Turns the rate limiter on for every route in the app.
+})
+export class AppModule {}
+</script></div>
+
+  <h3>The public API vs. the admin API</h3>
+  <div class="grid2">
+    <div class="card"><h4>Public: <code>/api/v1/:storeSlug/…</code></h4><ul><li><code>GET books</code>, <code>books/:id</code>, search, recommendations</li><li><code>GET home-sections</code> (the home layout)</li><li><code>GET academic/…</code> (fields, years, subjects)</li><li><code>POST requests</code> (5/min per IP)</li></ul><p class="muted small">No login. List endpoints return the slim "card" shape. Only <code>books/:id</code> returns everything.</p></div>
+    <div class="card"><h4>Admin: <code>/api/v1/admin/…</code></h4><ul><li><code>POST auth/login</code> (10/min) → JWT</li><li>orders, books, catalog, inventory, uploads, data-import, money, reports, home-sections, social-content, stats, plan</li></ul><p class="muted small">Every controller carries <code>@UseGuards(AdminAuthGuard)</code>. The paid features also carry <code>@RequiresFeature(…)</code>.</p></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════ 7 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 7</div>
+  <h2>The data model</h2>
+  <p class="lead"><code>prisma/schema.prisma</code> describes every table. Prisma turns it into SQL migrations and into the typed client that the services use.</p>
+
+  <table>
+    <thead><tr><th style="width:24%">Group</th><th>Tables</th></tr></thead>
+    <tbody>
+      <tr><td>Store</td><td><code>Store</code> (name, slug, plan, legal IDs), <code>StoreCounter</code> (invoice sequence), <code>HomeSection</code> + <code>HomeSectionBook</code></td></tr>
+      <tr><td>Catalogue</td><td><code>Book</code>, <code>BookImage</code> (gallery), <code>Author</code>/<code>BookAuthor</code>, <code>Publisher</code>/<code>BookPublisher</code>, <code>Category</code>, <code>Country</code></td></tr>
+      <tr><td>Academic</td><td><code>Field</code> → <code>AcademicYear</code> → <code>Subject</code>, with link tables <code>BookOnField/Year/Subject</code></td></tr>
+      <tr><td>Stock</td><td><code>Inventory</code> (count + status per book), <code>StockMovement</code> (log of every change and why)</td></tr>
+      <tr><td>Sales</td><td><code>Request</code> (lead), <code>Order</code>, <code>OrderItem</code></td></tr>
+      <tr><td>Money</td><td><code>Supplier</code>, <code>Purchase</code>, <code>PurchaseItem</code>, <code>Expense</code></td></tr>
+      <tr><td>Imports</td><td><code>ImportJob</code>: everything an import created is tagged with its id, so the import can be undone</td></tr>
+    </tbody>
+  </table>
+  <p class="small muted">Authors, publishers, categories, countries and the academic tree are <b>shared</b> reference tables. Everything else belongs to one store through <code>storeId</code>.</p>
+
+<div class="codebox"><div class="file"><span>prisma/schema.prisma</span><span>model Order (excerpt)</span></div><script type="text/plain">
+model Order {
+  id      String @id @default(uuid())
+  storeId String
+>> Every order belongs to one store. All admin queries filter on it.
+
+  // Customer snapshot (denormalized — orders survive even if customer info changes elsewhere)
+  firstName String
+  lastName  String
+  phone     String
+  wilaya    String
+  address   String
+>> The customer's details are copied INTO the order. If the same customer orders again with a new address, old orders still show what was true at the time.
+
+  status OrderStatus @default(pending)
+  channel       SaleChannel    @default(online)
+  paymentMethod PaymentMethod?
+>> channel = online | shop | import. This one field is what lets website orders, counter sales and imported history live in a single sales register.
+
+  // Money — denormalized totals so historical orders aren't affected by price changes
+  subtotal     Decimal @default(0) @db.Decimal(10, 2)
+  discount     Decimal @default(0) @db.Decimal(10, 2)
+  shippingCost Decimal @default(0) @db.Decimal(10, 2)
+  total        Decimal @default(0) @db.Decimal(10, 2)
+>> Decimal(10,2) stores exact cents. Floats would turn 0.1 + 0.2 into 0.30000000000000004, which is unacceptable for money. Totals are frozen too: raising a book's price tomorrow does not change yesterday's invoice.
+
+  stockApplied Boolean @default(false)
+>> A safety flag: "have this order's books already left the shelf?" It makes sure stock is taken out exactly once and put back exactly once, however many times the status changes.
+
+  invoiceNumber String?
+  invoicedAt    DateTime?
+  soldAt DateTime?
+>> soldAt = the real date of an imported old sale (createdAt would be the import day). Reports use soldAt when it exists.
+  importJobId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // …
+}
+</script></div>
+
+<div class="codebox"><div class="file"><span>prisma/schema.prisma</span><span>model Book (excerpt)</span></div><script type="text/plain">
+model Book {
+  id              String  @id @default(uuid())
+  title           String
+  titleNormalized String?
+>> A copy of the title with Arabic spelling variants flattened (chapter 17). Search compares against this.
+  price     Decimal? @db.Decimal(10, 2)
+  /// What the store paid for it. Admin-only — never sent to the storefront.
+  costPrice Decimal? @db.Decimal(10, 2)
+>> The purchase price feeds the margin and profit reports. Public routes pass every book through serializePublicBook(), which deletes this field before the JSON leaves the server.
+  importJobId String?
+  categoryId String
+  storeId    String
+  imageUrl String?
+>> The main cover. It is also picture 0 of the gallery (BookImage). setBookCover() keeps the two in step.
+  // …
+}
+</script></div>
+</section>
+
+<!-- ═════════════════════════════ 8 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 8</div>
+  <h2>One store per deployment, and caching</h2>
+  <p class="lead">The database can hold several stores. Each deployment, though, serves one store, and <code>StoreResolver</code> answers "which one?" quickly.</p>
+  <div class="note"><b>Why this matters for selling the platform:</b> the data is already multi-store, with a <code>storeId</code> on every row. To sell to a second shop today, you deploy a second copy pointed at its own store. Running many stores on one deployment needs per-user accounts first (chapter 25).</div>
+<div class="codebox"><div class="file"><span>src/common/tenant/store-resolver.service.ts</span><span>tenancy + caches</span></div><script type="text/plain">
+@Injectable()
+export class StoreResolver {
+  private cached: { id: string; slug: string } | null = null;
+
+  async getStore() {
+    if (this.cached) return this.cached;
+>> Asked on almost every admin request. After the first lookup the answer is kept in memory forever (the store of a deployment never changes).
+    const slug = process.env.STORE_SLUG;
+    const store = slug
+      ? await this.prisma.store.findUnique({ where: { slug } })
+      : await this.prisma.store.findFirst({ orderBy: { createdAt: 'asc' } });
+>> Which store? The one named by STORE_SLUG in the environment, else the oldest store in the database.
+    if (!store) throw new NotFoundException('No store configured');
+    this.cached = { id: store.id, slug: store.slug };
+    return this.cached;
+  }
+
+  async getPlan(): Promise<string> {
+    if (this.planCache && Date.now() - this.planCache.at < 60_000) return this.planCache.plan;
+>> The store's pack is re-read at most once a minute. A pack change (scripts/set-plan.ts) shows up within 60 s without a database hit on every request.
+    // …
+  }
+
+  async bySlug(slug: string): Promise<{ id: string; slug: string; name: string }> {
+    const hit = this.bySlugCache.get(slug);
+    if (hit && Date.now() - hit.at < SLUG_TTL_MS) {
+      if (!hit.store) throw new NotFoundException('Store not found');
+      return hit.store;
+    }
+>> Every storefront request starts by turning the slug in the URL ("elbayan") into a store. Caching it for one minute saves one database round trip (about 50 ms in production) on every page view. Unknown slugs are cached too, so a bot can't force repeated lookups.
+    const store = await this.prisma.store.findUnique({ where: { slug }, select: { id: true, slug: true, name: true } });
+    if (this.bySlugCache.size >= 100) this.bySlugCache.clear();
+>> A hard cap: crawlers trying random slugs cannot grow this map forever and eat memory.
+    this.bySlugCache.set(slug, { store, at: Date.now() });
+    if (!store) throw new NotFoundException('Store not found');
+    return store;
+  }
+}
+</script></div>
+</section>
+
+<!-- ═════════════════════════════ 9 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 9</div>
+  <h2>Security</h2>
+  <p class="lead">Security is layered: each layer assumes the one before it might fail.</p>
+
+  <table>
+    <thead><tr><th style="width:26%">Layer</th><th>What it stops</th></tr></thead>
+    <tbody>
+      <tr><td>HTTPS + helmet</td><td>Eavesdropping, click-jacking, content-type tricks</td></tr>
+      <tr><td>CORS allowlist</td><td>Other websites calling your API from a visitor's browser</td></tr>
+      <tr><td>Rate limits</td><td>Password guessing (login 10/min), form spam (5/min), scraping and floods (300/min)</td></tr>
+      <tr><td>AdminAuthGuard</td><td>Anyone without a valid admin JWT, and a valid token aimed at another store</td></tr>
+      <tr><td>ValidationPipe + query checks</td><td>Malformed or oversized input, unknown fields, bad enum values (→ 400, never a crash)</td></tr>
+      <tr><td>storeId on every query</td><td>Reading or changing another store's rows</td></tr>
+      <tr><td>Public serializer</td><td>Leaking <code>costPrice</code> and other internal fields to the storefront</td></tr>
+      <tr><td>Upload checks</td><td>Fake images: the file type is decided by its first bytes, not its name. Decompression bombs are refused.</td></tr>
+      <tr><td>Safe image fetch</td><td>Tricking the server into fetching internal addresses (SSRF)</td></tr>
+      <tr><td>Excel export safety</td><td>Cells starting with <code>=</code>, <code>+</code>, <code>-</code>, <code>@</code> are escaped, so an export can't run formulas in Excel</td></tr>
+      <tr><td>Production boot check</td><td>The API refuses to start in production without <code>JWT_SECRET</code></td></tr>
+    </tbody>
+  </table>
+
+<div class="codebox"><div class="file"><span>src/common/guards/admin-auth.guard.ts</span><span>who may enter the back office</span></div><script type="text/plain">
+async canActivate(context: ExecutionContext): Promise<boolean> {
+  const req = context.switchToHttp().getRequest<Request>();
+  const header = req.headers.authorization ?? '';
+  const [scheme, token] = header.split(' ');
+  if (scheme !== 'Bearer' || !token) {
+    throw new UnauthorizedException('Missing admin token');
+  }
+>> Step 1: there must be an "Authorization: Bearer <token>" header. No header → 401 (the admin app then sends you to the login page).
+
+  try {
+    const payload = await this.jwt.verifyAsync<{ role?: string }>(token);
+    if (payload.role !== 'admin') throw new Error('not admin');
+  } catch {
+    throw new UnauthorizedException('Invalid or expired admin token');
+  }
+>> Step 2: the token's signature is checked with JWT_SECRET, plus its 30-day expiry and its role. A forged or expired token fails here. "Fails closed": any doubt means no entry.
+
+  const slug = req.params?.storeSlug;
+  if (slug !== undefined) {
+    const own = await this.stores.getStore();
+    if (slug !== own.slug) {
+      throw new ForbiddenException('This admin account cannot access that store');
+    }
+  }
+>> Step 3 (tenancy): some admin tools have the store in the URL (/v1/:storeSlug/import). Editing the slug to another store's name is refused with 403, even with a valid token.
+  return true;
+}
+</script></div>
+
+<div class="codebox"><div class="file"><span>src/common/utils/image-source.ts</span><span>fetching pictures from the internet safely</span></div><script type="text/plain">
+async function isPublicHttps(url: URL): Promise<boolean> {
+  if (url.protocol !== 'https:' || url.username || url.password) return false;
+  const host = url.hostname.replace(/^\[|\]$/g, '');
+  if (!host || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.internal')) return false;
+>> The social export downloads covers from URLs stored in the database, and those URLs could have been typed by anyone. Only plain https links are allowed.
+  let addresses: string[];
+  // …
+  addresses = (await dns.lookup(host, { all: true, verbatim: true })).map((a) => a.address);
+  return addresses.length > 0 && addresses.every((a) => !isPrivateAddress(a));
+>> The name is resolved to its real IP addresses, and EVERY one must be public. Otherwise an attacker could register "evil.com → 127.0.0.1" and make your server read its own internal services (SSRF). Redirects are re-checked the same way (at most 3), and a download is cut at 15 MB.
+}
+
+export function isPrivateAddress(ip: string): boolean {
+  if (net.isIPv4(ip)) {
+    const [a, b] = ip.split('.').map(Number);
+    return (
+      a === 0 || a === 10 || a === 127 ||
+      (a === 100 && b >= 64 && b <= 127) || // CGNAT
+      (a === 169 && b === 254) || // link-local, cloud metadata
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      // …
+      a >= 224 // multicast + reserved
+    );
+  }
+>> The list of address ranges that never belong to a public website: your own machine (127.x), home and office networks (10.x, 192.168.x), and the cloud "metadata" address (169.254.x) that holds server secrets.
+  // … IPv6 equivalents
+}
+</script></div>
+</section>
+
+<!-- ═════════════════════════════ 10 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 10</div>
+  <h2>Orders: the state machine</h2>
+  <p class="lead">An order moves through fixed steps. The rules live in a small file with no database code, so they can be tested on their own.</p>
+
+  <svg viewBox="0 0 760 120" width="100%" font-family="Inter, sans-serif" font-size="12">
+    <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f6b4f"/></marker>
+    <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b3544a"/></marker></defs>
+    <g text-anchor="middle" font-weight="600">
+      <rect x="10" y="20" width="120" height="38" rx="19" fill="#fff" stroke="#b8892f"/><text x="70" y="44" fill="#143d2c">pending</text>
+      <rect x="200" y="20" width="120" height="38" rx="19" fill="#e7efe9" stroke="#2f6b4f"/><text x="260" y="44" fill="#143d2c">confirmed</text>
+      <rect x="390" y="20" width="120" height="38" rx="19" fill="#e7efe9" stroke="#2f6b4f"/><text x="450" y="44" fill="#143d2c">shipped</text>
+      <rect x="580" y="20" width="120" height="38" rx="19" fill="#e7efe9" stroke="#2f6b4f"/><text x="640" y="44" fill="#143d2c">delivered</text>
+      <rect x="300" y="82" width="160" height="34" rx="17" fill="#fbecea" stroke="#b3544a"/><text x="380" y="104" fill="#8a2f26">cancelled</text>
+    </g>
+    <g stroke="#2f6b4f" stroke-width="1.6" fill="none" marker-end="url(#a2)"><path d="M130,39 L198,39"/><path d="M320,39 L388,39"/><path d="M510,39 L578,39"/></g>
+    <g stroke="#b3544a" stroke-width="1.3" fill="none" stroke-dasharray="4 3" marker-end="url(#a3)"><path d="M70,58 Q90,98 298,99"/><path d="M260,58 L330,82"/><path d="M450,58 L410,82"/><path d="M640,58 Q630,98 462,99"/></g>
+    <text x="640" y="12" text-anchor="middle" font-size="10" fill="#5b6862">books leave stock from "confirmed" on</text>
+    <text x="640" y="114" text-anchor="middle" font-size="10" fill="#8a2f26">delivered → cancelled = a return</text>
+  </svg>
+
+<div class="codebox"><div class="file"><span>src/modules/admin/orders/order-rules.ts</span><span>pure business rules</span></div><script type="text/plain">
+export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pending: ['confirmed', 'cancelled'],
+  confirmed: ['shipped', 'cancelled'],
+  shipped: ['delivered', 'cancelled'],
+  // A delivered sale can still be returned: cancelling it puts the books back
+  // in stock and takes it out of the income.
+  delivered: ['cancelled'],
+  cancelled: [],
+};
+>> The whole workflow as a lookup table: for each status, where it may go next. "cancelled" is final. Changing the workflow later means editing this table and nothing else.
+
+export function canTransition(from: OrderStatus, to: OrderStatus): boolean {
+  if (from === to) return true;
+  return ORDER_TRANSITIONS[from]?.includes(to) ?? false;
+}
+>> Asked before every status change. Jumping "pending → delivered" is refused with a clear error.
+
+const cents = (n: number) => Math.round(n * 100) / 100;
+
+export function computeOrderTotals(items: { unitPrice: number; quantity: number }[], shipping: number, discount = 0): OrderTotals {
+  const subtotal = cents(items.reduce((s, it) => s + it.unitPrice * it.quantity, 0));
+  const d = cents(Math.min(Math.max(0, discount || 0), subtotal));
+  const shippingCost = cents(Math.max(0, shipping || 0));
+  return { subtotal, discount: d, shippingCost, total: cents(subtotal - d + shippingCost) };
+}
+>> The ONLY place order money is computed. Subtotal = price × quantity per line. The discount is clamped: never negative, never more than the books are worth. Shipping is never negative. Everything is rounded to the cent here, once.
+</script></div>
+
+<div class="codebox"><div class="file"><span>src/modules/admin/orders/orders.service.ts</span><span>updateStatus(): where rules meet the database</span></div><script type="text/plain">
+async updateStatus(id: string, target: OrderStatus) {
+  const storeId = await this.storeResolver.getStoreId();
+  const order = await this.prisma.order.findFirst({ where: { id, storeId }, include: { items: true } });
+  if (!order) throw new NotFoundException('Order not found');
+>> "where: { id, storeId }": an order id from another store is simply "not found".
+  if (!canTransition(order.status as OrderStatus, target)) {
+    throw new BadRequestException(`Cannot transition order from ${order.status} to ${target}`);
+  }
+
+  return this.prisma.$transaction(async (tx) => {
+>> Everything inside $transaction succeeds together or is rolled back together. A status can never change while its stock move fails, or the other way round.
+    // Conditional update: two clicks at once cannot move stock twice.
+    const moved = await tx.order.updateMany({ where: { id, status: order.status }, data: { status: target } });
+    if (moved.count === 0) throw new BadRequestException('تغيّرت حالة الطلب للتو. أعد تحميل الصفحة.');
+>> Protection against double clicks and two staff members at once: the update only matches if the status is STILL what we read a moment ago. If someone else changed it first, 0 rows match and we stop with "the order just changed, reload".
+
+    const lines = order.items.map((i) => ({ bookId: i.bookId, quantity: i.quantity }));
+    if (takesStock(target) && !order.stockApplied) {
+      await this.applyStock(tx, storeId, id, lines, -1);
+>> Moving into confirmed/shipped/delivered for the first time → books leave stock, and stockApplied becomes true.
+    } else if (target === 'cancelled' && order.stockApplied) {
+      await moveStock(tx, storeId, lines.map((l) => ({ bookId: l.bookId, delta: l.quantity })), 'sale_cancel', id);
+      await tx.order.update({ where: { id }, data: { stockApplied: false } });
+>> Cancelling (or returning) an order whose books had left → they come back, logged as "sale_cancel".
+    }
+    return tx.order.findUnique({ where: { id }, include: orderInclude });
+  });
+}
+</script></div>
+</section>
+
+<!-- ═════════════════════════════ 11 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 11</div>
+  <h2>The stock engine</h2>
+  <p class="lead">Sales, returns, purchases, purchase cancellations and history imports all change stock through one function. That's why the numbers stay right.</p>
+<div class="codebox"><div class="file"><span>src/common/stock/stock.ts</span><span>moveStock()</span></div><script type="text/plain">
+export async function moveStock(
+  tx: Tx,
+  storeId: string,
+  lines: StockLine[],
+  reason: StockReason,
+  refId?: string | null,
+  note?: string | null,
+): Promise<void> {
+>> tx = the caller's open transaction. A stock move is never on its own; it is part of the sale or purchase that caused it. reason = sale | sale_cancel | purchase | purchase_cancel | import | adjustment… refId = the order or purchase id, so the log links back.
+
+  const net = new Map<string, number>();
+  for (const l of lines) {
+    if (!l.bookId || !Number.isInteger(l.delta) || l.delta === 0) continue;
+    net.set(l.bookId, (net.get(l.bookId) ?? 0) + l.delta);
+  }
+>> If the same book appears on two lines (e.g. 2 + 1 copies), merge them into one net change (−3). Junk lines are ignored.
+
+  for (const [bookId, delta] of entries) {
+    const updated = await tx.$queryRaw<{ stock: number | null; status: InventoryStatus }[]>`
+      UPDATE "Inventory"
+         SET "stock" = CASE
+               WHEN "stock" IS NULL AND ${delta}::int > 0 THEN ${delta}::int
+               WHEN "stock" IS NULL THEN NULL
+               ELSE GREATEST(0, "stock" + ${delta}::int)
+             END,
+             "updatedAt" = now()
+       WHERE "bookId" = ${bookId} AND "storeId" = ${storeId}
+   RETURNING "stock", "status"`;
+>> One atomic SQL statement does read + add + write. Two cashiers selling the LAST copy at the same instant can't both read "1"; the database runs them one after the other. The rules: an unknown count (NULL) stays unknown on a sale (we can't invent a number) but becomes known on a delivery. GREATEST(0, …) means stock never goes below zero. ${…} values are sent as parameters, so there's no SQL injection.
+
+    if (!updated.length) {
+      if (delta > 0) {
+        await tx.inventory.create({ data: { bookId, storeId, stock: delta, status: 'available' } });
+      }
+      continue;
+    }
+>> The book had no stock row yet: a delivery creates one; a sale leaves it untracked.
+
+    const { stock, status } = updated[0];
+    let next: InventoryStatus | null = null;
+    if (stock === 0 && status === 'available') next = 'on_request';
+    if (stock !== null && stock > 0 && status === 'on_request') next = 'available';
+    if (next) await tx.inventory.update({ where: { bookId }, data: { status: next } });
+>> The storefront label follows the count: the last copy sold → "on request"; copies arrive → "available" again. "Rare" is a choice the owner made, so it is never changed automatically.
+  }
+
+  await tx.stockMovement.createMany({
+    data: entries.map(([bookId, delta]) => ({ storeId, bookId, delta, reason, refId: refId ?? null, note: note ?? null })),
+  });
+>> Every change is written to the StockMovement log: book, +/− amount, reason, linked document, time. The admin shows it as the stock history of each book, so you can always answer "where did this copy go?".
+}
+</script></div>
+  <div class="note gold"><b>Rule:</b> any new feature that sells, buys or returns books must call <code>moveStock()</code> inside its transaction. Hand edits on the Inventory screen write an <code>adjustment</code> movement, so they're logged too.</div>
+</section>
+
+<!-- ═════════════════════════════ 12 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 12</div>
+  <h2>Invoices</h2>
+  <p class="lead">An invoice number must be unique, sequential within the year, and must never change once printed. That's what Algerian accounting expects.</p>
+<div class="codebox"><div class="file"><span>src/modules/admin/orders/orders.service.ts</span><span>invoice()</span></div><script type="text/plain">
+async invoice(id: string) {
+  const store = await this.storeResolver.getStore();
+  let order = await this.prisma.order.findFirst({ where: { id, storeId: store.id }, include: { items: true } });
+  if (!order) throw new NotFoundException('Order not found');
+  if (order.status === 'cancelled') throw new BadRequestException('لا تُصدر فاتورة لطلب ملغى.');
+>> No invoice for a cancelled order.
+
+  if (!order.invoiceNumber) {
+>> Only numbered the FIRST time it's printed. Reprinting shows the same number.
+    const year = new Date().getFullYear();
+    order = await this.prisma.$transaction(async (tx) => {
+      const counter = await tx.storeCounter.upsert({
+        where: { storeId_key: { storeId: store.id, key: `invoice-${year}` } },
+        create: { storeId: store.id, key: `invoice-${year}`, value: 1 },
+        update: { value: { increment: 1 } },
+      });
+>> A counter row per store per year ("invoice-2026"). upsert = create it at 1 on the first invoice of the year, otherwise add 1. The database does the increment atomically, so two invoices can never get the same number. A new year starts again at 0001 automatically.
+      // Only the first caller numbers the invoice; a parallel one keeps it.
+      await tx.order.updateMany({
+        where: { id, invoiceNumber: null },
+        data: { invoiceNumber: `${year}-${String(counter.value).padStart(4, '0')}`, invoicedAt: new Date() },
+      });
+>> Writes "2026-0007" only if the order still has no number. If two tabs print at the same moment, the second one keeps the first one's number.
+      return tx.order.findUniqueOrThrow({ where: { id }, include: { items: true } });
+    });
+  }
+  const profile = await this.prisma.store.findUniqueOrThrow({
+    where: { id: store.id },
+    select: { name: true, phone: true, address: true, email: true, rc: true, nif: true, nis: true, art: true, invoiceFooter: true },
+  });
+>> The shop's legal identity (RC, NIF, NIS, ART) from Settings is printed on every invoice.
+  // …
+}
+</script></div>
+  <figure><img src="img/admin-invoice.webp" alt="" style="max-height:165mm"><figcaption>The printable invoice page (<code>/admin/invoice/:id</code>). It sits outside the admin shell so it prints cleanly on A4 or saves as PDF.</figcaption></figure>
+</section>
+
+<!-- ═════════════════════════════ 13 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 13</div>
+  <h2>Money and reports</h2>
+  <p class="lead">The money module records what comes in and goes out. The reports module turns it into the numbers a shop owner actually asks for.</p>
+  <div class="grid3">
+    <div class="card"><h4>Purchases</h4><p>Buying from a supplier adds the books to stock (<code>moveStock 'purchase'</code>) and updates each book's <code>costPrice</code>. Payments are recorded against it, so you know what you still owe. Cancelling it removes the stock again.</p></div>
+    <div class="card"><h4>Expenses</h4><p>Rent, salaries, transport, electricity… each with a category, so the report can show where the money goes.</p></div>
+    <div class="card"><h4>Frozen cost</h4><p>When a book is sold, its current <code>costPrice</code> is copied onto the order line as <code>unitCost</code>. Later purchase prices never rewrite the margin of past sales.</p></div>
+  </div>
+<div class="codebox"><div class="file"><span>src/modules/admin/reports/reports.service.ts</span><span>overview(): revenue and cost of goods per month</span></div><script type="text/plain">
+/** Orders that count as income: confirmed, shipped or delivered. */
+const SOLD = Prisma.sql`('confirmed','shipped','delivered')`;
+/** A sale's date: when it happened (imports), else when it was recorded. */
+const SALE_DATE = Prisma.sql`COALESCE(o."soldAt", o."createdAt")`;
+>> Two definitions used by every query, so all reports agree on what "a sale" is and when it happened. Pending and cancelled orders are never income.
+
+const [sales, costs, /* … 8 more */] = await Promise.all([
+>> Ten independent queries are sent to the database at the SAME time, not one after another. The report page loads in about the time of the slowest query.
+  this.prisma.$queryRaw`
+    SELECT to_char(date_trunc('month', ${SALE_DATE}), 'YYYY-MM') AS month,
+           count(*) AS orders,
+           sum(o.total) AS revenue,
+           sum(o.subtotal - o.discount) AS book_revenue,
+           sum(o."shippingCost") AS shipping
+      FROM "Order" o
+     WHERE o."storeId" = ${storeId} AND o.status::text IN ${SOLD}
+       AND ${SALE_DATE} BETWEEN ${from} AND ${to}
+     GROUP BY 1 ORDER BY 1`,
+>> Revenue per month, split into books vs. shipping. Raw SQL is used because the database can sum thousands of orders far faster than looping over them in JavaScript.
+  this.prisma.$queryRaw`
+    SELECT to_char(date_trunc('month', ${SALE_DATE}), 'YYYY-MM') AS month,
+           sum(i.quantity) AS books,
+           sum(CASE WHEN i."unitCost" IS NOT NULL THEN i.quantity * i."unitCost" ELSE 0 END) AS cogs,
+           sum(CASE WHEN i."unitCost" IS NOT NULL THEN i.quantity * i."unitPrice" ELSE 0 END) AS costed_revenue,
+           sum(i.quantity * i."unitPrice") AS line_revenue
+      FROM "OrderItem" i JOIN "Order" o ON o.id = i."orderId"
+     -- …same filters…
+>> COGS = cost of goods sold, from the frozen unitCost. "costed_revenue" counts only lines whose cost is known, so the margin % is honest: a book with no purchase price doesn't look like a 100 % profit. The report also says how much revenue has no known cost.
+  // … expenses by month and category, purchases, channels, top books, slow stock (no sale in 90 days), stock value
+]);
+</script></div>
+  <figure><img src="img/admin-reports.webp" alt=""><figcaption>Reports: revenue, cost of goods, margin, expenses and net profit per month, plus channels, top sellers and slow stock. Exportable to Excel.</figcaption></figure>
+</section>
+
+<!-- ═════════════════════════════ 14 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 14</div>
+  <h2>The Excel import wizard</h2>
+  <p class="lead">Shops arrive with years of hand-typed spreadsheets. The wizard reads them as they are: Arabic or French headers, prices like <bdi dir="ltr">«1 500 دج»</bdi>, Arabic-Indic digits, Hijri years.</p>
+  <div class="flow">
+    <div class="step"><b>1 · Analyze</b>Upload. The sheet is read, the layout detected, columns recognised by synonyms (<code>fields.ts</code>). Kept 30 min in memory.</div><div class="arrow">→</div>
+    <div class="step"><b>2 · Map</b>Admin checks which column is which. The suggested kind: catalogue, sales, purchases or expenses.</div><div class="arrow">→</div>
+    <div class="step"><b>3 · Preview</b>Row by row: new / update / duplicate / error / missing info, with the reason.</div><div class="arrow">→</div>
+    <div class="step"><b>4 · Commit</b>Chunked transactional writes. Every row tagged with <code>importJobId</code>.</div><div class="arrow">→</div>
+    <div class="step"><b>5 · Report / Undo</b>Excel report of what happened. Undo deletes what the job wrote (never books that were since ordered) and restores stock.</div>
+  </div>
+<div class="codebox"><div class="file"><span>src/modules/admin/data-import/values.ts</span><span>reading a hand-typed amount</span></div><script type="text/plain">
+export const INVALID = Symbol('invalid');
+export type Parsed<T> = T | null | typeof INVALID;
+>> Every parser answers one of three things: a clean value, null (the cell is empty, that's fine), or INVALID (something is written but unreadable). That third answer lets the preview point at the exact row and cell to fix, instead of silently guessing.
+
+export function latinDigits(s: string): string {
+  return s
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/٫/g, '.') // ٫ decimal separator
+    .replace(/٬/g, ','); // ٬ thousands separator
+>> "١٥٠٠" becomes "1500". Each Arabic-Indic digit is a fixed distance from "0" in Unicode, so subtracting 0x0660 gives the digit.
+}
+
+export function parseAmount(raw: unknown): Parsed<number> {
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : INVALID;
+  let s = latinDigits(text(raw));
+  if (!s || /^[-–—]+$/.test(s)) return null;
+>> A real number cell is used as is. A dash ("—") means "nothing" and counts as empty.
+  s = s
+    .toLowerCase()
+    .replace(/(د\.?\s?ج|دج|دينار|dzd|da|dinars?|€|eur|\$|usd)/g, '')
+    .replace(/[\s ']/g, '');
+>> Strip currency words in Arabic, French and English ("دج", "DA", "DZD", "dinars", "€") and spaces: «1 500 دج» → "1500".
+  if (!/^-?[\d.,]+$/.test(s)) return INVALID;
+
+  const lastDot = s.lastIndexOf('.');
+  const lastComma = s.lastIndexOf(',');
+  if (lastDot !== -1 && lastComma !== -1) {
+    // Both: whichever comes last is the decimal separator.
+    s = lastComma > lastDot ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+>> "1.500,50" (French) and "1,500.50" (English) both become 1500.5.
+  } else if (lastComma !== -1) {
+    s = /^-?\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, '') : s.replace(',', '.');
+>> "1,500" = thousands → 1500, but "12,5" = decimal → 12.5.
+  } else if (lastDot !== -1) {
+    // "1.500" / "1.500.000" is how prices are written in Algeria (French usage).
+    if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+>> A local detail that matters: in Algeria "1.500" means one thousand five hundred dinars, not one and a half.
+  }
+  const n = Number(s);
+  return Number.isFinite(n) ? n : INVALID;
+}
+</script></div>
+  <p class="small muted">Also handled: <code>parseYear</code> turns <bdi dir="ltr">"1420هـ"</bdi> (or a bare 13xx/14xx year) into a note instead of a wrong Gregorian year. <code>parseNames</code> splits <bdi>"ابن تيمية، ابن القيم"</bdi> into two authors. Dates, payment methods and expense categories are recognised in three languages. Duplicates are found in memory on title + main author, and author/publisher names are resolved in bulk, which is why 5,000 rows import in seconds.</p>
+</section>
+
+<!-- ═════════════════════════════ 15 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 15</div>
+  <h2>Cover pictures</h2>
+  <p class="lead">A phone photo is about 1 MB and 3000+ px wide, but a book card shows it about 200 px wide. Each cover is processed once, at upload, so every visitor gets a light, fast image.</p>
+<div class="codebox"><div class="file"><span>src/common/utils/cover-image.ts</span><span>processCover()</span></div><script type="text/plain">
+const FULL_MAX_PX = 2000;
+const THUMB_WIDTH = 480;
+/** Refuse decompression bombs (a tiny file that expands to gigapixels). */
+const MAX_INPUT_PIXELS = 60_000_000;
+>> Three dials: the big picture is capped at 2000 px (still sharp full-screen), cards use a 480 px thumbnail, and any image over 60 megapixels is refused. A 50 KB file can claim to be 100,000 × 100,000 px and would crash the server's memory.
+
+export async function processCover(input: Buffer): Promise<ProcessedCover> {
+  const base = sharp(input, { limitInputPixels: MAX_INPUT_PIXELS, failOn: 'error' }).rotate();
+>> .rotate() with no angle reads the phone's EXIF "orientation" tag and turns the pixels upright, so sideways photos are fixed. sharp drops all metadata on output by default, including the GPS location phones embed (your home or shop address).
+
+  const { data: full, info } = await base
+    .clone()
+    .resize({ width: FULL_MAX_PX, height: FULL_MAX_PX, fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 85, mozjpeg: true })
+    .toBuffer({ resolveWithObject: true });
+>> The full version: fit inside 2000 × 2000, never enlarge a small picture, encoded with mozjpeg (about 20–30 % smaller than a standard JPEG at the same quality).
+
+  const thumb = await base
+    .clone()
+    .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
+    .jpeg({ quality: 74, mozjpeg: true })
+    .toBuffer();
+>> The thumbnail, stored next to it in R2 as "<name>.thumb.jpg". The API returns its address as thumbUrl. Clients show it and fall back to the full picture if it's missing.
+
+  return { full, thumb, width: info.width, height: info.height };
+}
+</script></div>
+  <div class="grid2">
+    <div class="card"><h4>Where pictures come from</h4><ul><li>Admin upload / mobile Quick-Add camera → <code>POST admin/uploads/cover</code></li><li>The real file type is decided by its first bytes ("magic bytes"): JPG, PNG or WEBP only</li><li><code>image-sync/</code> matches a folder of phone photos to books by file name + OCR</li><li><code>images/fill</code> looks up missing covers online</li></ul></div>
+    <div class="card"><h4>Result</h4><ul><li>Storefront pages load about <b>20× less image data</b></li><li>No GPS or private metadata ever published</li><li>R2 has no egress fees, so serving covers stays nearly free</li><li><code>scripts/backfill-thumbnails.ts</code> created thumbnails for older covers (safe to re-run)</li></ul></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════ 16 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 16</div>
+  <h2>Packs (plans)</h2>
+  <p class="lead">The platform is sold in three packs. One decorator locks a feature on the server, and one component locks it in the admin.</p>
+<div class="codebox"><div class="file"><span>src/common/plan/plans.ts</span><span>what each pack unlocks</span></div><script type="text/plain">
+export const FEATURES = ['money', 'invoices', 'reports', 'socialExport', 'historyImport', 'academic'] as const;
+>> "as const" turns the list into a TypeScript type. Misspelling a feature name anywhere is a compile error, not a silent bug.
+
+export const PLANS: Record<PlanKey, PlanDef> = {
+  starter: {
+    label: 'أساسي',
+    features: [],
+    limits: { books: 1000, importsPerMonth: 1 },
+  },
+  pro: {
+    label: 'مكتبة',
+    features: ['money', 'invoices', 'reports', 'socialExport', 'academic'],
+    limits: { books: 10_000, importsPerMonth: null },
+  },
+  business: {
+    label: 'مؤسسة',
+    features: [...FEATURES],
+    limits: { books: null, importsPerMonth: null },
+  },
+};
+>> The whole commercial offer in one object. null = unlimited. Core selling (storefront, orders, books, stock, apps, catalogue export) is in EVERY pack, on purpose: a shop must always be able to leave with its data.
+
+export function cheapestWith(feature: Feature): PlanKey {
+  return PLAN_KEYS.find((k) => PLANS[k].features.includes(feature)) ?? 'business';
+}
+>> For the upgrade message: "available from the «مكتبة» pack".
+</script></div>
+<div class="codebox"><div class="file"><span>src/common/plan/requires-feature.ts</span><span>locking a route</span></div><script type="text/plain">
+async canActivate(ctx: ExecutionContext): Promise<boolean> {
+  const feature = this.reflector.getAllAndOverride<Feature | undefined>(FEATURE_KEY, [ctx.getHandler(), ctx.getClass()]);
+  if (!feature) return true;
+>> Read the @RequiresFeature('reports') label from the route (or its controller). No label → nothing to check.
+  const plan = planOf(await this.stores.getPlan());
+  if (plan.features.includes(feature)) return true;
+  const needed = cheapestWith(feature);
+  throw new PlanRequiredException(
+    `«${FEATURE_LABELS[feature]}» غير متوفرة في باقة «${plan.label}». متوفرة ابتداءً من باقة «${PLANS[needed].label}».`,
+    { feature, plan: plan.key, requiredPlan: needed },
+  );
+>> Not in the pack → HTTP 402 "Payment Required", with an Arabic message the admin shows as-is, plus machine-readable fields for the apps.
+}
+
+export function RequiresFeature(feature: Feature) {
+  return applyDecorators(SetMetadata(FEATURE_KEY, feature), UseGuards(FeatureGuard));
+}
+>> Usage on a controller: @RequiresFeature('money') ABOVE @UseGuards(AdminAuthGuard). Decorators apply bottom-up, so authentication runs first and a stranger gets 401, never a hint about your pack.
+</script></div>
+<div class="codebox"><div class="file"><span>admin/src/components/admin/plan-gate.tsx</span><span>the same lock in the interface</span></div><script type="text/plain">
+export function useFeature(feature: Feature): boolean {
+  const { data } = usePlan();
+  return data ? data.features[feature] : true;
+}
+>> Returns "allowed" while the pack is still loading, so menu items don't flash a lock on first paint.
+
+export function FeatureGate({ feature, children }: { feature: Feature; children: ReactNode }) {
+  const { data, isLoading } = usePlan();
+  if (isLoading || !data) return <TableSkeleton rows={4} cols={3} />;
+  if (data.features[feature]) return <>{children}</>;
+  return <UpgradeCard feature={feature} plan={data} />;
+}
+>> Wrap a page in <FeatureGate feature="reports">…</FeatureGate>. Inside the pack you see the page; outside it you see a friendly card explaining what the feature does (in Arabic) and which pack includes it. The server check above is the real lock; this one is for a good experience.
+</script></div>
+</section>
+
+<!-- ═════════════════════════════ 17 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part II · Chapter 17</div>
+  <h2>Arabic search</h2>
+  <p class="lead">Customers type <span class="ar">احمد</span> for <span class="ar">أحمد</span>, and <span class="ar">مكتبه</span> for <span class="ar">مكتبة</span>. Search has to forgive those variants.</p>
+<div class="codebox"><div class="file"><span>src/common/utils/normalize-arabic.ts</span><span>normalizeArabic()</span></div><script type="text/plain">
+export function normalizeArabic(text: string): string {
+  return text
+    .toLowerCase()
+>> Latin letters in titles ("SILA", "Python") match whatever case is typed.
+    .replace(/[ً-ٰٟ]/g, '')
+>> Remove the tashkeel (fatha, damma, kasra, shadda, sukun, tanween…) and the dagger alif. "الْكِتَاب" → "الكتاب".
+    .replace(/[أإآ]/g, 'ا')
+>> All forms of alif with hamza or madda → plain alif: أحمد = احمد.
+    .replace(/ة/g, 'ه')
+>> Taa marbuta ↔ haa: مكتبة = مكتبه.
+    .replace(/ى/g, 'ي')
+>> Alif maqsura ↔ yaa: مصطفى = مصطفي.
+    .replace(/\s+/g, ' ')
+    .trim();
+>> Collapse repeated spaces.
+}
+</script></div>
+  <p>The same function runs on both sides. When a book is saved, its normalised title goes into <code>Book.titleNormalized</code>. When a customer searches, the query is normalised the same way, then matched with <code>contains</code> (case-insensitive) against that column, along with authors and publishers. So both sides are always compared in the same "flattened" spelling. <code>scripts/perf/explain.ts</code> shows the database plan for this query.</p>
+  <div class="phones" style="margin-top:4mm">
+    <figure><img src="img/store-search-m.webp" alt=""><figcaption>Search on a phone</figcaption></figure>
+    <figure><img src="img/store-order-m.webp" alt=""><figcaption>Order form</figcaption></figure>
+    <figure><img src="img/store-request-m.webp" alt=""><figcaption>"Request a book"</figcaption></figure>
+  </div>
+</section>
+
+<!-- ═════════════════════════════ 18 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part III · Chapter 18</div>
+  <h2>The storefront</h2>
+  <p class="lead"><code>frontend/</code>: what customers see. It's built for speed on a mid-range phone with a weak 4G signal.</p>
+  <div class="shots">
+    <figure><img src="img/store-home.webp" alt=""><figcaption>Home: search hero + blocks in the order the admin set</figcaption></figure>
+    <figure><img src="img/store-book.webp" alt=""><figcaption>Book page: gallery, details, order / ask on WhatsApp</figcaption></figure>
+  </div>
+  <table style="margin-top:4mm">
+    <thead><tr><th style="width:26%">Page</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>home.tsx</code></td><td>Fixed search hero, then the blocks from <code>GET /home-sections</code>: categories, latest, popular, request form, and hand-picked shelves.</td></tr>
+      <tr><td><code>search.tsx</code></td><td>Instant results by title, author and publisher, with Arabic normalisation.</td></tr>
+      <tr><td><code>book.tsx</code></td><td>Full book: gallery, description, extra info, stock status, order and request dialogs.</td></tr>
+      <tr><td><code>collection.tsx</code></td><td>A shelf's «عرض الكل» (see all) page.</td></tr>
+      <tr><td><code>academic/*</code></td><td>Field → year → subject → books (full edition only).</td></tr>
+    </tbody>
+  </table>
+  <h3>Why it's fast</h3>
+  <ul class="why">
+    <li><b>Slim list responses:</b> lists return only what a card needs (<code>bookCardInclude</code>). Home asks for 16 books, not the whole catalogue.</li>
+    <li><b>Thumbnails</b> on cards (chapter 15).</li>
+    <li><b>Hashed files cached for a year:</b> the browser re-downloads only what changed after a deploy.</li>
+    <li><b>Heavy code loads on demand</b>, as shown below.</li>
+  </ul>
+<div class="codebox"><div class="file"><span>frontend/src/components/lazy-dialogs.tsx</span><span>loading the order dialog only when needed</span></div><script type="text/plain">
+const loadRequest = () => import("@/components/request-dialog");
+const loadOrder = () => import("@/components/order-modal");
+const RequestImpl = lazy(loadRequest);
+const OrderImpl = lazy(loadOrder);
+>> import() inside a function = "download this file later". Vite splits the dialogs (and their dialog library, the heaviest part of the storefront) into separate small files that the first page load skips.
+
+function useLazyTrigger(trigger: ReactElement, preload: () => Promise<unknown>) {
+  const [active, setActive] = useState(false);
+  const open = () => setActive(true);
+  const warm = () => void preload().catch(() => undefined);
+  const element = cloneElement(trigger, {
+    role: "button",
+    tabIndex: 0,
+    "aria-haspopup": "dialog",
+    onClick: open,
+    onPointerEnter: warm,
+    onTouchStart: warm,
+    onFocus: warm,
+>> The trick: the code starts downloading the moment a finger TOUCHES the button (or the mouse hovers it), a fraction of a second before the click. By the time the tap completes, the dialog is usually ready, so it feels instant without slowing the first page load. role/tabIndex/aria keep it usable with a keyboard and screen readers.
+    // …
+  });
+}
+</script></div>
+  <div class="note"><b>Rule:</b> always import the order and request dialogs from <code>components/lazy-dialogs.tsx</code>, never directly. A direct import would pull the heavy code back into the first page load.</div>
+</section>
+
+<!-- ═════════════════════════════ 19 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part III · Chapter 19</div>
+  <h2>The admin dashboard</h2>
+  <p class="lead"><code>admin/</code>: a separate Vite app served under <code>/admin/</code>. It's deployed on its own, so customers never download back-office code.</p>
+  <div class="shots">
+    <figure><img src="img/admin-overview.webp" alt=""><figcaption>Overview: today's numbers and what needs attention</figcaption></figure>
+    <figure><img src="img/admin-orders.webp" alt=""><figcaption>Orders: one register for every channel</figcaption></figure>
+    <figure><img src="img/admin-sales-counter.webp" alt=""><figcaption>Counter sales (POS)</figcaption></figure>
+    <figure><img src="img/admin-books.webp" alt=""><figcaption>Books, with "missing price / cover / stock" filters</figcaption></figure>
+    <figure><img src="img/admin-purchases.webp" alt=""><figcaption>Purchases from suppliers</figcaption></figure>
+    <figure><img src="img/admin-import-kind.webp" alt=""><figcaption>Excel wizard: choosing what the sheet contains</figcaption></figure>
+  </div>
+</section>
+
+<section style="break-before: page">
+  <h3 style="margin-top:0">Every admin screen</h3>
+  <table>
+    <thead><tr><th style="width:22%">Screen</th><th>Purpose</th><th style="width:15%">Pack</th></tr></thead>
+    <tbody>
+      <tr><td>overview</td><td>Key numbers, recent orders, alerts</td><td><span class="pill grey">all</span></td></tr>
+      <tr><td>orders / order-detail</td><td>Status workflow, edit lines, discount, print invoice, return</td><td><span class="pill grey">all</span></td></tr>
+      <tr><td>requests</td><td>Customer leads → convert to an order, or delete spam</td><td><span class="pill grey">all</span></td></tr>
+      <tr><td>sales</td><td>Counter POS + the register of all sales</td><td><span class="pill grey">all</span></td></tr>
+      <tr><td>books / quick-add</td><td>Catalogue CRUD, gallery; fast entry on a phone</td><td><span class="pill grey">all</span></td></tr>
+      <tr><td>catalog</td><td>Authors, publishers, categories (with book counts)</td><td><span class="pill grey">all</span></td></tr>
+      <tr><td>inventory</td><td>Stock counts, statuses, movement history per book</td><td><span class="pill grey">all</span></td></tr>
+      <tr><td>storefront</td><td>Arrange the home page: reorder, rename, hide blocks; build shelves</td><td><span class="pill grey">all</span></td></tr>
+      <tr><td>data</td><td>Import wizard, history + undo, exports, data-quality report</td><td><span class="pill grey">all</span> <span class="pill gold">history: Business</span></td></tr>
+      <tr><td>purchases / expenses</td><td>Suppliers, stock in, payments, balance; shop expenses</td><td><span class="pill">Pro+</span></td></tr>
+      <tr><td>invoice</td><td>Printable numbered invoice</td><td><span class="pill">Pro+</span></td></tr>
+      <tr><td>reports</td><td>Profit and loss, margins, top and slow books, Excel export</td><td><span class="pill">Pro+</span></td></tr>
+      <tr><td>social-content</td><td>Pick books → ZIP of covers + captions for Instagram/Facebook/TikTok</td><td><span class="pill">Pro+</span></td></tr>
+      <tr><td>academic</td><td>Fields, years, subjects (full edition)</td><td><span class="pill">Pro+</span></td></tr>
+      <tr><td>settings</td><td>Store identity for invoices; current pack</td><td><span class="pill grey">all</span></td></tr>
+    </tbody>
+  </table>
+<div class="codebox"><div class="file"><span>admin/src/lib/auth.ts</span><span>keeping the admin logged in</span></div><script type="text/plain">
+const TOKEN_KEY = "bayan-admin-token";
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
+>> After login, the 30-day JWT is kept in the browser's localStorage.
+
+export function attachAuth(instance: AxiosInstance) {
+  instance.interceptors.request.use((config) => {
+    const token = getToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+>> An "interceptor" runs on EVERY request the admin makes. No page has to remember to add the token; it is added here, once.
+  instance.interceptors.response.use(
+    (res) => res,
+    (err) => {
+      if (err?.response?.status === 401) redirectToLogin();
+      return Promise.reject(err);
+    },
+  );
+>> And on every response: if the server says 401 (token expired or invalid), clear it and go to /admin/login. A full page reload also clears any cached data.
+}
+</script></div>
+  <p class="small muted">Every admin page is <code>React.lazy</code> in <code>App.tsx</code>, so opening "Orders" doesn't download the code of "Reports". Data comes through TanStack Query hooks, which cache results and refresh them in the background. After a change, the related queries are refreshed, so lists update without a reload.</p>
+</section>
+
+<!-- ═════════════════════════════ 20 / 21 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part III · Chapters 20–21</div>
+  <h2>The mobile apps, and editions</h2>
+  <h3 style="margin-top:2mm">20. The mobile apps (Flutter)</h3>
+  <p>They live in a separate repository (<code>BookStoreMobile</code>) and are the native twins of the two web apps. They use the same palette, fonts, logo and Arabic RTL layout, and they call this same API over HTTP. The backend doesn't care which app is calling.</p>
+  <div class="grid2">
+    <div class="card"><h4>store_app</h4><p>Browse, search, book page, order and request. Uses <code>GET /books</code> without <code>limit</code> to load the catalogue.</p></div>
+    <div class="card"><h4>admin_app</h4><p>JWT login, the orders and requests workflow, and <b>Quick-Add</b>: camera → cover uploaded to R2 → title + category → "save &amp; scan next".</p></div>
+  </div>
+  <div class="phones"><figure><img src="img/admin-quickadd-m.webp" alt=""><figcaption>Quick-Add on a phone</figcaption></figure></div>
+  <div class="note gold"><b>Porting rule:</b> a UI change on the web isn't automatic on mobile; it must be ported by hand. Pending ports are listed in the roadmap.</div>
+
+  <h3>21. Editions: one codebase, two products</h3>
+  <p>The same code builds two products. <b>basic</b> is the build for مكتبة البيان. <b>full</b> is the complete platform you sell to other stores. Hidden features stay in the code and the database; only the menus and pages are switched off.</p>
+<div class="codebox"><div class="file"><span>frontend/src/lib/features.ts</span><span>the edition switch</span></div><script type="text/plain">
+const EDITION = (import.meta.env.VITE_EDITION as string | undefined) ?? "basic";
+>> Vite replaces import.meta.env.VITE_EDITION with a fixed value when the app is BUILT (set in render.yaml). It is a build-time setting, not something a visitor can change.
+
+export const features = {
+  academic: EDITION === "full",
+};
+>> Pages ask "features.academic ?" before showing the academic nav link and home block. /academic/* routes redirect home in basic. The admin has its own copy (admin/src/lib/features.ts), and the Flutter apps use --dart-define=EDITION=full.
+</script></div>
+  <div class="note"><b>Editions vs. packs:</b> an <i>edition</i> is decided when the app is built: which product it is. A <i>pack</i> is decided per store at run time: what that customer paid for. Both exist so one codebase can be sold in different shapes.</div>
+</section>
+
+<!-- ═════════════════════════════ 22 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part IV · Chapter 22</div>
+  <h2>Deployment and operations</h2>
+  <p class="lead"><code>render.yaml</code> describes all three services. Pushing to <code>master</code> redeploys them.</p>
+  <table>
+    <thead><tr><th style="width:24%">Service</th><th>How it runs</th></tr></thead>
+    <tbody>
+      <tr><td>bookstore-api</td><td>Docker (Node 22). Two-stage build: compile, then copy only runtime packages. Runs <code>prisma migrate deploy</code> on boot. Health check <code>/api/v1/health</code>.</td></tr>
+      <tr><td>bookstore-storefront</td><td>Static site from <code>frontend/dist</code>. Hashed assets cached for a year.</td></tr>
+      <tr><td>bookstore-admin</td><td>Static site from <code>admin/dist</code>, base <code>/admin/</code>.</td></tr>
+      <tr><td>Database</td><td>Neon PostgreSQL: a pooled URL for the app, a direct URL for migrations.</td></tr>
+      <tr><td>Secrets</td><td>Entered once in the Render dashboard (<code>sync: false</code>). <code>JWT_SECRET</code> is generated by Render and never shown.</td></tr>
+    </tbody>
+  </table>
+<div class="codebox"><div class="file"><span>src/common/keep-alive.ts</span><span>staying awake on the free plan</span></div><script type="text/plain">
+export function keepAwake(): void {
+  const base = process.env.RENDER_EXTERNAL_URL?.replace(/\/$/, '');
+  if (!base || process.env.KEEP_AWAKE === 'false') return;
+>> Only runs on Render (which sets RENDER_EXTERNAL_URL). It does nothing on your Mac. Set KEEP_AWAKE=false once you move to a paid plan.
+  const url = `${base}/api/v1/health`;
+  const log = new Logger('KeepAwake');
+  const ping = () =>
+    fetch(url, { signal: AbortSignal.timeout(30_000) }).catch((e: Error) => log.warn(`ping failed: ${e.message}`));
+  setInterval(ping, 10 * 60_000).unref();
+>> Render's free plan sleeps after 15 minutes without traffic, and the next customer then waits about 30 s. Calling its own public URL every 10 minutes counts as traffic, so it never sleeps. One always-on service uses about 744 of the 750 free hours a month. .unref() means the timer never keeps the process alive during shutdown.
+  log.log(`pinging ${url} every 10 min`);
+}
+</script></div>
+  <h3>Useful scripts</h3>
+  <table>
+    <thead><tr><th style="width:34%">Script</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td><code>scripts/setup-store.ts</code></td><td>Set the store's name, slug and identity</td></tr>
+      <tr><td><code>scripts/set-plan.ts</code></td><td>Change a store's pack (starter / pro / business)</td></tr>
+      <tr><td><code>scripts/backfill-thumbnails.ts</code></td><td>Create missing 480 px thumbnails (safe to re-run)</td></tr>
+      <tr><td><code>scripts/migrate-covers-to-r2.ts</code></td><td>Move old local covers into R2</td></tr>
+      <tr><td><code>scripts/perf/*</code></td><td>Seed a throwaway N-book store, benchmark endpoints, explain search. Local only.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═════════════════════════════ 23 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part IV · Chapter 23</div>
+  <h2>Testing and quality</h2>
+  <p class="lead">The riskiest logic (money, stock statuses, parsing user files) is written as <b>pure functions</b>, with no database and no framework, so it can be tested in milliseconds.</p>
+  <table>
+    <thead><tr><th style="width:42%">Test file</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr><td><code>orders/order-rules.spec.ts</code></td><td>Allowed and refused status moves; totals, discount clamping, rounding</td></tr>
+      <tr><td><code>reports/money-logic.spec.ts</code></td><td>Margins, COGS, purchase balances</td></tr>
+      <tr><td><code>data-import/data-import.spec.ts</code></td><td>Header recognition, <bdi dir="ltr">«1 500 دج»</bdi>, "1.500,00", Hijri years, name splitting</td></tr>
+      <tr><td><code>utils/normalize-arabic.spec.ts</code></td><td>Alif/hamza, taa marbuta, tashkeel</td></tr>
+      <tr><td><code>utils/cover-image.spec.ts</code></td><td>Resize, thumbnail naming, thumbUrl rules</td></tr>
+      <tr><td><code>utils/export-safety.spec.ts</code></td><td>Excel formula injection is neutralised</td></tr>
+    </tbody>
+  </table>
+  <p><b>Status today:</b> 6 suites and 151 tests, all passing. The TypeScript build is clean. <code>npm audit</code> reports 0 known vulnerabilities on the API after the November 2026 patch (body-parser, multer, qs).</p>
+  <h3>Commands</h3>
+<div class="codebox"><div class="file"><span>terminal</span><span>day-to-day</span></div><script type="text/plain">
+npm run start:dev                  # API on :3000, restarts on save
+cd frontend && npm run dev         # storefront on :5173
+cd admin && npm run dev            # admin on :5175/admin/
+npx jest                           # run all unit tests
+npm run build                      # type-check + compile the API
+npx prisma migrate dev --name x    # create a migration after editing schema.prisma
+npm audit --omit=dev               # check runtime packages for known vulnerabilities
+</script></div>
+</section>
+
+<!-- ═════════════════════════════ 24 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part V · Chapter 24</div>
+  <h2>What makes this platform good</h2>
+  <p class="lead">These are the principles that show up again and again in the code, and the reason a small shop can trust it with its money.</p>
+  <div class="grid2">
+    <div class="card"><h4>1. One source of truth per fact</h4><p>Stock changes only through <code>moveStock()</code>. Money is computed only in <code>computeOrderTotals()</code>. A sale is defined once (<code>SOLD</code>, <code>SALE_DATE</code>). Numbers can't drift apart between screens.</p></div>
+    <div class="card"><h4>2. All-or-nothing writes</h4><p>A sale, its stock move and its log are one transaction. A crash halfway leaves nothing half-done.</p></div>
+    <div class="card"><h4>3. Safe under double clicks</h4><p>Conditional updates (<code>where: { status: old }</code>, <code>invoiceNumber: null</code>) and atomic SQL mean two clicks or two cashiers never sell or number twice.</p></div>
+    <div class="card"><h4>4. History is frozen</h4><p>Orders copy the customer, prices and unit cost. Changing a price today never rewrites last year's invoices or margins.</p></div>
+    <div class="card"><h4>5. Everything is traceable and undoable</h4><p>Every stock change has a reason and a link. Every import is tagged and can be undone. A return is a normal, logged status change.</p></div>
+    <div class="card"><h4>6. Built for the real local shop</h4><p>Arabic-first RTL, Algerian number formats, 69 wilayas, WhatsApp ordering, legal IDs on invoices, Hijri years, French/Arabic Excel headers.</p></div>
+    <div class="card"><h4>7. Fast on cheap phones and cheap servers</h4><p>Thumbnails, slim list responses, one SQL query per read, caches, code split on demand, year-long asset caching, a free plan that never sleeps.</p></div>
+    <div class="card"><h4>8. Secure by default</h4><p>Fails closed, filters by store everywhere, hides cost prices, rate-limits, blocks SSRF and formula injection, strips GPS from photos.</p></div>
+    <div class="card"><h4>9. Your data stays yours</h4><p>Catalogue and orders export to Excel in every pack. Leaving the platform is never a trap, and that's a selling point.</p></div>
+    <div class="card"><h4>10. One codebase, many products</h4><p>Editions (build time) and packs (per store) let the same code serve مكتبة البيان and be sold to other shops.</p></div>
+    <div class="card"><h4>11. Readable on purpose</h4><p>The same module shape everywhere. Comments explain <i>why</i>, not <i>what</i>. Pure rule files with tests. Files are small and named for what they do.</p></div>
+    <div class="card"><h4>12. Cheap to run</h4><p>Render free tier, Neon, R2 with no egress fees. The whole platform can run for almost nothing until sales justify more.</p></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════ 25 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Part V · Chapter 25</div>
+  <h2>Roadmap</h2>
+  <p class="lead">Where the platform has been, where it stands in November 2026, and the next steps in the order they make sense.</p>
+  <div class="road">
+    <div class="stop done"><h4>Foundation <span class="pill">shipped</span></h4><p>Catalogue, academic tree, storefront, requests via WhatsApp, admin dashboard, JWT auth, R2 covers, mobile apps, production hardening (rate limits, tenancy, helmet), social export.</p></div>
+    <div class="stop done"><h4>Phase 1: Smart import and export <span class="pill">shipped</span></h4><p>Excel wizard (analyze → preview → commit → report → undo), exports, data-quality report.</p></div>
+    <div class="stop done"><h4>Phase 2: Money <span class="pill">shipped</span></h4><p>Suppliers, purchases, payments, expenses, counter POS, one sales register, numbered invoices, returns.</p></div>
+    <div class="stop done"><h4>Phase 3: Reports <span class="pill">shipped</span></h4><p>Profit and loss per month, COGS from frozen costs, margins, top and slow books, stock value, Excel export.</p></div>
+    <div class="stop done"><h4>Phase 4: Packs <span class="pill">shipped</span></h4><p>Starter / Pro / Business, server and UI gating, limits. Then: admin-arranged home page and hand-picked shelves, deleting requests, and the security patch (Nov 2026).</p></div>
+    <div class="stop now"><h4>Now: small housekeeping <span class="pill gold">next</span></h4><ul><li>Merge <code>master</code> into <code>develop</code> so both branches match again.</li><li>Move the <code>shadcn</code> CLI to <code>devDependencies</code> in <code>admin/</code> and <code>frontend/</code> (clears most build-tool audit warnings).</li><li>Commit the <code>facebook/</code> brand images; add <code>.DS_Store</code> to <code>.gitignore</code>.</li></ul></div>
+    <div class="stop"><h4>Next: mobile catch-up <span class="pill grey">planned</span></h4><ul><li><code>store_app</code>: render the hand-picked shelves from <code>/home-sections</code>.</li><li><code>admin_app</code>: money (purchases, expenses), reports, pack gating, deleting requests.</li></ul></div>
+    <div class="stop"><h4>Then: ready for many stores <span class="pill grey">planned</span></h4><ul><li><b>Per-user accounts</b> (owner, cashier…) instead of the shared <code>ADMIN_PASSWORD</code>, with roles and who-did-what in the logs.</li><li><b>Platform-owner console:</b> create stores, set packs, see usage, without running scripts.</li><li>Then several stores per deployment, using the <code>storeId</code> already on every row.</li></ul></div>
+    <div class="stop"><h4>Later: platform upkeep <span class="pill grey">when quiet</span></h4><ul><li>Prisma 5 → 7, NestJS 11 → 12, TypeScript 7: one planned upgrade week, with the test suite as the safety net.</li><li>Paid Render plan once revenue allows (then set <code>KEEP_AWAKE=false</code>).</li><li>Error tracking (the exception filter is already Sentry-ready).</li></ul></div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════ 26 ═════════════════════════════ -->
+<section class="chapter">
+  <div class="num">Chapter 26</div>
+  <h2>Glossary</h2>
+  <table>
+    <thead><tr><th style="width:24%">Term</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>API</td><td>The server program the apps talk to. It receives requests, applies rules, reads and writes the database, and answers in JSON.</td></tr>
+      <tr><td>Endpoint / route</td><td>One address of the API, e.g. <code>GET /api/v1/admin/orders</code>.</td></tr>
+      <tr><td>Module / controller / service</td><td>NestJS building blocks: a feature folder, its URL handlers, and its logic.</td></tr>
+      <tr><td>DTO</td><td>"Data transfer object": a class describing what a request body must look like. Used for validation.</td></tr>
+      <tr><td>Guard</td><td>Code that runs before a route and decides whether the request may continue (login, pack).</td></tr>
+      <tr><td>Decorator</td><td>The <code>@Something()</code> labels on classes and methods that attach behaviour (routes, guards, validation).</td></tr>
+      <tr><td>ORM / Prisma</td><td>The library that turns typed TypeScript calls into SQL and keeps the schema in versioned migrations.</td></tr>
+      <tr><td>Migration</td><td>A saved SQL change to the database structure, applied in order on every environment.</td></tr>
+      <tr><td>Transaction</td><td>A group of database writes that all succeed or are all cancelled together.</td></tr>
+      <tr><td>Atomic</td><td>Happens as one indivisible step; nobody can see or interfere with a half-done state.</td></tr>
+      <tr><td>JWT</td><td>"JSON Web Token": a signed pass the server gives at login and checks on every admin request.</td></tr>
+      <tr><td>CORS</td><td>Browser rule deciding which websites may call the API.</td></tr>
+      <tr><td>Rate limit</td><td>A maximum number of requests per minute per visitor.</td></tr>
+      <tr><td>SSRF</td><td>"Server-side request forgery": tricking a server into fetching an internal address for an attacker.</td></tr>
+      <tr><td>COGS</td><td>Cost of goods sold: what the sold books cost you to buy.</td></tr>
+      <tr><td>Tenancy / storeId</td><td>Keeping each store's data separate in a shared database.</td></tr>
+      <tr><td>Thumbnail</td><td>A small version of a picture for lists and cards.</td></tr>
+      <tr><td>Bundle / code splitting</td><td>The JavaScript files a browser downloads; splitting means downloading parts only when needed.</td></tr>
+      <tr><td>TanStack Query</td><td>Front-end library that fetches, caches and refreshes server data for the pages.</td></tr>
+      <tr><td>Edition / pack</td><td>Edition = which product the app was built as (basic/full). Pack = what a given store pays for.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<script>
+// Turns each <script type="text/plain"> code sample into a highlighted block.
+// Lines starting with ">>" become the gold explanatory notes.
+(function () {
+  const KW = /\b(const|let|var|async|await|function|return|if|else|for|of|in|export|import|from|new|throw|class|type|interface|private|readonly|true|false|null|undefined|try|catch|continue|model|SELECT|FROM|WHERE|AND|JOIN|GROUP|BY|ORDER|UPDATE|SET|CASE|WHEN|THEN|ELSE|END|RETURNING|IS|NOT|NULL|IN|AS|ON|BETWEEN|sum|count)\b/;
+  const esc0 = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // Arabic inside English (or code) is isolated so the bidi algorithm keeps each run in order.
+  const AR = /[«\u0600-\u06FF](?:[\u0600-\u06FF«»\s\d.,:،؛ـ-]*[\u0600-\u06FF»])?/g;
+  // In code, Arabic runs keep the left-to-right order of the code around them, as in an editor.
+  // Arabic-Indic digits get a left-to-right mark each, so a range like [٠-٩] is not shown reversed.
+  const esc = (s) => esc0(s).replace(AR, (m) => '<bdi class="ar ltr">' + m.replace(/[٠-٩۰-۹]/g, "$&\u200E") + "</bdi>\u200E");
+  // In notes, a run with digits (an amount like «1 500 دج») also reads left to right; words read right to left.
+  const escNote = (s) => esc0(s).replace(AR, (m) => '<bdi class="ar' + (/\d/.test(m) ? " ltr" : "") + '">' + m + "</bdi>");
+  function highlightCode(code) {
+    const re = /('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`[^`]*`)|\b(\d[\d_]*(?:\.\d+)?)\b|(\b[A-Za-z_]+\b)/g;
+    let out = "", last = 0, m;
+    while ((m = re.exec(code))) {
+      out += esc(code.slice(last, m.index));
+      if (m[1]) out += '<span class="tok-s">' + esc(m[1]) + "</span>";
+      else if (m[2]) out += '<span class="tok-n">' + esc(m[2]) + "</span>";
+      else if (KW.test(m[3]) && m[3].match(KW)[0] === m[3]) out += '<span class="tok-k">' + esc(m[3]) + "</span>";
+      else out += esc(m[3]);
+      last = re.lastIndex;
+    }
+    return out + esc(code.slice(last));
+  }
+  function commentStart(line) {
+    let q = null;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) { if (c === "\\") i++; else if (c === q) q = null; continue; }
+      if (c === "'" || c === '"' || c === "`") { q = c; continue; }
+      if (c === "/" && line[i + 1] === "/" && line[i - 1] !== ":") return i;
+      if (c === "#" && /^\s*$/.test(line.slice(0, i)) === false && line[i - 1] === " " && line.includes("  #")) return i;
+      if (c === "-" && line[i + 1] === "-" && line[i + 2] === " ") return i;
+    }
+    return -1;
+  }
+  document.querySelectorAll('script[type="text/plain"]').forEach((s) => {
+    const lines = s.textContent.replace(/^\n+|\s+$/g, "").split("\n");
+    const pre = document.createElement("pre");
+    let inBlock = false, html = "";
+    for (const raw of lines) {
+      const t = raw.trim();
+      if (t.startsWith(">>")) { html += '<span class="ann">' + escNote(t.slice(2).trim()) + "</span>"; continue; }
+      if (!inBlock && t.startsWith("/*")) inBlock = true;
+      if (inBlock || t.startsWith("///") || t.startsWith("* ")) {
+        html += '<span class="ln"><span class="tok-c">' + esc(raw) + "</span></span>";
+        if (t.endsWith("*/")) inBlock = false;
+        continue;
+      }
+      const ci = commentStart(raw);
+      const code = ci === -1 ? raw : raw.slice(0, ci);
+      const com = ci === -1 ? "" : raw.slice(ci);
+      html += '<span class="ln">' + highlightCode(code) + (com ? '<span class="tok-c">' + esc(com) + "</span>" : "") + "</span>";
+    }
+    pre.innerHTML = html;
+    s.replaceWith(pre);
+  });
+})();
+</script>
+</body>
+</html>
