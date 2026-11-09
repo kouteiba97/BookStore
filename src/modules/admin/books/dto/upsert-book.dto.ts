@@ -161,4 +161,10 @@ export class UpsertBookDto {
   @IsArray()
   @IsString({ each: true })
   subjectIds?: string[];
+
+  /// On create only: also put the new book at the end of this storefront
+  /// shelf (HomeSection of kind "books"), e.g. «جديد معرض الكتاب SILA».
+  @IsOptional()
+  @IsString()
+  homeSectionId?: string | null;
 }

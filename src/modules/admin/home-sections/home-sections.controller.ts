@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards } fro
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
 import { AdminHomeSectionsService } from './home-sections.service';
 import {
+  AddRecentBooksDto,
   CreateHomeSectionDto,
   ReorderHomeSectionsDto,
   SetShelfBooksDto,
@@ -37,6 +38,12 @@ export class AdminHomeSectionsController {
   @Put(':id/books')
   setBooks(@Param('id') id: string, @Body() dto: SetShelfBooksDto) {
     return this.service.setBooks(id, dto);
+  }
+
+  /** Add the books created since a date, e.g. everything scanned today at a fair. */
+  @Post(':id/books/recent')
+  addRecent(@Param('id') id: string, @Body() dto: AddRecentBooksDto) {
+    return this.service.appendRecent(id, dto);
   }
 
   @Delete(':id')

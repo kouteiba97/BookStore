@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  addRecentToShelf,
   createHomeSection,
   deleteHomeSection,
   fetchHomeSections,
@@ -20,6 +21,7 @@ import {
   Surface,
   TableSkeleton,
   inputClass,
+  selectClass,
 } from "@/components/admin/primitives";
 import { useToast } from "@/components/admin/toaster";
 import BookSearch from "@/components/admin/book-search";
@@ -348,6 +350,57 @@ function SectionForm({
   );
 }
 
+const RECENT_PERIODS = [
+  { days: 0, label: "اليوم" },
+  { days: 2, label: "آخر 3 أيام" },
+  { days: 6, label: "آخر 7 أيام" },
+  { days: 29, label: "آخر 30 يومًا" },
+];
+
+/**
+ * One click for a book fair: every book added in the period (from the web or
+ * the phone) goes to the end of the shelf; books already on it are skipped.
+ */
+function AddRecent({ section, onSaved }: { section: AdminHomeSection; onSaved: () => void }) {
+  const toast = useToast();
+  const [days, setDays] = useState(0);
+  const add = useMutation({
+    mutationFn: () => {
+      const since = new Date();
+      since.setHours(0, 0, 0, 0);
+      since.setDate(since.getDate() - days);
+      return addRecentToShelf(section.id, since);
+    },
+    onSuccess: (r) =>
+      r.added
+        ? toast.success(`أُضيف ${r.added} كتاب إلى القسم`)
+        : toast.info("لا توجد كتب جديدة في هذه المدة، أو كلها موجودة في القسم"),
+    onError: (e) => toast.error(errMsg(e, "تعذّرت الإضافة")),
+    onSettled: onSaved,
+  });
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-border/70 bg-card px-3 py-2 text-sm">
+      <span className="text-muted-foreground">أو أضيفوا كل الكتب التي سُجّلت</span>
+      <select
+        className={`${selectClass} h-8 w-auto`}
+        value={days}
+        onChange={(e) => setDays(Number(e.target.value))}
+        aria-label="المدة"
+      >
+        {RECENT_PERIODS.map((p) => (
+          <option key={p.days} value={p.days}>
+            {p.label}
+          </option>
+        ))}
+      </select>
+      <Button type="button" variant="secondary" size="sm" disabled={add.isPending} onClick={() => add.mutate()}>
+        {add.isPending ? "جاري الإضافة..." : "أضفها إلى القسم"}
+      </Button>
+    </div>
+  );
+}
+
 /** The books of one shelf: add by search, reorder, remove. Every change saves at once. */
 function ShelfEditor({ section, onSaved }: { section: AdminHomeSection; onSaved: () => void }) {
   const toast = useToast();
@@ -395,6 +448,7 @@ function ShelfEditor({ section, onSaved }: { section: AdminHomeSection; onSaved:
           ]);
         }}
       />
+      <AddRecent section={section} onSaved={onSaved} />
       {books.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted-foreground">
           لا توجد كتب بعد. القسم لا يظهر في المتجر حتى تضيفوا له كتابًا واحدًا على الأقل.

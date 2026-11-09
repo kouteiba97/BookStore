@@ -437,5 +437,11 @@ export const deleteHomeSection = (id: string) =>
 export const reorderHomeSections = (ids: string[]) =>
   adminApi.put("/home-sections/order", { ids }).then((r) => r.data);
 
+/** Add every book created since `since` to the end of a shelf. */
+export const addRecentToShelf = (id: string, since: Date) =>
+  adminApi
+    .post(`/home-sections/${id}/books/recent`, { since: since.toISOString() })
+    .then((r) => r.data as { added: number; total: number });
+
 export const setHomeShelfBooks = (id: string, bookIds: string[]) =>
   adminApi.put(`/home-sections/${id}/books`, { bookIds }).then((r) => r.data as { count: number });

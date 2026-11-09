@@ -2,6 +2,7 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsDateString,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -43,6 +44,12 @@ export class ReorderHomeSectionsDto {
   @ArrayMaxSize(100)
   @IsString({ each: true })
   ids: string[];
+}
+
+export class AddRecentBooksDto {
+  /** Books created at or after this moment (the client sends its local midnight). */
+  @IsDateString()
+  since: string;
 }
 
 export class SetShelfBooksDto {

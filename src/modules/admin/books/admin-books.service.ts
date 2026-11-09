@@ -12,6 +12,7 @@ import {
   serializeBook,
   serializeBooks,
 } from '../../../common/utils/book-serializer';
+import { AdminHomeSectionsService } from '../home-sections/home-sections.service';
 import { UpsertBookDto } from './dto/upsert-book.dto';
 
 /** "What is this book missing?" filters, used by the data-quality links. */
@@ -30,6 +31,7 @@ export class AdminBooksService {
     private readonly prisma: PrismaService,
     private readonly storeResolver: StoreResolver,
     private readonly plans: PlanService,
+    private readonly homeSections: AdminHomeSectionsService,
   ) {}
 
   async list(opts: {
@@ -103,6 +105,9 @@ export class AdminBooksService {
   async create(dto: UpsertBookDto) {
     const storeId = await this.storeResolver.getStoreId();
     await this.plans.assertCanAddBooks(1);
+    // Checked first, so a wrong shelf refuses the book instead of half-saving it.
+    const shelfId = dto.homeSectionId || null;
+    if (shelfId) await this.homeSections.findShelf(shelfId);
 
     const categoryId = await this.resolveCategoryId(
       dto.categoryId,
@@ -180,6 +185,7 @@ export class AdminBooksService {
       include: bookInclude as any,
     });
 
+    if (shelfId) await this.homeSections.appendBooks(shelfId, [book.id]);
     return serializeBook(book);
   }
 

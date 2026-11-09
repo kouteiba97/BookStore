@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createBook, fetchAcademicTree } from "@/lib/admin-api";
+import { createBook, fetchAcademicTree, fetchHomeSections } from "@/lib/admin-api";
 import GalleryEditor, {
   releaseGallery,
   uploadGallery,
@@ -47,6 +47,25 @@ const EMPTY = {
   subjectIds: [] as string[],
 };
 
+// The storefront shelf new books also go to, kept across visits so a whole
+// book-fair session can be scanned into «جديد معرض الكتاب» without re-picking it.
+const SHELF_KEY = "bayan-quick-add-shelf";
+const readShelf = () => {
+  try {
+    return localStorage.getItem(SHELF_KEY) ?? "";
+  } catch {
+    return "";
+  }
+};
+const writeShelf = (id: string) => {
+  try {
+    if (id) localStorage.setItem(SHELF_KEY, id);
+    else localStorage.removeItem(SHELF_KEY);
+  } catch {
+    /* private mode: the choice lasts for this visit only */
+  }
+};
+
 export default function QuickAddPage() {
   const qc = useQueryClient();
   const toast = useToast();
@@ -55,6 +74,19 @@ export default function QuickAddPage() {
   // The cover first, then one picture per volume for a series.
   const [pictures, setPictures] = useState<GalleryItem[]>([]);
   const [savedCount, setSavedCount] = useState(0);
+  const [shelfId, setShelfId] = useState(readShelf);
+
+  const { data: sections = [] } = useQuery({
+    queryKey: ["home-sections"],
+    queryFn: fetchHomeSections,
+  });
+  const shelves = sections.filter((s) => s.kind === "books");
+  // A remembered shelf that was deleted since counts as none.
+  const shelf = shelves.find((s) => s.id === shelfId) ?? null;
+  const pickShelf = (id: string) => {
+    setShelfId(id);
+    writeShelf(id);
+  };
 
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) =>
     setF((prev) => ({ ...prev, [k]: v }));
@@ -129,12 +161,14 @@ export default function QuickAddPage() {
         fieldIds: f.academicOn ? f.fieldIds : [],
         yearIds: f.academicOn ? f.yearIds : [],
         subjectIds: f.academicOn ? f.subjectIds : [],
+        homeSectionId: shelf?.id ?? null,
       });
     },
     onSuccess: () => {
-      toast.success("تمت إضافة الكتاب ✓");
+      toast.success(shelf ? `تمت إضافة الكتاب ✓ وأُضيف إلى «${shelf.title}»` : "تمت إضافة الكتاب ✓");
       setSavedCount((c) => c + 1);
       qc.invalidateQueries({ queryKey: ["admin-books"] });
+      if (shelf) qc.invalidateQueries({ queryKey: ["home-sections"] });
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
       reset();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -151,6 +185,30 @@ export default function QuickAddPage() {
         <div className="rounded-lg bg-emerald-50 px-3 py-2 text-center text-sm font-semibold text-emerald-700 ring-1 ring-emerald-200">
           تمت إضافة {savedCount} كتاب في هذه الجلسة
         </div>
+      )}
+
+      {/* ── Storefront shelf ── */}
+      {shelves.length > 0 && (
+        <Surface className={`p-4 ${shelf ? "ring-2 ring-primary/30" : ""}`}>
+          <Field
+            label="أضف الكتب أيضًا إلى قسم في المتجر"
+            hint={
+              shelf
+                ? `كل كتاب تحفظونه يُضاف إلى آخر «${shelf.title}». يبقى هذا الاختيار حتى تغيّروه.`
+                : "اختاروا قسمًا، مثل «جديد معرض الكتاب»، لتُضاف إليه كل الكتب التي تسجّلونها الآن."
+            }
+          >
+            <select className={selectClass} value={shelf?.id ?? ""} onChange={(e) => pickShelf(e.target.value)}>
+              <option value="">بدون قسم</option>
+              {shelves.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.title || "قسم بلا اسم"}
+                  {s.visible ? "" : " (مخفي)"}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </Surface>
       )}
 
       {/* ── Pictures ── */}

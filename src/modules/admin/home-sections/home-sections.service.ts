@@ -2,8 +2,9 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../../prisma/prisma.service';
 import { StoreResolver } from '../../../common/tenant/store-resolver.service';
 import { thumbUrlFor } from '../../../common/utils/cover-image';
-import { BUILTIN_KINDS, SHELF_KIND, isBuiltin } from '../../../common/home/home-layout';
+import { BUILTIN_KINDS, MAX_SHELF_BOOKS, SHELF_KIND, isBuiltin } from '../../../common/home/home-layout';
 import {
+  AddRecentBooksDto,
   CreateHomeSectionDto,
   ReorderHomeSectionsDto,
   SetShelfBooksDto,
@@ -131,8 +132,7 @@ export class AdminHomeSectionsService {
 
   /** Replace a shelf's books with `bookIds`, in that order. */
   async setBooks(id: string, dto: SetShelfBooksDto) {
-    const row = await this.find(id);
-    if (row.kind !== SHELF_KIND) throw new BadRequestException('هذا القسم لا يحتوي على كتب مختارة');
+    const row = await this.findShelf(id);
     const ids = [...new Set(dto.bookIds)];
     const owned = await this.prisma.book.findMany({
       where: { id: { in: ids }, storeId: row.storeId },
@@ -147,6 +147,48 @@ export class AdminHomeSectionsService {
       }),
     ]);
     return { count: bookIds.length };
+  }
+
+  /**
+   * Add books at the end of a shelf, skipping those already on it — used when
+   * a book is created straight into a shelf (Quick-Add during a book fair).
+   */
+  async appendBooks(id: string, bookIds: string[]) {
+    const row = await this.findShelf(id);
+    const [onShelf, owned, last] = await Promise.all([
+      this.prisma.homeSectionBook.findMany({ where: { sectionId: id }, select: { bookId: true } }),
+      this.prisma.book.findMany({ where: { id: { in: bookIds }, storeId: row.storeId }, select: { id: true } }),
+      this.prisma.homeSectionBook.aggregate({ where: { sectionId: id }, _max: { position: true } }),
+    ]);
+    const present = new Set(onShelf.map((b) => b.bookId));
+    const ok = new Set(owned.map((b) => b.id));
+    const room = Math.max(0, MAX_SHELF_BOOKS - present.size);
+    const add = [...new Set(bookIds)].filter((b) => ok.has(b) && !present.has(b)).slice(0, room);
+    const start = (last._max.position ?? -1) + 1;
+    await this.prisma.homeSectionBook.createMany({
+      data: add.map((bookId, i) => ({ sectionId: id, bookId, position: start + i })),
+      skipDuplicates: true,
+    });
+    return { added: add.length, total: present.size + add.length };
+  }
+
+  /** Add every book created since `since` (oldest first) that is not on the shelf yet. */
+  async appendRecent(id: string, dto: AddRecentBooksDto) {
+    const row = await this.findShelf(id);
+    const books = await this.prisma.book.findMany({
+      where: { storeId: row.storeId, createdAt: { gte: new Date(dto.since) } },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+      take: MAX_SHELF_BOOKS,
+    });
+    return this.appendBooks(id, books.map((b) => b.id));
+  }
+
+  /** A shelf of this store, or a 400/404 the admin can read. */
+  async findShelf(id: string) {
+    const row = await this.find(id);
+    if (row.kind !== SHELF_KIND) throw new BadRequestException('هذا القسم لا يحتوي على كتب مختارة');
+    return row;
   }
 
   private async find(id: string) {
