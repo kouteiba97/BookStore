@@ -52,7 +52,7 @@ Auth & hardening:
 
 ## Frontend pages (`frontend/src/pages/`)
 
-Public: `home.tsx` (blocks in the order of `GET /home-sections`; the search hero stays fixed), `collection.tsx` (`/collections/:id`, a shelf’s «عرض الكل»), `search.tsx`, `book.tsx`, `academic/{fields,years,subjects,subject-books}.tsx`
+Public: `home.tsx` (blocks in the order of `GET /home-sections`; the search hero stays fixed), `collection.tsx` (`/collections/:id`, a shelf’s «عرض الكل»), `links.tsx` (`/links`, link-in-bio page the business-card QR code opens, outside the site layout), `search.tsx`, `book.tsx`, `academic/{fields,years,subjects,subject-books}.tsx`
 
 Admin (separate app — `admin/src/pages/admin/`, served at `/admin`): `overview`, `orders`, `order-detail`, `books` (`?missing=price|cover|author|category|stock|outOfStock`), `quick-add` (mobile book entry), `catalog`, `academic`, `inventory`, `requests`, `social-content`, `data` (import wizard / history / exports / data quality), `sales` (counter POS + register), `purchases` (+ suppliers), `expenses`, `reports`, `settings` (store identity + pack), `storefront` (home page sections and shelves), and `invoice` (`/admin/invoice/:id`, printable, outside the shell). Pack gating in `components/admin/plan-gate.tsx` (`usePlan`, `useFeature`, `<FeatureGate>`; locked nav items show a lock). Money/reports API in `admin/src/lib/money-api.ts`. Login at `/admin/login` (`admin/src/pages/login.tsx`); token helpers + axios interceptors in `admin/src/lib/auth.ts`. Admin shared components live in `admin/src/components/admin/`, API in `admin/src/lib/admin-api.ts`.
 
@@ -64,7 +64,7 @@ Admin (separate app — `admin/src/pages/admin/`, served at `/admin`): `overview
 
 API env (optional): `STOREFRONT_URL` (adds a link to each book in social exports), `TRUST_PROXY_HOPS` (default 1). `JWT_SECRET` is mandatory when `NODE_ENV=production` (the API refuses to boot without it).
 
-Frontend env (Vite): `VITE_EDITION` (default `basic`), `VITE_STORE_SLUG` (default `elbayan`), `VITE_WHATSAPP_NUMBER` (storefront), `VITE_PUBLIC_SITE_URL` (admin's "view store" link). Store identity script: `scripts/setup-store.ts`.
+Frontend env (Vite): `VITE_EDITION` (default `basic`), `VITE_STORE_SLUG` (default `elbayan`), `VITE_WHATSAPP_NUMBER` (storefront), `VITE_FACEBOOK_URL` / `VITE_INSTAGRAM_URL` / `VITE_TIKTOK_URL` (storefront `/links`, the business-card QR target; an unset one is hidden), `VITE_PUBLIC_SITE_URL` (admin's "view store" link). Store identity script: `scripts/setup-store.ts`.
 
 ## Frontend shared
 

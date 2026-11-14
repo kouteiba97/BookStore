@@ -12,6 +12,7 @@ import SubjectBooksPage from "@/pages/academic/subject-books";
 import { PrivacyPage, TermsPage } from "@/pages/legal";
 import NotFoundPage from "@/pages/not-found";
 import CollectionPage from "@/pages/collection";
+import LinksPage from "@/pages/links";
 import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({
@@ -37,6 +38,8 @@ export default function App() {
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
+          {/* Business-card QR target: a page of its own, without the site header. */}
+          <Route path="links" element={<LinksPage />} />
           {/* Public */}
           <Route element={<Layout />}>
             <Route index element={<HomePage />} />

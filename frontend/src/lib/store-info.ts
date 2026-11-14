@@ -18,3 +18,18 @@ export const storeLocation = {
   /** Opens Google Maps (app on phones) with directions available. */
   openUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`,
 };
+
+/** WhatsApp number in international form, digits only (wa.me links). */
+export const whatsappNumber =
+  (import.meta.env.VITE_WHATSAPP_NUMBER as string | undefined) ?? "213777887762";
+
+/**
+ * The shop's social pages, for the /links page the business-card QR code
+ * opens. Each is set per deployment; one left empty is simply not shown, so
+ * a page can be added later without a code change.
+ */
+export const storeSocial = [
+  { key: "facebook", label: "فيسبوك", url: import.meta.env.VITE_FACEBOOK_URL as string | undefined },
+  { key: "instagram", label: "إنستغرام", url: import.meta.env.VITE_INSTAGRAM_URL as string | undefined },
+  { key: "tiktok", label: "تيك توك", url: import.meta.env.VITE_TIKTOK_URL as string | undefined },
+].filter((s): s is { key: "facebook" | "instagram" | "tiktok"; label: string; url: string } => Boolean(s.url?.trim()));
