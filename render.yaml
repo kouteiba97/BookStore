@@ -38,6 +38,67 @@ services:
         sync: false
       - key: R2_PUBLIC_BASE_URL
         sync: false
+      # ── Social auto-posting (see docs/social-autopost.md) ──
+      - key: SOCIAL_TOKEN_KEY      # encrypts the Meta token in the database; auto-generated
+        generateValue: true
+      - key: META_APP_ID           # optional: lets the server renew an expiring token itself
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN    # optional: alerts when a person must act
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: HEALTHCHECK_TICK_URL     # optional: healthchecks.io check, period 10 min, grace 30 min
+        sync: false
+      - key: HEALTHCHECK_PUBLISH_URL  # optional: healthchecks.io check, period 1 day, grace 1 day
+        sync: false
+
+  # ── Social auto-poster: OPTIONAL paid backup (≈ $1/month) ────────────────
+  # Auto-posting already runs inside bookstore-api every 10 min (free; the API
+  # keeps itself awake — src/common/keep-alive.ts). Uncomment this Cron Job to
+  # also run it from outside, so posting continues even if the API is down.
+  # Both together are safe: a database lease lets only one run work at a time.
+  # - type: cron
+  #   name: bookstore-social-tick
+  #   runtime: docker
+  #   dockerfilePath: ./Dockerfile
+  #   dockerCommand: node dist/social-tick.js
+  #   plan: starter
+  #   schedule: "*/10 * * * *"
+  #   envVars:
+  #     - key: DATABASE_URL
+  #       fromService: { type: web, name: bookstore-api, envVarKey: DATABASE_URL }
+  #     - key: STORE_SLUG
+  #       fromService: { type: web, name: bookstore-api, envVarKey: STORE_SLUG }
+  #     - key: WHATSAPP_NUMBER
+  #       fromService: { type: web, name: bookstore-api, envVarKey: WHATSAPP_NUMBER }
+  #     - key: STOREFRONT_URL
+  #       fromService: { type: web, name: bookstore-api, envVarKey: STOREFRONT_URL }
+  #     - key: SOCIAL_TOKEN_KEY
+  #       fromService: { type: web, name: bookstore-api, envVarKey: SOCIAL_TOKEN_KEY }
+  #     - key: META_APP_ID
+  #       fromService: { type: web, name: bookstore-api, envVarKey: META_APP_ID }
+  #     - key: META_APP_SECRET
+  #       fromService: { type: web, name: bookstore-api, envVarKey: META_APP_SECRET }
+  #     - key: TELEGRAM_BOT_TOKEN
+  #       fromService: { type: web, name: bookstore-api, envVarKey: TELEGRAM_BOT_TOKEN }
+  #     - key: TELEGRAM_CHAT_ID
+  #       fromService: { type: web, name: bookstore-api, envVarKey: TELEGRAM_CHAT_ID }
+  #     - key: R2_ACCOUNT_ID
+  #       fromService: { type: web, name: bookstore-api, envVarKey: R2_ACCOUNT_ID }
+  #     - key: R2_ACCESS_KEY_ID
+  #       fromService: { type: web, name: bookstore-api, envVarKey: R2_ACCESS_KEY_ID }
+  #     - key: R2_SECRET_ACCESS_KEY
+  #       fromService: { type: web, name: bookstore-api, envVarKey: R2_SECRET_ACCESS_KEY }
+  #     - key: R2_BUCKET
+  #       fromService: { type: web, name: bookstore-api, envVarKey: R2_BUCKET }
+  #     - key: R2_PUBLIC_BASE_URL
+  #       fromService: { type: web, name: bookstore-api, envVarKey: R2_PUBLIC_BASE_URL }
+  #     - key: HEALTHCHECK_TICK_URL
+  #       fromService: { type: web, name: bookstore-api, envVarKey: HEALTHCHECK_TICK_URL }
+  #     - key: HEALTHCHECK_PUBLISH_URL
+  #       fromService: { type: web, name: bookstore-api, envVarKey: HEALTHCHECK_PUBLISH_URL }
 
   # ── Public storefront (static SPA) ───────────────────────────────────────
   - type: web

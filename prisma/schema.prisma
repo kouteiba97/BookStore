@@ -95,6 +95,10 @@ model Store {
   counters       StoreCounter[]
   homeSections   HomeSection[]
   customers      Customer[]
+
+  socialSettings SocialSettings?
+  socialChannels SocialChannel[]
+  socialPosts    SocialPost[]
 }
 
 // ================= STOREFRONT HOME =================
@@ -195,6 +199,7 @@ model Book {
   purchaseItems  PurchaseItem[]
   stockMovements StockMovement[]
   homeSections   HomeSectionBook[]
+  socialPosts    SocialPost[]
 
   @@index([storeId, title])
   @@index([titleNormalized])
@@ -675,4 +680,131 @@ model StoreCounter {
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@id([storeId, key])
+}
+
+// ================= SOCIAL AUTO-POSTING =================
+// The server picks books, writes captions and publishes them to the store's
+// Facebook Page and Instagram account on its own (src/modules/admin/social-autopost).
+
+enum SocialPlatform {
+  facebook
+  instagram
+}
+
+enum SocialPostStatus {
+  /// Waiting for the owner; becomes `approved` by itself at autoApproveAt.
+  draft
+  /// Will be published at scheduledAt.
+  approved
+  /// Facebook only: handed to Meta's own scheduler, which publishes it.
+  scheduled
+  /// Instagram: container created / publish in flight.
+  publishing
+  published
+  /// This item cannot be posted (bad picture, refused by Meta…); the queue moves on.
+  failed
+  /// Rejected by the owner, or its time passed while the channel was stopped.
+  skipped
+}
+
+/// One row per store: the Meta connection and the posting calendar.
+model SocialSettings {
+  id      String @id @default(uuid())
+  storeId String @unique
+
+  /// Business Manager system-user token, AES-256-GCM encrypted (SOCIAL_TOKEN_KEY).
+  tokenEncrypted String?
+  /// null = never expires.
+  tokenExpiresAt DateTime?
+  tokenCheckedAt DateTime?
+
+  pageId     String?
+  pageName   String?
+  igUserId   String?
+  igUsername String?
+
+  /// Ramadan, exam (Bac) days, quiet days (Eid), busy seasons — see schedule.ts.
+  calendar Json?
+
+  /// Drafts publish by themselves after this many hours unless the owner skips them.
+  autoApproveHours Int @default(48)
+
+  /// Lease that keeps two runs of the job from overlapping.
+  tickLockedUntil DateTime?
+  lastTickAt      DateTime?
+
+  /// alert key → when it was last sent, so one problem is reported once a day, not every run.
+  alertsSent Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+/// Facebook or Instagram for one store: on/off and its health.
+model SocialChannel {
+  id       String         @id @default(uuid())
+  storeId  String
+  platform SocialPlatform
+
+  enabled Boolean @default(false)
+
+  /// Set when the server stopped this channel because a person must act
+  /// (checkpoint, spam flag, revoked access…). null = running.
+  pausedReason String?
+  pausedAt     DateTime?
+
+  /// Meta asked us to slow down: no calls on this channel before this time.
+  blockedUntil DateTime?
+
+  consecutiveFailures Int       @default(0)
+  lastPublishedAt     DateTime?
+  lastError           String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, platform])
+}
+
+/// One planned post of one book on one platform at one time.
+model SocialPost {
+  id       String           @id @default(uuid())
+  storeId  String
+  bookId   String
+  platform SocialPlatform
+  status   SocialPostStatus @default(draft)
+
+  scheduledAt   DateTime
+  autoApproveAt DateTime?
+
+  caption  String
+  /// The picture sent (Instagram: the 4:5 framed copy, made on first use).
+  imageUrl String?
+
+  /// Facebook post id / Instagram media id once scheduled or published.
+  remoteId    String?
+  /// Instagram container id while publishing — checked before any retry so a
+  /// post is never published twice.
+  containerId String?
+  permalink   String?
+
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime?
+  error         String?
+  publishedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  book  Book  @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  /// One post per slot: planning twice can never create duplicates.
+  @@unique([storeId, platform, scheduledAt])
+  @@index([storeId, status, scheduledAt])
+  @@index([bookId, platform, scheduledAt])
 }

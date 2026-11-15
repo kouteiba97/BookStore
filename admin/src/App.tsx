@@ -26,6 +26,7 @@ const ReportsPage = lazy(() => import("@/pages/admin/reports"));
 const SettingsPage = lazy(() => import("@/pages/admin/settings"));
 const StorefrontPage = lazy(() => import("@/pages/admin/storefront"));
 const InvoicePage = lazy(() => import("@/pages/admin/invoice"));
+const SocialAutopostPage = lazy(() => import("@/pages/admin/social-autopost"));
 import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({
@@ -99,6 +100,7 @@ export default function App() {
             <Route path="reports" element={<ReportsPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="storefront" element={<StorefrontPage />} />
+            <Route path="social-autopost" element={<SocialAutopostPage />} />
           </Route>
 
           {/* Anything outside /admin → send to the dashboard home */}

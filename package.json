@@ -16,7 +16,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "social:tick": "ts-node -P tsconfig.build.json src/social-tick.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
