@@ -127,6 +127,10 @@ export const updateOrder = (id: string, data: any) =>
 export const updateOrderStatus = (id: string, status: string) =>
   adminApi.patch(`/orders/${id}/status`, { status }).then((r) => r.data);
 
+/** Delivery company and tracking number, shown on the customer's tracking page. */
+export const updateOrderShipping = (id: string, data: { carrier: string | null; trackingNumber: string | null }) =>
+  adminApi.patch(`/orders/${id}/shipping`, data).then((r) => r.data);
+
 export const cancelOrder = (id: string) =>
   adminApi.post(`/orders/${id}/cancel`).then((r) => r.data);
 

@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { TenantModule } from './common/tenant/tenant.module';
 import { BooksModule } from './modules/books/books.module';
 import { RequestsModule } from './modules/requests/requests.module';
+import { ShopModule } from './modules/shop/shop.module';
 import { AcademicModule } from './modules/academic/academic.module';
 import { ImportModule } from './modules/import/import.module';
 import { ImagesModule } from './modules/images/images.module';
@@ -38,6 +39,7 @@ import { HealthController } from './health.controller';
     AdminModule,
     BooksModule,
     RequestsModule,
+    ShopModule,
     AcademicModule,
     ImportModule,
     ImagesModule,

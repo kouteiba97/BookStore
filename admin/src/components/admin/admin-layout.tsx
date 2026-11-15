@@ -1,5 +1,7 @@
 import { Suspense, useEffect, useState, type ReactElement } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { fetchOrders } from "@/lib/admin-api";
 import { TableSkeleton } from "@/components/admin/primitives";
 import { LogoMark } from "@/components/logo";
 import { clearToken } from "@/lib/auth";
@@ -268,6 +270,14 @@ function Sidebar({
   mobile?: boolean;
 }) {
   const { data: plan } = usePlan();
+  // Web orders waiting for a confirmation call — the number on «الطلبات».
+  const { data: pending } = useQuery({
+    queryKey: ["admin-orders", "pending-count"],
+    queryFn: () => fetchOrders({ status: "pending", page: 1, pageSize: 1 }),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+  const badges: Record<string, number | undefined> = { "/admin/orders": pending?.total || undefined };
   return (
     <div className="flex h-full w-full flex-col bg-card">
       {/* Brand */}
@@ -304,6 +314,14 @@ function Sidebar({
                   )}
                   <span className={active ? "text-primary" : "text-muted-foreground/80"}>{item.icon}</span>
                   {!collapsed && <span className="truncate">{item.label}</span>}
+                  {badges[item.to] ? (
+                    <span
+                      className={`${collapsed ? "absolute top-1 left-1 h-4 min-w-4 px-1 text-[9px]" : "ms-auto h-5 min-w-5 px-1.5 text-[10px]"} inline-flex items-center justify-center rounded-full bg-amber-500 font-bold text-white tabular-nums`}
+                      title={`${badges[item.to]} طلب في انتظار التأكيد`}
+                    >
+                      {badges[item.to]}
+                    </span>
+                  ) : null}
                   {!collapsed && item.feature && plan && !plan.features[item.feature] && (
                     <span className="ms-auto text-amber-600" title="غير متوفرة في باقتك">
                       <LockIcon />

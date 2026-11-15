@@ -135,3 +135,16 @@ export class CounterSaleDto {
   @MaxLength(1000)
   notes?: string | null;
 }
+
+/** Delivery company and tracking number, set when the order ships. */
+export class UpdateShippingDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  carrier?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  trackingNumber?: string | null;
+}

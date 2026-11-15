@@ -426,6 +426,16 @@ model Order {
   invoiceNumber String?
   invoicedAt    DateTime?
 
+  /// Short public order number ("BY-482193") the customer reads over the
+  /// phone and uses to track the order. Given to every online order; null on
+  /// counter sales, imports and orders made before it existed.
+  reference String?
+
+  /// Delivery company and its tracking number, once the order is shipped.
+  /// Shown to the customer on the tracking page.
+  carrier        String?
+  trackingNumber String?
+
   /// Date of the sale when it differs from when it was recorded (imports).
   soldAt DateTime?
 
@@ -439,6 +449,7 @@ model Order {
   request Request?
 
   @@unique([storeId, invoiceNumber])
+  @@unique([storeId, reference])
   @@index([storeId, status])
   @@index([storeId, createdAt])
   @@index([storeId, channel])

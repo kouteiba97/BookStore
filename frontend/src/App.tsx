@@ -13,6 +13,7 @@ import { PrivacyPage, TermsPage } from "@/pages/legal";
 import NotFoundPage from "@/pages/not-found";
 import CollectionPage from "@/pages/collection";
 import LinksPage from "@/pages/links";
+import TrackPage from "@/pages/track";
 import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="search" element={<SearchPage />} />
             <Route path="books/:id" element={<BookPage />} />
             <Route path="collections/:id" element={<CollectionPage />} />
+            <Route path="track" element={<TrackPage />} />
             {features.academic ? (
               <>
                 <Route path="academic" element={<FieldsPage />} />

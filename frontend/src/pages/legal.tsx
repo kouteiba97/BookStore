@@ -5,8 +5,8 @@ import { Link } from "react-router-dom";
  *
  * These describe what the site actually does today: it collects a name, phone,
  * wilaya and address when someone places an order, stores them so the order can
- * be fulfilled, and hands the conversation to WhatsApp. It sets no cookies and
- * runs no analytics. Keep this file in step with the code — a policy that
+ * be fulfilled, gives the order a number the customer can track, and offers
+ * (never forces) a WhatsApp chat. It sets no cookies and runs no analytics. Keep this file in step with the code — a policy that
  * describes behaviour the site does not have is worse than none.
  */
 
@@ -14,7 +14,7 @@ const WHATSAPP =
   (import.meta.env.VITE_WHATSAPP_NUMBER as string | undefined) ?? "213777887762";
 const CONTACT_URL = `https://wa.me/${WHATSAPP}`;
 
-const UPDATED = "سبتمبر 2026";
+const UPDATED = "نوفمبر 2026";
 
 function Shell({
   title,
@@ -93,16 +93,23 @@ export function PrivacyPage() {
       <Section heading="ما الذي نجمعه">
         <p>
           لا نطلب منك إنشاء حساب، ولا نجمع أي بيانات لمجرد تصفّح الموقع. نجمع
-          البيانات التالية فقط عندما تُرسل طلب كتاب بنفسك:
+          البيانات التالية فقط عندما تُرسل طلبًا بنفسك:
         </p>
         <Bullets
           items={[
             "الاسم واللقب",
             "رقم الهاتف",
             "الولاية والعنوان",
-            "الكتاب المطلوب",
+            "الكتب المطلوبة وكمّياتها، وملاحظتك إن كتبتها",
           ]}
         />
+        <p>
+          يحصل كل طلب على رقم (مثل BY-482193). لتتبّع الطلب نطلب الرقم
+          <strong> ورقم الهاتف معًا</strong>، فلا يستطيع أحد غيرك الاطّلاع على
+          طلبك. تُحفظ بيانات التوصيل التي أدخلتها في متصفحك أنت (وليس في ملف
+          تعريف ارتباط) لتجدها جاهزة في طلبك القادم؛ يمكنك مسحها من إعدادات
+          المتصفح متى شئت.
+        </p>
       </Section>
 
       <Section heading="لماذا نجمعها">
@@ -132,10 +139,10 @@ export function PrivacyPage() {
 
       <Section heading="واتساب">
         <p>
-          بعد تسجيل طلبك عندنا، يفتح الموقع محادثة واتساب لإتمام التأكيد. عند
-          هذه النقطة تصبح المحادثة خاضعة لسياسة خصوصية واتساب (Meta)، وهي خارجة
-          عن سيطرتنا. أنت لست ملزمًا بمتابعة المحادثة، وطلبك يبقى مسجّلًا لدينا
-          في كل الأحوال.
+          بعد تسجيل طلبك نعرض عليك زرّ «راسلنا على واتساب» إن أردت تأكيدًا أسرع،
+          ولا يُفتح واتساب من تلقاء نفسه. ونراسلك نحن على واتساب عند شحن طلبك.
+          المحادثات على واتساب خاضعة لسياسة خصوصية واتساب (Meta)، وهي خارجة عن
+          سيطرتنا. طلبك يبقى مسجّلًا لدينا في كل الأحوال.
         </p>
       </Section>
 
@@ -215,8 +222,10 @@ export function TermsPage() {
       <Section heading="كيف يتمّ الطلب">
         <p>
           إرسال النموذج على هذا الموقع هو <strong>طلب</strong> وليس عقد بيع
-          نهائيًا. يصبح الطلب مؤكَّدًا فقط بعد أن نتواصل معك ونؤكّد توفّر الكتاب
-          والسعر وتفاصيل التوصيل. نحتفظ بحق رفض أي طلب.
+          نهائيًا. يحصل الطلب فورًا على رقم تتبّعه به من صفحة «تتبّع طلبك»، ثم
+          يتصل بك فريق المكتبة هاتفيًا خلال 24 ساعة (أيام العمل) لتأكيد توفّر
+          الكتب والسعر وتكلفة التوصيل. يصبح الطلب مؤكَّدًا بعد هذه المكالمة فقط،
+          وعند الشحن نراسلك على واتساب برقم التتبّع. نحتفظ بحق رفض أي طلب.
         </p>
       </Section>
 
@@ -231,7 +240,7 @@ export function TermsPage() {
       <Section heading="الدفع والتوصيل">
         <Bullets
           items={[
-            "الدفع عند الاستلام.",
+            "لا دفع مسبق: تدفع عند الاستلام.",
             "التوصيل متاح إلى جميع الولايات الـ69.",
             "مدّة التوصيل تقديرية وتختلف حسب الولاية وشركة التوصيل.",
             "تكاليف التوصيل تُبلَّغ لك عند التأكيد.",
