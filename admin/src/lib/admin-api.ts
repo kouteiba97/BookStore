@@ -445,3 +445,124 @@ export const addRecentToShelf = (id: string, since: Date) =>
 
 export const setHomeShelfBooks = (id: string, bookIds: string[]) =>
   adminApi.put(`/home-sections/${id}/books`, { bookIds }).then((r) => r.data as { count: number });
+// ── Social auto-posting ──────────────────────────────────
+
+export type SocialPlatform = "facebook" | "instagram";
+export type SocialPostStatus =
+  | "draft"
+  | "approved"
+  | "scheduled"
+  | "publishing"
+  | "published"
+  | "failed"
+  | "skipped";
+
+export interface SocialDateRange {
+  from: string;
+  to: string;
+  label?: string;
+}
+
+export interface SocialCalendar {
+  ramadan: SocialDateRange[];
+  examDays: string[];
+  quietDays: string[];
+  peakSeasons: SocialDateRange[];
+}
+
+export interface SocialChannelStatus {
+  platform: SocialPlatform;
+  enabled: boolean;
+  pausedReason: string | null;
+  pausedAt: string | null;
+  blockedUntil: string | null;
+  lastPublishedAt: string | null;
+  lastError: string | null;
+  upcoming: number;
+  plannedUntil: string | null;
+}
+
+export interface SocialAutopostStatus {
+  dryRun: boolean;
+  connected: boolean;
+  page: { id: string; name: string | null } | null;
+  instagram: { id: string; username: string | null } | null;
+  token: { expiresAt: string | null; checkedAt: string | null };
+  autoApproveHours: number;
+  lastTickAt: string | null;
+  channels: SocialChannelStatus[];
+  calendar: SocialCalendar;
+  calendarIsDefault: boolean;
+  setup: {
+    tokenKey: boolean;
+    telegram: boolean;
+    heartbeat: boolean;
+    r2: boolean;
+    r2DevDomain: boolean;
+    appSecret: boolean;
+  };
+}
+
+export interface SocialQueuePost {
+  id: string;
+  platform: SocialPlatform;
+  status: SocialPostStatus;
+  scheduledAt: string;
+  localDate: string;
+  autoApproveAt: string | null;
+  caption: string;
+  error: string | null;
+  permalink: string | null;
+  publishedAt: string | null;
+  book: { id: string; title: string; cover: string | null; thumb: string | null };
+}
+
+export const fetchAutopostStatus = () =>
+  adminApi.get("/social-autopost/status").then((r) => r.data as SocialAutopostStatus);
+
+/** Either the new status, or the list of Pages to choose from. */
+export const connectAutopost = (token: string, pageId?: string) =>
+  adminApi
+    .put("/social-autopost/connection", { token, pageId })
+    .then(
+      (r) =>
+        r.data as
+          | SocialAutopostStatus
+          | { needsPage: true; pages: { id: string; name: string; instagram: string | null }[] },
+    );
+
+export const disconnectAutopost = () =>
+  adminApi.delete("/social-autopost/connection").then((r) => r.data as SocialAutopostStatus);
+
+export const updateAutopostChannel = (platform: SocialPlatform, body: { enabled?: boolean; resume?: boolean }) =>
+  adminApi.patch(`/social-autopost/channels/${platform}`, body).then((r) => r.data as SocialAutopostStatus);
+
+export const updateAutopostSettings = (autoApproveHours: number) =>
+  adminApi.patch("/social-autopost/settings", { autoApproveHours }).then((r) => r.data as SocialAutopostStatus);
+
+export const updateAutopostCalendar = (calendar: SocialCalendar) =>
+  adminApi
+    .put("/social-autopost/calendar", { calendar })
+    .then((r) => r.data as SocialAutopostStatus & { moved: number; notMoved: number });
+
+export const fetchAutopostPosts = () =>
+  adminApi.get("/social-autopost/posts").then((r) => r.data as { items: SocialQueuePost[] });
+
+export const updateAutopostPost = (id: string, body: { action?: "approve" | "skip" | "replace"; caption?: string }) =>
+  adminApi.patch(`/social-autopost/posts/${id}`, body).then((r) => r.data);
+
+export const runAutopostNow = () =>
+  adminApi.post("/social-autopost/run").then(
+    (r) =>
+      r.data as {
+        ran: boolean;
+        planned: number;
+        approved: number;
+        scheduled: number;
+        published: number;
+        failed: number;
+        skipped: number;
+        paused: SocialPlatform[];
+        notes: string[];
+      },
+  );

@@ -25,8 +25,13 @@ import { ReportsService } from './reports/reports.service';
 import { AdminHomeSectionsController } from './home-sections/home-sections.controller';
 import { AdminHomeSectionsService } from './home-sections/home-sections.service';
 import { PlanController } from '../../common/plan/plan.controller';
+import { SocialAutopostEngineModule } from './social-autopost/social-autopost.module';
+import { SocialAutopostController } from './social-autopost/autopost.controller';
+import { SocialAutopostAdminService } from './social-autopost/autopost-admin.service';
+import { SocialTicker } from './social-autopost/social-ticker';
 
 @Module({
+  imports: [SocialAutopostEngineModule],
   controllers: [
     StatsController,
     AdminBooksController,
@@ -43,6 +48,7 @@ import { PlanController } from '../../common/plan/plan.controller';
     ReportsController,
     PlanController,
     AdminHomeSectionsController,
+    SocialAutopostController,
   ],
   providers: [
     StatsService,
@@ -57,6 +63,8 @@ import { PlanController } from '../../common/plan/plan.controller';
     MoneyService,
     ReportsService,
     AdminHomeSectionsService,
+    SocialAutopostAdminService,
+    SocialTicker,
   ],
 })
 export class AdminModule {}
