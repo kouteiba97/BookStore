@@ -27,7 +27,7 @@ const LABEL: Record<OrderStatus, string> = STATUSES.reduce(
 );
 
 export default function OrdersPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get("search") ?? "");
   const [status, setStatus] = useState<string>("");
   const [page, setPage] = useState(1);
 

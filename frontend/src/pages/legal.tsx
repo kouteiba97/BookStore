@@ -6,7 +6,9 @@ import { Link } from "react-router-dom";
  * These describe what the site actually does today: it collects a name, phone,
  * wilaya and address when someone places an order, stores them so the order can
  * be fulfilled, gives the order a number the customer can track, and offers
- * (never forces) a WhatsApp chat. It sets no cookies and runs no analytics. Keep this file in step with the code — a policy that
+ * (never forces) a WhatsApp chat. An account is optional (phone + password,
+ * the login token kept in the browser). It sets no cookies and runs no
+ * analytics. Keep this file in step with the code — a policy that
  * describes behaviour the site does not have is worse than none.
  */
 
@@ -92,7 +94,7 @@ export function PrivacyPage() {
 
       <Section heading="ما الذي نجمعه">
         <p>
-          لا نطلب منك إنشاء حساب، ولا نجمع أي بيانات لمجرد تصفّح الموقع. نجمع
+          لا تحتاج إلى حساب لتطلب، ولا نجمع أي بيانات لمجرد تصفّح الموقع. نجمع
           البيانات التالية فقط عندما تُرسل طلبًا بنفسك:
         </p>
         <Bullets
@@ -109,6 +111,25 @@ export function PrivacyPage() {
           طلبك. تُحفظ بيانات التوصيل التي أدخلتها، ومحتوى سلّتك، في متصفحك أنت
           (وليس في ملف تعريف ارتباط ولا على خوادمنا قبل أن ترسل الطلب) لتجدها
           جاهزة في زيارتك القادمة؛ يمكنك مسحها من إعدادات المتصفح متى شئت.
+        </p>
+      </Section>
+
+      <Section heading="الحساب (اختياري)">
+        <p>
+          إن أنشأت حسابًا نحفظ: الاسم واللقب، رقم الهاتف (وهو اسم الدخول)،
+          البريد الإلكتروني إن أضفته، وعنوان التوصيل الذي تختاره. لا نحفظ كلمة
+          مرورك نفسها، بل بصمة مشفّرة منها لا يمكن استرجاع الكلمة منها.
+        </p>
+        <p>
+          عند الدخول نحفظ في متصفحك «رمز دخول» صالحًا 30 يومًا (في التخزين
+          المحلي للمتصفح، وليس ملف تعريف ارتباط)؛ يُمسح عند الضغط على «تسجيل
+          الخروج»، ويتوقّف عن العمل إذا غيّرت كلمة المرور. لا تُربط بحسابك إلا
+          الطلبات التي ترسلها وأنت مسجّل الدخول.
+        </p>
+        <p>
+          إن نسيت كلمة المرور نرسل لك على واتساب رابطًا يُستعمل مرة واحدة خلال
+          48 ساعة. ولحذف حسابك راسلنا وسنحذفه؛ تبقى طلباتك السابقة في سجلّ
+          المعاملات دون ربطها بالحساب.
         </p>
       </Section>
 

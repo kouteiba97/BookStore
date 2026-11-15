@@ -26,7 +26,7 @@ const ok = (cond, label) => {
   if (!cond) failures++;
 };
 
-async function call(method, path, { body, token } = {}) {
+async function call(method, path, { body, token } = {}, retried = false) {
   const res = await fetch(`${API}/api/v1${path}`, {
     method,
     headers: {
@@ -35,6 +35,12 @@ async function call(method, path, { body, token } = {}) {
     },
     body: body ? JSON.stringify(body) : undefined,
   });
+  // The API rate-limits public writes; wait out the window once instead of failing.
+  if (res.status === 429 && !retried) {
+    console.log('  … rate limit reached, waiting 61 s');
+    await new Promise((r) => setTimeout(r, 61_000));
+    return call(method, path, { body, token }, true);
+  }
   let data = null;
   try {
     data = await res.json();

@@ -40,6 +40,12 @@ const Icon = {
       <path d="M3 6h18l-2 13H5L3 6Z" /><path d="M9 10v0M15 10v0" /><path d="M3 6 5 3h14l2 3" />
     </svg>
   ),
+  customers: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5" />
+    </svg>
+  ),
   requests: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z" />
@@ -135,6 +141,7 @@ const NAV: NavItem[] = [
   { to: "/admin/sales", label: "المبيعات", icon: Icon.sales },
   { to: "/admin/orders", label: "الطلبات", icon: Icon.orders },
   { to: "/admin/requests", label: "طلبات العملاء", icon: Icon.requests },
+  { to: "/admin/customers", label: "الزبائن", icon: Icon.customers },
   { to: "/admin/books", label: "الكتب", icon: Icon.books },
   { to: "/admin/quick-add", label: "إضافة سريعة", icon: Icon.quickAdd },
   { to: "/admin/catalog/categories", label: "التصنيفات", icon: Icon.catalog },
@@ -153,6 +160,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin": "نظرة عامة",
   "/admin/orders": "إدارة الطلبات",
   "/admin/requests": "طلبات العملاء",
+  "/admin/customers": "الزبائن",
   "/admin/books": "إدارة الكتب",
   "/admin/quick-add": "إضافة سريعة",
   "/admin/catalog/categories": "التصنيفات",

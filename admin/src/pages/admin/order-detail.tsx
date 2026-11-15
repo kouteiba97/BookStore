@@ -281,6 +281,11 @@ export default function OrderDetailPage() {
             <Info label="الولاية" value={order.wilaya} />
             <Info label="العنوان" value={order.address} />
             {order.notes && <Info label="ملاحظات" value={order.notes} />}
+            {order.customer && (
+              <p className="text-[11px] text-muted-foreground">
+                ↳ طلبه من <Link to={`/admin/customers?search=${encodeURIComponent(order.phone)}`} className="text-primary hover:underline">حسابه على الموقع</Link>
+              </p>
+            )}
             {order.request && (
               <p className="text-[11px] text-muted-foreground">
                 ↳ تم تحويله من <Link to="/admin/requests" className="text-primary hover:underline">طلب عميل</Link>

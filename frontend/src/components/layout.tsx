@@ -2,7 +2,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { LogoMark } from "@/components/logo";
 import { features } from "@/lib/features";
 import StoreMap from "@/components/store-map";
-import { CartButton } from "@/components/cart-buttons";
+import { AccountButton, CartButton } from "@/components/cart-buttons";
 
 export default function Layout() {
   const { pathname } = useLocation();
@@ -33,7 +33,7 @@ export default function Layout() {
               <Link
                 key={link.to}
                 to={link.to}
-                className={`rounded-lg px-3 py-1.5 transition-all ${
+                className={`rounded-lg px-2.5 py-1.5 transition-all sm:px-3 ${link.to === "/" ? "hidden sm:block " : ""}${
                   isActive(link.to)
                     ? "bg-gold/15 font-semibold text-gold-light"
                     : "text-gold-light hover:bg-gold/10 hover:text-gold-light"
@@ -42,6 +42,7 @@ export default function Layout() {
                 {link.label}
               </Link>
             ))}
+            <AccountButton />
             <CartButton />
           </nav>
         </div>
@@ -84,6 +85,11 @@ export default function Layout() {
               <li>
                 <Link to="/track" className="text-gold-light transition-colors hover:text-white">
                   تتبّع طلبك
+                </Link>
+              </li>
+              <li>
+                <Link to="/account" className="text-gold-light transition-colors hover:text-white">
+                  حسابي
                 </Link>
               </li>
               <li>

@@ -25,6 +25,8 @@ import { ReportsService } from './reports/reports.service';
 import { AdminHomeSectionsController } from './home-sections/home-sections.controller';
 import { AdminHomeSectionsService } from './home-sections/home-sections.service';
 import { PlanController } from '../../common/plan/plan.controller';
+import { CustomersController } from './customers/customers.controller';
+import { CustomersService } from './customers/customers.service';
 
 @Module({
   controllers: [
@@ -43,6 +45,7 @@ import { PlanController } from '../../common/plan/plan.controller';
     ReportsController,
     PlanController,
     AdminHomeSectionsController,
+    CustomersController,
   ],
   providers: [
     StatsService,
@@ -57,6 +60,7 @@ import { PlanController } from '../../common/plan/plan.controller';
     MoneyService,
     ReportsService,
     AdminHomeSectionsService,
+    CustomersService,
   ],
 })
 export class AdminModule {}

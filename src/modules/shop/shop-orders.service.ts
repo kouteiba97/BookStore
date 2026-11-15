@@ -16,7 +16,7 @@ import { withReference } from '../../common/orders/with-reference';
 import { CreateShopOrderDto, MAX_QTY } from './dto/shop-order.dto';
 
 /** The order fields a customer may see — never cost, notes or invoice data. */
-const publicOrderSelect = {
+export const publicOrderSelect = {
   id: true,
   reference: true,
   status: true,
@@ -58,7 +58,7 @@ export class ShopOrdersService {
     private readonly stores: StoreResolver,
   ) {}
 
-  async create(storeSlug: string, dto: CreateShopOrderDto) {
+  async create(storeSlug: string, dto: CreateShopOrderDto, customerId: string | null = null) {
     const store = await this.stores.bySlug(storeSlug);
 
     // The same book twice in one basket is one line with both quantities.
@@ -106,6 +106,8 @@ export class ShopOrdersService {
           address: dto.address,
           ...totals,
           notes: dto.note ? `ملاحظة الزبون: ${dto.note}` : null,
+          // Only an order placed while logged in joins the account.
+          customerId,
           items: { create: lines },
         },
         select: publicOrderSelect,

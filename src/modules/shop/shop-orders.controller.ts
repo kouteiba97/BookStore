@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ShopOrdersService } from './shop-orders.service';
 import { CreateShopOrderDto, QuoteDto } from './dto/shop-order.dto';
+import { CurrentCustomer, OptionalCustomerGuard, type AuthedCustomer } from '../../common/guards/customer-auth.guard';
 
 /**
  * Public storefront orders: place one, follow one, re-price a basket.
@@ -13,9 +14,15 @@ export class ShopOrdersController {
 
   // The storefront's main write: throttled like the old request form.
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  // A logged-in customer's order joins their account; guests are welcome.
+  @UseGuards(OptionalCustomerGuard)
   @Post()
-  create(@Param('storeSlug') storeSlug: string, @Body() dto: CreateShopOrderDto) {
-    return this.service.create(storeSlug, dto);
+  create(
+    @Param('storeSlug') storeSlug: string,
+    @Body() dto: CreateShopOrderDto,
+    @CurrentCustomer() customer?: AuthedCustomer,
+  ) {
+    return this.service.create(storeSlug, dto, customer?.id ?? null);
   }
 
   // Reference + phone must both match; throttled so neither can be guessed.

@@ -20,6 +20,7 @@ import { withReference } from '../../../common/orders/with-reference';
 const orderInclude = {
   items: { include: { book: { select: { id: true, title: true, imageUrl: true } } } },
   request: { select: { id: true } },
+  customer: { select: { id: true, firstName: true, lastName: true } },
 };
 
 type Tx = Prisma.TransactionClient;

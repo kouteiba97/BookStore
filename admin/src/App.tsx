@@ -11,6 +11,7 @@ const OverviewPage = lazy(() => import("@/pages/admin/overview"));
 const OrdersPage = lazy(() => import("@/pages/admin/orders"));
 const OrderDetailPage = lazy(() => import("@/pages/admin/order-detail"));
 const AdminRequestsPage = lazy(() => import("@/pages/admin/requests"));
+const CustomersPage = lazy(() => import("@/pages/admin/customers"));
 const BooksAdminPage = lazy(() => import("@/pages/admin/books"));
 const QuickAddPage = lazy(() => import("@/pages/admin/quick-add"));
 const CatalogPage = lazy(() => import("@/pages/admin/catalog"));
@@ -80,6 +81,7 @@ export default function App() {
             <Route path="orders" element={<OrdersPage />} />
             <Route path="orders/:id" element={<OrderDetailPage />} />
             <Route path="requests" element={<AdminRequestsPage />} />
+            <Route path="customers" element={<CustomersPage />} />
             <Route path="books" element={<BooksAdminPage />} />
             <Route path="quick-add" element={<QuickAddPage />} />
             <Route path="catalog" element={<Navigate to="/admin/catalog/categories" replace />} />

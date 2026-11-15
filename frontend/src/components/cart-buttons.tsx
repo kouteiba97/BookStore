@@ -1,5 +1,26 @@
+import { Link } from "react-router-dom";
 import { useCart } from "@/lib/cart";
+import { useAccount } from "@/lib/account";
 import type { Book } from "@/lib/types";
+
+/** Header link to «حسابي», or to the login page for guests. */
+export function AccountButton() {
+  const account = useAccount();
+  return (
+    <Link
+      to={account.loggedIn ? "/account" : "/account/login"}
+      className="relative flex h-10 w-10 items-center justify-center rounded-lg text-gold-light transition-colors hover:bg-gold/10"
+      aria-label={account.loggedIn ? "حسابي" : "تسجيل الدخول"}
+      title={account.loggedIn ? "حسابي" : "تسجيل الدخول"}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </svg>
+      {account.loggedIn && <span className="absolute top-2 left-2 h-2 w-2 rounded-full bg-gold ring-2 ring-[#1F3A2E]" aria-hidden="true" />}
+    </Link>
+  );
+}
 
 /** Header button with the number of books in the basket. */
 export function CartButton() {

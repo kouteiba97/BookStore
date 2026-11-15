@@ -8,7 +8,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { CustomerFields, PayOnDeliveryNote } from "@/components/customer-fields";
-import { useCustomerForm } from "@/lib/customer-form";
+import { initialCustomer, useCustomerForm } from "@/lib/customer-form";
+import { useAccount } from "@/lib/account";
+import { useAfterOrder } from "@/lib/after-order";
 import { OrderConfirmation } from "@/components/order-confirmation";
 import { formatDzd } from "@/lib/format";
 import { apiErrorMessage, createOrder } from "@/lib/queries";
@@ -24,7 +26,9 @@ import type { Book, PlacedOrder } from "@/lib/types";
  */
 function OrderForm({ book, onPlaced, onClose }: { book: Book; onPlaced: (o: PlacedOrder) => void; onClose: () => void }) {
   const saved = useSavedCustomer();
-  const f = useCustomerForm(saved.value);
+  const account = useAccount();
+  const afterOrder = useAfterOrder();
+  const f = useCustomerForm(initialCustomer(account.customer, saved.value));
   const [website, setWebsite] = useState(""); // honeypot
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
 
@@ -34,6 +38,7 @@ function OrderForm({ book, onPlaced, onClose }: { book: Book; onPlaced: (o: Plac
     mutationFn: createOrder,
     onSuccess: (order) => {
       saved.remember(f.values());
+      afterOrder(f.values());
       setPlaced(order);
       onPlaced(order);
     },

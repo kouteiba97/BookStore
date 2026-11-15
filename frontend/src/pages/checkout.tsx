@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useCart } from "@/lib/cart";
-import { useCustomerForm } from "@/lib/customer-form";
+import { initialCustomer, useCustomerForm } from "@/lib/customer-form";
+import { useAccount } from "@/lib/account";
+import { useAfterOrder } from "@/lib/after-order";
 import { useSavedCustomer } from "@/lib/saved-customer";
 import { apiErrorMessage, createOrder, quoteBooks } from "@/lib/queries";
 import { CustomerFields, PayOnDeliveryNote } from "@/components/customer-fields";
@@ -17,7 +19,9 @@ import type { PlacedOrder } from "@/lib/types";
 export default function CheckoutPage() {
   const cart = useCart();
   const saved = useSavedCustomer();
-  const f = useCustomerForm(saved.value);
+  const account = useAccount();
+  const afterOrder = useAfterOrder();
+  const f = useCustomerForm(initialCustomer(account.customer, saved.value));
   const [note, setNote] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
   const [placed, setPlaced] = useState<PlacedOrder | null>(null);
@@ -42,6 +46,7 @@ export default function CheckoutPage() {
     mutationFn: createOrder,
     onSuccess: (order) => {
       saved.remember(f.values());
+      afterOrder(f.values());
       setPlaced(order);
       cart.clear();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -89,6 +94,15 @@ export default function CheckoutPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           أرسل طلبك، ثم يتصل بك فريق المكتبة لتأكيده. لا دفع الآن.
         </p>
+        {account.loggedIn ? (
+          <p className="mt-2 text-xs text-primary">سيُحفظ هذا الطلب في «طلباتي» بحسابك.</p>
+        ) : (
+          <p className="mt-2 text-xs text-muted-foreground">
+            لديك حساب؟{" "}
+            <Link to="/account/login?next=/checkout" className="font-semibold text-primary hover:underline">سجّل الدخول</Link>
+            {" "}لملء بياناتك وحفظ الطلب في حسابك — أو تابع دون حساب.
+          </p>
+        )}
       </header>
 
       <form onSubmit={submit} noValidate className="relative grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">

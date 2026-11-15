@@ -16,6 +16,24 @@ type Errors = Partial<Record<keyof CheckoutCustomer, string>>;
 /** Same rule as the API: 0555123456, +213 555 12 34 56, 00213… */
 const DZ_PHONE = /^(?:(?:\+|00)213|0)[1-9]\d{7,9}$/;
 
+/**
+ * Where the form starts: the logged-in profile first, then what this device
+ * remembers from the last order, field by field.
+ */
+export function initialCustomer(
+  profile: { firstName: string; lastName: string; phone: string; wilaya: string | null; address: string | null } | null | undefined,
+  saved: Partial<CheckoutCustomer> | undefined,
+): Partial<CheckoutCustomer> | undefined {
+  if (!profile) return saved;
+  return {
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    phone: profile.phone,
+    wilaya: profile.wilaya || saved?.wilaya || "",
+    address: profile.address || saved?.address || "",
+  };
+}
+
 export function useCustomerForm(initial?: Partial<CheckoutCustomer>) {
   const [form, setForm] = useState<CheckoutCustomer>({ ...EMPTY_CUSTOMER, ...initial });
   const [errors, setErrors] = useState<Errors>({});
