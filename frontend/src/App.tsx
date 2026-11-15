@@ -14,6 +14,8 @@ import NotFoundPage from "@/pages/not-found";
 import CollectionPage from "@/pages/collection";
 import LinksPage from "@/pages/links";
 import TrackPage from "@/pages/track";
+import CheckoutPage from "@/pages/checkout";
+import { CartProvider } from "@/components/cart-provider";
 import { features } from "@/lib/features";
 
 const queryClient = new QueryClient({
@@ -37,6 +39,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <CartProvider>
         <ScrollToTop />
         <Routes>
           {/* Business-card QR target: a page of its own, without the site header. */}
@@ -48,6 +51,7 @@ export default function App() {
             <Route path="books/:id" element={<BookPage />} />
             <Route path="collections/:id" element={<CollectionPage />} />
             <Route path="track" element={<TrackPage />} />
+            <Route path="checkout" element={<CheckoutPage />} />
             {features.academic ? (
               <>
                 <Route path="academic" element={<FieldsPage />} />
@@ -65,6 +69,7 @@ export default function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
+        </CartProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import type { Book } from "@/lib/types";
+import { AddToCartButton } from "@/components/cart-buttons";
 
 // ── Status config ────────────────────────────────────────
 
@@ -139,12 +140,15 @@ export default function BookCard({ book }: { book: Book }) {
         )}
 
         {/* CTA */}
-        <Link
-          to={`/books/${book.id}`}
-          className="mt-auto flex w-full items-center justify-center rounded-lg border border-border/70 bg-card py-2 text-[12px] font-semibold text-foreground/80 transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
-        >
-          عرض التفاصيل
-        </Link>
+        <div className="mt-auto flex gap-1.5">
+          <Link
+            to={`/books/${book.id}`}
+            className="flex flex-1 items-center justify-center rounded-lg border border-border/70 bg-card py-2 text-[12px] font-semibold text-foreground/80 transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
+          >
+            عرض التفاصيل
+          </Link>
+          <AddToCartButton book={book} variant="card" />
+        </div>
       </div>
     </div>
   );

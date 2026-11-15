@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { LogoMark } from "@/components/logo";
 import { features } from "@/lib/features";
 import StoreMap from "@/components/store-map";
+import { CartButton } from "@/components/cart-buttons";
 
 export default function Layout() {
   const { pathname } = useLocation();
@@ -27,7 +28,7 @@ export default function Layout() {
             </span>
           </Link>
 
-          <nav className="flex items-center gap-1 text-sm">
+          <nav className="flex items-center gap-0.5 text-sm sm:gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
@@ -41,6 +42,7 @@ export default function Layout() {
                 {link.label}
               </Link>
             ))}
+            <CartButton />
           </nav>
         </div>
       </header>
@@ -79,6 +81,11 @@ export default function Layout() {
               معلومات قانونية
             </p>
             <ul className="flex flex-col gap-2 text-sm">
+              <li>
+                <Link to="/track" className="text-gold-light transition-colors hover:text-white">
+                  تتبّع طلبك
+                </Link>
+              </li>
               <li>
                 <Link to="/privacy" className="text-gold-light transition-colors hover:text-white">
                   سياسة الخصوصية

@@ -69,7 +69,7 @@ function OrderForm({ book, onPlaced, onClose }: { book: Book; onPlaced: (o: Plac
           {authorLine && <p className="line-clamp-1 text-xs text-muted-foreground">{authorLine}</p>}
         </div>
         <span className="shrink-0 text-sm font-bold text-primary">
-          {book.price != null && book.price > 0 ? formatDzd(book.price) : <span className="text-xs font-medium text-muted-foreground">السعر عند التأكيد</span>}
+          {Number(book.price) > 0 ? formatDzd(Number(book.price)) : <span className="text-xs font-medium text-muted-foreground">السعر عند التأكيد</span>}
         </span>
       </div>
 
