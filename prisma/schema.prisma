@@ -736,6 +736,10 @@ model SocialSettings {
   /// alert key → when it was last sent, so one problem is reported once a day, not every run.
   alertsSent Json?
 
+  /// Non-urgent messages waiting for the evening digest (19:30 Algeria).
+  digest       Json?
+  digestSentAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

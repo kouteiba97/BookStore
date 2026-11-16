@@ -89,6 +89,7 @@ export default function SocialAutopostPage() {
       if (!r.ran) return toast.info("تشغيل آخر جارٍ الآن، حاول بعد قليل");
       const parts = [
         r.planned && `خُطط ${r.planned}`,
+        r.promoted && `كتب جديدة قُدّمت ${r.promoted}`,
         r.scheduled && `جُدول ${r.scheduled}`,
         r.published && `نُشر ${r.published}`,
         r.failed && `تعذّر ${r.failed}`,

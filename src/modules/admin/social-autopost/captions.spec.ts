@@ -38,6 +38,12 @@ describe('captions', () => {
     expect(text).toContain('https://shop.example/books/1');
   });
 
+  it('announces new arrivals, whatever the seed', () => {
+    for (const seed of ['a', 'b', 'c']) {
+      expect(buildCaption(book, { platform: 'facebook', seed, newArrival: true }).split('\n')[0]).toBe('🆕 وصل حديثاً إلى مكتبة البيان');
+    }
+  });
+
   it('rotates templates by seed', () => {
     const variants = new Set(Array.from({ length: 30 }, (_, i) => buildCaption(book, { platform: 'facebook', seed: `k${i}` }).split('\n')[0]));
     expect(variants.size).toBeGreaterThan(1);

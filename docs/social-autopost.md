@@ -10,18 +10,22 @@ Code: `src/modules/admin/social-autopost/` · admin page:
 choice: `reports/Facebook posting times Algeria automation.md` (+ raw notes in
 `research_notes/`).
 
-## Status — handoff (read this first on another machine)
+## Status — handoff (read this first in a new session)
 
-**Phase 1 is done and merged into `master` (Nov 2026).** Built and tested end to end in
-dry-run mode (unit specs + `scripts/social-autopost-sim.js`, 15 scenario checks). It has
-**not yet posted to a real Meta account** — that needs the owner's one-time setup below.
+**Phases 1 and 2 (backend + web) are on `master` (Nov 2026).** Tested end to end in dry-run
+mode (unit specs + `scripts/social-autopost-sim.js`, 22 scenario checks). It has **not yet
+posted to a real Meta account** — that needs the owner's one-time setup below.
 
 | Phase | What | State |
 |---|---|---|
 | 1 | Queue tables, planner, captions, 4:5 Instagram image, Meta publisher, error classes, auto-pause + Telegram, admin page, calendar | ✅ done |
+| 2a | New arrivals: a book added in the last 3 days takes the next slot (≥ 1 h away) on each platform, announced «وصل حديثاً»; Meta-scheduled posts are taken back for it | ✅ done |
+| 2b | Evening digest: non-urgent messages wait for one silent Telegram message at 19:30; Thursday adds a weekly summary. Urgent ones (channel paused) still go out at once | ✅ done |
+| 2c | Books with no stock status (web Quick-Add default) are postable; stock = 0 and «حسب الطلب» never are | ✅ done |
+| 2d | Port the screen to the Flutter `admin_app` (`C:\Users\ii\Desktop\BookStoreMobile`) | see that repo |
 | — | Owner's Meta setup + first real post + check it is public | ⏳ owner |
-| 2 | Port the screen to the Flutter `admin_app` (separate repo); "new arrival" post when a book is added via Quick-Add; optional AI hook line in captions (facts only — never invent claims about a religious book); daily 19:30 digest instead of one message per event | next |
-| 3 | Learning loop: pull per-post reach nightly (Graph post insights), 5 posts in the best slot / 2 in test slots per week, move the main slot after 4–8 weeks (separate profiles for normal, summer, Ramadan) | later |
+| later | Optional AI hook line in captions (facts only — never invent claims about a religious book; needs an API key and owner approval of cost) | not started |
+| 3 | Learning loop: pull per-post reach nightly (Graph post insights), 5 posts in the best slot / 2 in test slots per week, move the main slot after 4–8 weeks (separate profiles for normal, summer, Ramadan) | later — needs a few weeks of real posts first |
 
 Decisions already taken (don't re-litigate without the owner):
 - **Meta API directly**, no Zapier/Make/Buffer — data, covers and admin already live here.
@@ -45,8 +49,10 @@ safe to call any time; `SocialTicker` calls it every 10 min inside the API,
 it too.
 
 1. **Plan** the next 14 days: one post per free slot. Books must have an https cover and be
-   `available` or `rare`; a book is not posted again on the same platform for 120 days; new
-   arrivals and books with a description go first; two posts in a row avoid the same category.
+   `available` or `rare` (or have no stock status recorded), never stock 0; a book is not
+   posted again on the same platform for 120 days; books with a description go first; two
+   posts in a row avoid the same category. Before planning, **new arrivals** (added in the
+   last 3 days, not yet posted) take over the next slot ≥ 1 h away from an older book.
 2. **Approve** drafts after `autoApproveHours` (default 48 h) unless the owner skipped them.
 3. **Check the token** once a day (renews it if `META_APP_ID`/`META_APP_SECRET` are set and
    Meta made it expiring).
@@ -63,7 +69,9 @@ failure the next attempt first asks Meta whether the first one went through.
 **Errors** (`meta-errors.ts`): hiccups are retried (5 min → 15 min → 1 h → 3 h);
 throttling pauses the channel for an hour; a bad picture fails that one post and the queue
 moves on; account problems (checkpoint, spam flag, revoked access, dead token) **pause the
-channel** and alert the owner. 5 failures in a row also pause it.
+channel** and alert the owner at once (Telegram). 5 failures in a row also pause it. Everything
+non-urgent (a skipped book, the queue running dry, token expiring in > 3 days) waits for the
+silent **19:30 digest** (`sendDigest`), with a weekly summary on Thursdays.
 
 Files: `schedule.ts` (slots + calendar, pure) · `book-picker.ts` · `captions.ts` (templates
 built only from stored facts, ≤ 5 hashtags) · `instagram-image.ts` · `meta-graph.client.ts`

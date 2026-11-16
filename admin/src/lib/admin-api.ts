@@ -574,6 +574,7 @@ export const runAutopostNow = () =>
       r.data as {
         ran: boolean;
         planned: number;
+        promoted: number;
         approved: number;
         scheduled: number;
         published: number;
