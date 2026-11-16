@@ -94,6 +94,7 @@ model Store {
   stockMovements StockMovement[]
   counters       StoreCounter[]
   homeSections   HomeSection[]
+  customers      Customer[]
 
   socialSettings SocialSettings?
   socialChannels SocialChannel[]
@@ -431,22 +432,88 @@ model Order {
   invoiceNumber String?
   invoicedAt    DateTime?
 
+  /// Short public order number ("BY-482193") the customer reads over the
+  /// phone and uses to track the order. Given to every online order; null on
+  /// counter sales, imports and orders made before it existed.
+  reference String?
+
+  /// Delivery company and its tracking number, once the order is shipped.
+  /// Shown to the customer on the tracking page.
+  carrier        String?
+  trackingNumber String?
+
   /// Date of the sale when it differs from when it was recorded (imports).
   soldAt DateTime?
 
   importJobId String?
 
+  /// The customer account that placed it, when they were logged in. Never
+  /// set from a phone number match (numbers are not verified).
+  customerId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  store   Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  items   OrderItem[]
-  request Request?
+  store    Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customer Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items    OrderItem[]
+  request  Request?
 
   @@unique([storeId, invoiceNumber])
+  @@unique([storeId, reference])
   @@index([storeId, status])
   @@index([storeId, createdAt])
   @@index([storeId, channel])
+  @@index([customerId, createdAt])
+}
+
+/// A storefront customer who chose to create an account. Optional: guests
+/// order without one. Logs in with the phone number and a password.
+model Customer {
+  id      String @id @default(uuid())
+  storeId String
+
+  firstName String
+  lastName  String
+  /// National form, "0555123456" (see common/orders/order-public.ts).
+  phone     String
+  email     String?
+
+  /// scrypt hash with its salt (common/auth/password.ts). Never sent out.
+  passwordHash String
+
+  /// Saved delivery address, pre-filled at checkout.
+  wilaya  String?
+  address String?
+
+  /// Raised on password change/reset: every older login token stops working.
+  tokenVersion Int @default(0)
+
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  store       Store                @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders      Order[]
+  resetTokens PasswordResetToken[]
+
+  @@unique([storeId, phone])
+  @@unique([storeId, email])
+}
+
+/// One-time link to set a new password. Only the SHA-256 of the token is
+/// stored, so a database leak cannot be used to take over accounts.
+model PasswordResetToken {
+  id         String    @id @default(uuid())
+  customerId String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
 }
 
 model OrderItem {

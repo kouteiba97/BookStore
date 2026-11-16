@@ -15,6 +15,7 @@ import {
   CounterSaleDto,
   SALE_CHANNELS,
   UpdateOrderStatusDto,
+  UpdateShippingDto,
   UpsertOrderDto,
 } from './dto/order.dto';
 import { AdminAuthGuard } from '../../../common/guards/admin-auth.guard';
@@ -77,6 +78,11 @@ export class OrdersController {
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
     return this.service.updateStatus(id, dto.status);
+  }
+
+  @Patch(':id/shipping')
+  updateShipping(@Param('id') id: string, @Body() dto: UpdateShippingDto) {
+    return this.service.updateShipping(id, dto);
   }
 
   @Post(':id/cancel')

@@ -34,16 +34,17 @@ Open **http://localhost:5173/admin** to land on the overview page.
 | Route | What it does |
 |---|---|
 | `/admin` | KPIs, daily charts, status breakdowns, top-selling books, recent activity. Range toggle: 7 / 30 / 90 days. |
-| `/admin/orders` | Searchable list of orders. Filters by status. Click a row → detail. |
+| `/admin/orders` | Searchable list of orders (name, phone, **order number** `BY-482193`, invoice number, book). Filters by status. Click a row → detail. **Web orders land here directly** with status «قيد الانتظار»; the menu item shows how many are waiting. Opens pre-filtered with `?search=`. |
 | `/admin/sales` | **Counter** (POS: search a book, quantities, discount, payment → a delivered sale that takes stock at once) and **Register** (every sale: website, counter, imported; filter by channel and dates). |
-| `/admin/orders/:id` | Status pipeline, edit modal (multi-item), cancel / **return** («إرجاع» on a delivered sale), invoice button, channel/payment/discount, WhatsApp shortcut. |
+| `/admin/orders/:id` | Order number, status pipeline, edit modal (multi-item), cancel / **return** («إرجاع» on a delivered sale), invoice button, channel/payment/discount. **«إبلاغ الزبون عبر واتساب»** opens WhatsApp with a ready message for the current status (confirm / confirmed with the amount / shipped with carrier and tracking number / delivered / cancelled). **«الشحن»** card (online orders, once confirmed): delivery company + tracking number, shown on the customer's tracking page. Warns when a pending order has a book without a price or no shipping cost yet. |
+| `/admin/customers` | «الزبائن»: storefront accounts (optional — most customers order as guests). Orders count, total bought, last order, «طلباته» (opens the orders list filtered by phone), **«رابط إعادة التعيين»** (one-time link, 48 h, to send on WhatsApp when a customer forgot their password), delete on request (orders stay, unlinked). |
 | `/admin/invoice/:id` | Printable numbered invoice (outside the dashboard shell). Print or save as PDF. Pack: `invoices`. |
 | `/admin/purchases` | Purchases from suppliers (stock in, purchase price updated), payments and balance per supplier, cancel; **Suppliers** tab. Pack: `money`. |
 | `/admin/expenses` | Rent, salaries, transport… by period and category. Pack: `money`. |
 | `/admin/reports` | Revenue, cost of books sold, margin, expenses, net profit; monthly chart + table; channels; best sellers; slow stock; stock value; Excel export. Pack: `reports`. |
 | `/admin/settings` | Store identity for invoices (name, phone, address, RC, NIF, NIS, ART, footer) and the pack: usage, limits, comparison table. |
 | `/admin/data` | Excel import wizard (books, **or** sales / purchases / expenses history), import history with undo, Excel exports, data quality. |
-| `/admin/requests` | Customer leads from the public site. Status = `جديد / تم التواصل / تم البيع`. **Convert to order** button. |
+| `/admin/requests` | «اطلب كتابًا» leads (books **not** in the catalogue) and orders from older app versions. Status = `جديد / تم التواصل / تم البيع`. **Convert to order** button. |
 | `/admin/books` | CRUD for books. Inline inventory toggle (status + stock) inside the form. |
 | `/admin/storefront` | «واجهة المتجر»: the storefront home page below the search box. Reorder, hide/show and rename the built-in blocks (categories, academic, latest, most requested, «request a book» banner), and add **shelves of hand-picked books** (e.g. «جديد معرض الكتاب SILA 2026»): name, short description, books added by search, reordered, removed. The home page shows a shelf’s first 8 books and links «عرض الكل» to `/collections/:id`. An empty or hidden shelf does not show. |
 | `/admin/catalog/:resource` | Tabs for Categories / Authors / Publishers / Countries. Add/edit/delete. Refuses delete if any book references the row. |
@@ -87,7 +88,18 @@ When you save, **all items are replaced** — the backend deletes existing items
 
 ---
 
-## 5. Lead → Order conversion
+## 5. A web order, start to finish
+
+1. The customer orders on the site (one book, or the whole cart). They get an order number like `BY-482193` and a screen explaining what happens next. **No stock moves yet.**
+2. The order appears in «الطلبات» as «قيد الانتظار» (badge in the menu). Prices come from the catalogue; a book without a price shows 0 and a warning.
+3. Call the customer (or press «إبلاغ الزبون عبر واتساب»). In «تعديل الطلب» set the missing prices and the **shipping cost**.
+4. **تأكيد** → books leave stock. Send the confirmation message (it includes the amount to pay on delivery and the tracking link).
+5. Ship → fill «الشحن» (carrier + tracking number) → **شحن** → send the shipping message.
+6. **تسليم** when delivered.
+
+The customer follows every step at `/track` (order number + phone) or in «حسابي» if they ordered while logged in.
+
+## 6. Lead → Order conversion
 
 A "request" (طلب عميل) is a lead from the public site. To turn it into a real order:
 
@@ -102,7 +114,7 @@ Result: a new order is created in `confirmed` status, and the lead is marked `do
 
 ---
 
-## 6. Backend API reference
+## 7. Backend API reference
 
 All under `/api/v1/admin`. Examples assume `localhost:3000`.
 
@@ -161,7 +173,32 @@ POST   /admin/orders/:id/invoice        → { store, order } and assigns the inv
 
 POST   /admin/orders/from-request/:requestId
        { items: [{bookId, quantity, unitPrice}], shippingCost?, notes? }
+PATCH  /admin/orders/:id/shipping       { carrier?, trackingNumber? }   ← shown on the customer's tracking page
 ```
+
+Online orders (created here, converted from a lead, or placed on the storefront) get a `reference` (`BY-` + 6 digits, `ORDER_REF_PREFIX` env to change the prefix).
+
+### Customers (storefront accounts)
+
+```
+GET    /admin/customers?search=&page=&pageSize=   → { customers: [{…, ordersCount, totalSpent, lastOrderAt}], total }
+POST   /admin/customers/:id/reset-link            → { url, expiresAt }   (one use, 48 h, earlier links stop working)
+DELETE /admin/customers/:id                       ← their orders stay, unlinked
+```
+
+### Storefront (public) — orders and accounts
+
+```
+POST /:storeSlug/orders                 { firstName, lastName, phone, wilaya, address, items: [{bookId, quantity}], note?, website? }
+                                        → { reference, status, items, totals, phone, whatsappUrl }   (5/min; server prices; 20 lines × 10 copies max)
+GET  /:storeSlug/orders/track?ref=&phone=     both must match → public view only (10/min)
+POST /:storeSlug/orders/quote           { bookIds } → today's price and availability (cart)
+
+POST /:storeSlug/account/register | login | password/reset     (5/min each) → { token, customer }
+GET|PATCH /:storeSlug/account/me · POST /account/password · GET /account/orders[/:reference]   (customer token)
+```
+
+A customer token is signed with its own secret (`CUSTOMER_JWT_SECRET`, or derived from `JWT_SECRET`) and audience; the admin guard refuses it and the customer guard refuses admin tokens. Changing or resetting a password logs out every other device. An order joins an account only when placed while logged in — never by phone match.
 
 ### Inventory
 
@@ -218,13 +255,13 @@ Only ids/filters are accepted; titles, prices and pictures are read from the dat
 
 ---
 
-## 7. Securing the admin (production)
+## 8. Securing the admin (production)
 
 The admin is protected by the API itself: `POST /api/v1/admin/auth/login` exchanges `ADMIN_PASSWORD` for a 30-day JWT (`JWT_SECRET`), and `AdminAuthGuard` protects every admin route. Login is limited to 10 attempts/min. An extra layer (Cloudflare Access, basic-auth) is optional.
 
 ---
 
-## 8. Schema additions in this dashboard
+## 9. Schema additions in this dashboard
 
 Migration `prisma/migrations/20260425000000_add_orders_and_price/`:
 
@@ -236,7 +273,7 @@ Migration `prisma/migrations/20260425000000_add_orders_and_price/`:
 
 ---
 
-## 9. Frequently asked
+## 10. Frequently asked
 
 **Why no users?**
 The platform never had user accounts. Sales close manually over WhatsApp; the `Request` model captures lead info. Adding users would require a full auth system — out of scope for this iteration.

@@ -4,6 +4,7 @@ import BookCard from "@/components/book-card";
 import BookGallery from "@/components/book-gallery";
 import { BookGridSkeleton } from "@/components/book-card-skeleton";
 import { OrderModal } from "@/components/lazy-dialogs";
+import { AddToCartButton } from "@/components/cart-buttons";
 import { fetchBook, fetchRecommendations } from "@/lib/queries";
 import type { Book } from "@/lib/types";
 
@@ -260,8 +261,9 @@ export default function BookPage() {
 
           {/* CTA */}
           <div className="mt-2 flex flex-col gap-2">
-            <div className="hidden md:block">
+            <div className="hidden flex-wrap gap-2 md:flex">
               <OrderButton book={book} />
+              <AddToCartButton book={book} />
             </div>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 shrink-0 text-primary/60">
@@ -342,8 +344,13 @@ export default function BookPage() {
       )}
 
       {/* ── Sticky mobile CTA ── */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/95 p-3 backdrop-blur-sm md:hidden">
-        <OrderButton book={book} />
+      <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border/60 bg-background/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm md:hidden">
+        <div className="flex-1">
+          <OrderButton book={book} />
+        </div>
+        <div className="w-[40%]">
+          <AddToCartButton book={book} variant="bar" />
+        </div>
       </div>
     </div>
   );

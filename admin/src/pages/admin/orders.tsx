@@ -27,7 +27,7 @@ const LABEL: Record<OrderStatus, string> = STATUSES.reduce(
 );
 
 export default function OrdersPage() {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get("search") ?? "");
   const [status, setStatus] = useState<string>("");
   const [page, setPage] = useState(1);
 
@@ -78,7 +78,7 @@ export default function OrdersPage() {
           <input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="ابحث بالاسم أو الهاتف..."
+            placeholder="ابحث بالاسم أو الهاتف أو رقم الطلب..."
             className={`${inputClass} pr-9`}
           />
         </div>
@@ -105,7 +105,7 @@ export default function OrdersPage() {
       ) : orders.length === 0 ? (
         <EmptyState
           title="لا توجد طلبات"
-          description="عند إنشاء طلب أو تحويل طلب عميل، سيظهر هنا."
+          description="طلبات الموقع تصل هنا مباشرة بحالة «قيد الانتظار»، وكذلك ما تنشئه أو تحوّله من طلبات العملاء."
           icon={
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" className="h-7 w-7">
               <path d="M3 6h18l-2 13H5L3 6Z" />
@@ -133,6 +133,7 @@ export default function OrdersPage() {
                     <td className="px-4 py-3">
                       <p className="font-semibold">{o.firstName} {o.lastName}</p>
                       <p className="text-xs text-muted-foreground">{o.phone} • {o.wilaya}</p>
+                      {o.reference && <p className="font-mono text-[11px] text-muted-foreground" dir="ltr">{o.reference}</p>}
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs text-muted-foreground">
@@ -174,6 +175,7 @@ export default function OrdersPage() {
                     <div className="min-w-0">
                       <p className="font-bold truncate">{o.firstName} {o.lastName}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">{o.phone} • {o.wilaya}</p>
+                      {o.reference && <p className="mt-0.5 font-mono text-[11px] text-muted-foreground" dir="ltr">{o.reference}</p>}
                     </div>
                     <StatusBadge status={o.status} label={LABEL[o.status]} />
                   </div>
