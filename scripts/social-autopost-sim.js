@@ -39,6 +39,7 @@ const { TenantModule } = dist('common/tenant/tenant.module');
 const { StorageModule } = dist('modules/storage/storage.module');
 const { SocialAutopostEngineModule } = dist('modules/admin/social-autopost/social-autopost.module');
 const { SocialAutopostService } = dist('modules/admin/social-autopost/autopost.service');
+const { SocialNotifier } = dist('modules/admin/social-autopost/notifier.service');
 const { GraphApiError } = dist('modules/admin/social-autopost/meta-errors');
 
 const local = (s) => new Date(s + ':00+01:00'); // Algeria time
@@ -56,6 +57,9 @@ Module({ imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, Tenan
   const svc = app.get(SocialAutopostService);
   const db = app.get(PrismaService);
   const dry = svc.meta;
+  // Record what would be sent to the owner on Telegram.
+  const sends = [];
+  app.get(SocialNotifier).send = async (text, urgent) => (sends.push({ text, urgent }), false);
   await seed(db);
 
   // A Meta stand-in that records calls and can be told to fail.
@@ -103,6 +107,34 @@ Module({ imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, Tenan
   const r = await tick('2026-11-17T16:00');
   const scheduled = await db.socialPost.count({ where: { platform: 'facebook', status: 'scheduled' } });
   check(r.approved > 0 && scheduled >= 6, `drafts auto-approved after 48 h; ${scheduled} FB posts waiting in Meta's scheduler`);
+
+  // ── A book added now jumps the queue on both platforms ──
+  const simStore = await db.store.findUnique({ where: { slug: 'autopost-sim' } });
+  const anyBook = await db.book.findFirst({ where: { storeId: simStore.id } });
+  const addedAt = local('2026-11-17T16:02');
+  const fresh = await db.book.create({
+    data: { title: 'كتاب وصل اليوم', storeId: simStore.id, categoryId: anyBook.categoryId, imageUrl: 'https://covers.example.com/covers/new.jpg', createdAt: addedAt },
+  }); // no stock status recorded, like the web Quick-Add default
+  const soldOut = await db.book.create({
+    data: {
+      title: 'كتاب نفد',
+      storeId: simStore.id,
+      categoryId: anyBook.categoryId,
+      imageUrl: 'https://covers.example.com/covers/sold-out.jpg',
+      createdAt: addedAt,
+      inventory: { create: { storeId: simStore.id, status: 'available', stock: 0 } },
+    },
+  });
+  calls.length = 0;
+  const rp = await tick('2026-11-17T16:10');
+  const promotedFb = await db.socialPost.findFirst({ where: { platform: 'facebook', scheduledAt: { gte: local('2026-11-17T17:10') } }, orderBy: { scheduledAt: 'asc' } });
+  const promotedIg = await db.socialPost.findFirst({ where: { platform: 'instagram', scheduledAt: { gte: local('2026-11-17T17:10') } }, orderBy: { scheduledAt: 'asc' } });
+  check(
+    rp.promoted === 2 && promotedFb.bookId === fresh.id && promotedIg.bookId === fresh.id && promotedFb.caption.startsWith('🆕 وصل حديثاً'),
+    'new book takes the next Facebook and Instagram slots, announced as «وصل حديثاً»',
+  );
+  check(calls.includes('deletePost') && promotedFb.status === 'scheduled', 'the Meta-scheduled post it replaced was taken back, the new one handed over');
+  check((await db.socialPost.count({ where: { bookId: soldOut.id } })) === 0, 'a sold-out book (stock 0) is never posted');
 
   // ── Network error on a Facebook publish: retried, never duplicated ──
   // Turn one approved FB post into a "due now" post and make the first call fail.
@@ -159,6 +191,15 @@ Module({ imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, Tenan
   const upcoming = await db.socialPost.count({ where: { scheduledAt: { gt: t3 }, status: { in: ['draft', 'approved', 'scheduled'] } } });
   check(upcoming >= 20, `two-week buffer kept full (${upcoming} upcoming posts)`);
 
+  // ── Alerts: urgent at once, the rest in one evening digest ──
+  check(sends.some((m) => m.urgent && m.text.includes('توقف النشر على إنستغرام')), 'checkpoint pause alerted immediately (urgent)');
+  check(!sends.some((m) => !m.text.startsWith('🌙') && m.text.includes('تعذّر نشر')), 'bad-picture notice was not sent on its own');
+  const digest = sends.find((m) => m.text.startsWith('🌙 ملخص المساء'));
+  check(Boolean(digest) && !digest.urgent && digest.text.includes('تعذّر نشر'), 'it arrived in the silent evening digest (after 19:30)');
+  const digests = sends.filter((m) => m.text.startsWith('🌙')).length;
+  await svc.tick(new Date(t3.getTime() + 30 * 60_000));
+  check(sends.filter((m) => m.text.startsWith('🌙')).length === digests, 'at most one digest a day');
+
   await db.store.delete({ where: { slug: 'autopost-sim' } });
   console.log(failures ? `\n${failures} check(s) failed` : '\nall checks passed');
   await app.close();
@@ -182,6 +223,7 @@ async function seed(db) {
     await db.book.create({
       data: {
         title: 'كتاب محاكاة ' + i,
+        createdAt: new Date('2025-01-01T00:00:00Z'), // old stock, not new arrivals
         storeId: store.id,
         categoryId: cats[i % cats.length].id,
         price: 1500 + i * 100,

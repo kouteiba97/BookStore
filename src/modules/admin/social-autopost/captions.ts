@@ -19,6 +19,8 @@ export interface CaptionContext {
   bookLink?: string | null;
   /** Picks the template; pass something stable per post (book id + date). */
   seed: string;
+  /** Just added to the store: announce it as a new arrival. */
+  newArrival?: boolean;
 }
 
 const MAX_DESCRIPTION = 420;
@@ -97,10 +99,18 @@ const IN_STOCK_TEMPLATE: Template = (m, about) => [
   ...(about ? ['', about] : []),
 ];
 
+/** A book the store has just added. */
+const NEW_ARRIVAL_TEMPLATE: Template = (m, about) => [
+  `🆕 وصل حديثاً إلى ${m.store.name}`,
+  `📚 ${m.title}`,
+  ...facts(m),
+  ...(about ? ['', about] : []),
+];
+
 export function buildCaption(m: SocialPostMetadata, ctx: CaptionContext): string {
   const about = excerpt(m.description);
   const choices = m.availability?.code === 'available' ? [...TEMPLATES, IN_STOCK_TEMPLATE] : TEMPLATES;
-  const template = choices[stableIndex(ctx.seed, choices.length)];
+  const template = ctx.newArrival ? NEW_ARRIVAL_TEMPLATE : choices[stableIndex(ctx.seed, choices.length)];
   const lines = template(m, about);
 
   lines.push('', orderLine(ctx));

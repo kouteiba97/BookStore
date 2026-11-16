@@ -11,7 +11,7 @@ import { frameForInstagram, instagramImageKey } from './instagram-image';
 import { GraphApiError, ownerFix, type ErrorClass } from './meta-errors';
 import { DryRunMetaApi, MetaGraphClient, type MetaApi } from './meta-graph.client';
 import { SocialNotifier } from './notifier.service';
-import { algeriaDate, calendarOrDefault, slotsBetween, type Platform } from './schedule';
+import { algeriaDate, algeriaToUtc, calendarOrDefault, slotsBetween, weekday, type Platform } from './schedule';
 import { decryptToken, encryptToken } from './token-crypto';
 
 /**
@@ -65,6 +65,14 @@ const ALERT_REPEAT_MS = 20 * HOUR;
 /** An in-flight post untouched this long was interrupted (server restart). */
 const STUCK_MS = 15 * MIN;
 const IMAGE_MAX_BYTES = 15 * 1024 * 1024;
+/** A book added this recently is announced as a new arrival in the next free-able slot. */
+const NEW_ARRIVAL_MS = 3 * DAY;
+const MAX_PROMOTIONS_PER_RUN = 3;
+/** A slot closer than this keeps its book (Instagram may already be preparing it). */
+const PROMOTE_MIN_LEAD_MS = HOUR;
+/** Evening digest of non-urgent messages, Algeria time (the owner works 7:00–19:00). */
+const DIGEST_TIME = '19:30';
+const MAX_DIGEST_ITEMS = 30;
 
 export const REQUIRED_SCOPES: Record<Platform, string[]> = {
   facebook: ['pages_manage_posts'],
@@ -75,6 +83,8 @@ export interface TickReport {
   ran: boolean;
   dryRun: boolean;
   planned: number;
+  /** New arrivals moved to the front of the queue. */
+  promoted: number;
   approved: number;
   scheduled: number;
   published: number;
@@ -155,6 +165,8 @@ export class SocialAutopostService {
 
     try {
       const ctx = await this.context(store.id, now);
+      // New arrivals first, so the planner does not park them two weeks out.
+      await this.promoteNewArrivals(ctx);
       await this.plan(ctx);
       await this.autoApprove(ctx);
       if (ctx.settings.pageId) await this.checkToken(ctx);
@@ -171,6 +183,7 @@ export class SocialAutopostService {
       }
       await this.expireMissed(ctx);
       await this.checkHealth(ctx);
+      await this.sendDigest(ctx);
       await this.notifier.heartbeat('tick');
       return ctx.report;
     } catch (err) {
@@ -282,17 +295,13 @@ export class SocialAutopostService {
     });
     const excluded = [...new Set([...recent.map((r) => r.bookId), ...exclude])];
     const base: Prisma.BookWhereInput = {
-      storeId,
+      ...this.eligibleWhere(storeId),
       ...(excluded.length ? { id: { notIn: excluded } } : {}),
-      // Meta fetches the picture itself, so it must be a public https URL.
-      imageUrl: this.meta.dryRun ? { not: null } : { startsWith: 'https://' },
-      // Only what a customer can actually get.
-      inventory: { status: { in: ['available', 'rare'] } },
     };
     const select = { id: true, categoryId: true, createdAt: true } as const;
     const [described, plain] = await Promise.all([
-      this.prisma.book.findMany({ where: { ...base, description: { not: null }, NOT: { description: '' } }, select }),
-      this.prisma.book.findMany({ where: { ...base, OR: [{ description: null }, { description: '' }] }, select }),
+      this.prisma.book.findMany({ where: { AND: [base, { description: { not: null } }, { NOT: { description: '' } }] }, select }),
+      this.prisma.book.findMany({ where: { AND: [base, { OR: [{ description: null }, { description: '' }] }] }, select }),
     ]);
     return pickBooks(
       [...described.map((b) => ({ ...b, hasDescription: true })), ...plain.map((b) => ({ ...b, hasDescription: false }))],
@@ -303,12 +312,113 @@ export class SocialAutopostService {
     );
   }
 
+  /**
+   * Books that may be posted at all: a public https cover (Meta fetches the
+   * picture itself) and something a customer can get — available or rare,
+   * or no stock status recorded (the web Quick-Add leaves it off by default).
+   * Never "on request", never a counted stock of zero.
+   */
+  private eligibleWhere(storeId: string): Prisma.BookWhereInput {
+    return {
+      storeId,
+      imageUrl: this.meta.dryRun ? { not: null } : { startsWith: 'https://' },
+      OR: [
+        { inventory: { is: null } },
+        {
+          inventory: {
+            is: { status: { in: ['available', 'rare'] }, OR: [{ stock: null }, { stock: { gt: 0 } }] },
+          },
+        },
+      ],
+    };
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // 1b. New arrivals jump the queue
+  // ════════════════════════════════════════════════════════════
+
+  /**
+   * A book added in the last few days has not waited two weeks for a free
+   * slot: it takes the next upcoming slot of a book that is not new (that
+   * book goes back to the pool) and is announced as «وصل حديثاً».
+   * Facebook posts already in Meta's scheduler are taken back first.
+   */
+  private async promoteNewArrivals(ctx: Ctx): Promise<void> {
+    const since = new Date(ctx.now.getTime() - NEW_ARRIVAL_MS);
+    for (const platform of PLATFORMS) {
+      if (!ctx.channels.get(platform)?.enabled) continue;
+
+      const already = await this.prisma.socialPost.findMany({
+        where: { storeId: ctx.storeId, platform, book: { createdAt: { gte: since } } },
+        select: { bookId: true },
+        distinct: ['bookId'],
+      });
+      const fresh = await this.prisma.book.findMany({
+        where: {
+          AND: [
+            this.eligibleWhere(ctx.storeId),
+            { createdAt: { gte: since, lte: ctx.now } },
+            ...(already.length ? [{ id: { notIn: already.map((a) => a.bookId) } }] : []),
+          ],
+        },
+        select: postBookSelect,
+        orderBy: { createdAt: 'asc' },
+        take: MAX_PROMOTIONS_PER_RUN,
+      });
+      if (!fresh.length) continue;
+
+      const canTakeBack = platform === 'facebook' && this.running(ctx, 'facebook');
+      for (const book of fresh) {
+        const target = await this.prisma.socialPost.findFirst({
+          where: {
+            storeId: ctx.storeId,
+            platform,
+            status: { in: canTakeBack ? ['draft', 'approved', 'scheduled'] : ['draft', 'approved'] },
+            scheduledAt: { gte: new Date(ctx.now.getTime() + PROMOTE_MIN_LEAD_MS) },
+            book: { createdAt: { lt: since } },
+          },
+          orderBy: { scheduledAt: 'asc' },
+        });
+        if (!target) break;
+
+        if (target.status === 'scheduled' && target.remoteId) {
+          const pageToken = await this.facebookPageToken(ctx);
+          if (!pageToken) break;
+          try {
+            await this.meta.deletePost(pageToken, target.remoteId);
+          } catch (err) {
+            if (!(err instanceof GraphApiError && err.info.code === 100)) {
+              ctx.report.notes.push(`facebook: could not take back a scheduled post for a new arrival (${errorText(err)})`);
+              break;
+            }
+          }
+        }
+
+        await this.prisma.socialPost.update({
+          where: { id: target.id },
+          data: {
+            bookId: book.id,
+            caption: this.captionFor(ctx.storeName, book, platform, target.scheduledAt, true),
+            imageUrl: platform === 'facebook' ? book.imageUrl : null,
+            status: target.status === 'draft' ? 'draft' : 'approved',
+            remoteId: null,
+            containerId: null,
+            attempts: 0,
+            nextAttemptAt: null,
+            error: null,
+          },
+        });
+        ctx.report.promoted++;
+      }
+    }
+  }
+
   async loadBooks(ids: string[]): Promise<Map<string, PostBook>> {
     const rows = await this.prisma.book.findMany({ where: { id: { in: ids } }, select: postBookSelect });
     return new Map(rows.map((b) => [b.id, b]));
   }
 
-  captionFor(storeName: string, book: PostBook, platform: Platform, at: Date): string {
+  captionFor(storeName: string, book: PostBook, platform: Platform, at: Date, newArrival = false): string {
     const link = process.env.STOREFRONT_URL?.trim().replace(/\/+$/, '');
     const meta = buildSocialMetadata(
       {
@@ -329,6 +439,7 @@ export class SocialAutopostService {
       whatsapp: process.env.WHATSAPP_NUMBER,
       bookLink: link && /^https?:\/\//.test(link) ? `${link}/books/${book.id}` : null,
       seed: `${book.id}:${at.toISOString()}`,
+      newArrival,
     });
   }
 
@@ -853,23 +964,84 @@ export class SocialAutopostService {
     }
   }
 
-  /** Send an alert unless the same one went out in the last 20 hours. */
+  /**
+   * Tell the owner, unless the same alert went out in the last 20 hours.
+   * Urgent alerts (a person must act) go out at once; the rest wait for the
+   * evening digest so the owner's working day is not interrupted.
+   */
   private async alert(ctx: Ctx, key: string, text: string, urgent: boolean, force = false): Promise<void> {
     const sent = { ...((ctx.settings.alertsSent as Record<string, string> | null) ?? {}) };
     const last = sent[key] ? Date.parse(sent[key]) : NaN;
     if (!force && Number.isFinite(last) && ctx.now.getTime() - last < ALERT_REPEAT_MS) return;
-    await this.notifier.send(text, urgent);
+
+    const data: Prisma.SocialSettingsUpdateInput = {};
+    if (urgent) {
+      await this.notifier.send(text, true);
+    } else {
+      const queued = Array.isArray(ctx.settings.digest) ? (ctx.settings.digest as string[]) : [];
+      data.digest = [...queued, text].slice(-MAX_DIGEST_ITEMS);
+    }
     sent[key] = ctx.now.toISOString();
     // Forget alerts older than a month so the map stays small.
     for (const [k, v] of Object.entries(sent)) {
       if (ctx.now.getTime() - Date.parse(v) > 30 * DAY) delete sent[k];
     }
-    ctx.settings = await this.prisma.socialSettings.update({ where: { id: ctx.settings.id }, data: { alertsSent: sent } });
+    data.alertsSent = sent;
+    ctx.settings = await this.prisma.socialSettings.update({ where: { id: ctx.settings.id }, data });
+  }
+
+  /**
+   * Once a day from 19:30 Algeria time (after the owner's working day): the
+   * non-urgent messages collected since the last digest, in one silent
+   * message. Thursdays (end of the Algerian work week) add a weekly summary.
+   */
+  private async sendDigest(ctx: Ctx): Promise<void> {
+    const today = algeriaDate(ctx.now);
+    if (ctx.now < algeriaToUtc(today, DIGEST_TIME)) return;
+    if (ctx.settings.digestSentAt && algeriaDate(ctx.settings.digestSentAt) === today) return;
+
+    const items = Array.isArray(ctx.settings.digest) ? (ctx.settings.digest as string[]) : [];
+    const weekly = weekday(today) === 4 && Boolean(ctx.settings.pageId);
+    if (!items.length && !weekly) return;
+
+    const parts: string[] = [];
+    if (weekly) parts.push(await this.weeklySummary(ctx));
+    if (items.length) parts.push(`ملاحظات اليوم:\n${items.map((t) => `• ${t}`).join('\n')}`);
+    const sent = await this.notifier.send(`🌙 ملخص المساء\n\n${parts.join('\n\n')}`, false);
+    // Keep the items if Telegram is configured but unreachable; drop them otherwise
+    // (no channel to deliver to — they are in the server log already).
+    if (!sent && this.notifier.telegramConfigured) return;
+    ctx.settings = await this.prisma.socialSettings.update({
+      where: { id: ctx.settings.id },
+      data: { digest: [], digestSentAt: ctx.now },
+    });
+  }
+
+  private async weeklySummary(ctx: Ctx): Promise<string> {
+    const weekAgo = new Date(ctx.now.getTime() - 7 * DAY);
+    const [published, upcoming] = await Promise.all([
+      this.prisma.socialPost.groupBy({
+        by: ['platform'],
+        where: { storeId: ctx.storeId, status: 'published', publishedAt: { gte: weekAgo } },
+        _count: { _all: true },
+      }),
+      this.prisma.socialPost.count({
+        where: { storeId: ctx.storeId, status: { in: ['draft', 'approved', 'scheduled'] }, scheduledAt: { gt: ctx.now } },
+      }),
+    ]);
+    const count = (p: Platform) => published.find((x) => x.platform === p)?._count._all ?? 0;
+    const lines = [`📊 هذا الأسبوع: نُشر ${count('facebook')} على فيسبوك و${count('instagram')} على إنستغرام.`];
+    lines.push(`📅 في الانتظار: ${upcoming} منشوراً مخططاً.`);
+    for (const platform of PLATFORMS) {
+      const ch = ctx.channels.get(platform);
+      if (ch?.enabled && ch.pausedReason) lines.push(`⛔ ${PLATFORM_NAMES[platform]} متوقف — راجع لوحة التحكم.`);
+    }
+    return lines.join('\n');
   }
 }
 
 function emptyReport(dryRun: boolean): TickReport {
-  return { ran: true, dryRun, planned: 0, approved: 0, scheduled: 0, published: 0, failed: 0, skipped: 0, paused: [], notes: [] };
+  return { ran: true, dryRun, planned: 0, promoted: 0, approved: 0, scheduled: 0, published: 0, failed: 0, skipped: 0, paused: [], notes: [] };
 }
 
 function errorText(err: unknown): string {
