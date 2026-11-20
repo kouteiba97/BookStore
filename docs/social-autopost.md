@@ -22,7 +22,7 @@ posted to a real Meta account** — that needs the owner's one-time setup below.
 | 2a | New arrivals: a book added in the last 3 days takes the next slot (≥ 1 h away) on each platform, announced «وصل حديثاً»; Meta-scheduled posts are taken back for it | ✅ done |
 | 2b | Evening digest: non-urgent messages wait for one silent Telegram message at 19:30; Thursday adds a weekly summary. Urgent ones (channel paused) still go out at once | ✅ done |
 | 2c | Books with no stock status (web Quick-Add default) are postable; stock = 0 and «حسب الطلب» never are | ✅ done |
-| 2d | Port the screen to the Flutter `admin_app` (`C:\Users\ii\Desktop\BookStoreMobile`) | see that repo |
+| 2d | Mobile: `admin_app/lib/screens/social_autopost.dart` in BookStoreMobile (المزيد ← النشر التلقائي) — channel health + resume, queue actions, run now. Token connect and calendar stay web-only | ✅ done (needs a new APK build) |
 | — | Owner's Meta setup + first real post + check it is public | ⏳ owner |
 | later | Optional AI hook line in captions (facts only — never invent claims about a religious book; needs an API key and owner approval of cost) | not started |
 | 3 | Learning loop: pull per-post reach nightly (Graph post insights), 5 posts in the best slot / 2 in test slots per week, move the main slot after 4–8 weeks (separate profiles for normal, summer, Ramadan) | later — needs a few weeks of real posts first |
