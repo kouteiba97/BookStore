@@ -25,6 +25,8 @@ import { ReportsService } from './reports/reports.service';
 import { AdminHomeSectionsController } from './home-sections/home-sections.controller';
 import { AdminHomeSectionsService } from './home-sections/home-sections.service';
 import { PlanController } from '../../common/plan/plan.controller';
+import { CustomersController } from './customers/customers.controller';
+import { CustomersService } from './customers/customers.service';
 import { SocialAutopostEngineModule } from './social-autopost/social-autopost.module';
 import { SocialAutopostController } from './social-autopost/autopost.controller';
 import { SocialAutopostAdminService } from './social-autopost/autopost-admin.service';
@@ -48,6 +50,7 @@ import { SocialTicker } from './social-autopost/social-ticker';
     ReportsController,
     PlanController,
     AdminHomeSectionsController,
+    CustomersController,
     SocialAutopostController,
   ],
   providers: [
@@ -63,6 +66,7 @@ import { SocialTicker } from './social-autopost/social-ticker';
     MoneyService,
     ReportsService,
     AdminHomeSectionsService,
+    CustomersService,
     SocialAutopostAdminService,
     SocialTicker,
   ],

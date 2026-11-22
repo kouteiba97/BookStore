@@ -1,5 +1,7 @@
 import { Suspense, useEffect, useState, type ReactElement } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { fetchOrders } from "@/lib/admin-api";
 import { TableSkeleton } from "@/components/admin/primitives";
 import { LogoMark } from "@/components/logo";
 import { clearToken } from "@/lib/auth";
@@ -36,6 +38,12 @@ const Icon = {
   orders: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
       <path d="M3 6h18l-2 13H5L3 6Z" /><path d="M9 10v0M15 10v0" /><path d="M3 6 5 3h14l2 3" />
+    </svg>
+  ),
+  customers: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-[18px] w-[18px]">
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5" />
     </svg>
   ),
   requests: (
@@ -138,6 +146,7 @@ const NAV: NavItem[] = [
   { to: "/admin/sales", label: "المبيعات", icon: Icon.sales },
   { to: "/admin/orders", label: "الطلبات", icon: Icon.orders },
   { to: "/admin/requests", label: "طلبات العملاء", icon: Icon.requests },
+  { to: "/admin/customers", label: "الزبائن", icon: Icon.customers },
   { to: "/admin/books", label: "الكتب", icon: Icon.books },
   { to: "/admin/quick-add", label: "إضافة سريعة", icon: Icon.quickAdd },
   { to: "/admin/catalog/categories", label: "التصنيفات", icon: Icon.catalog },
@@ -157,6 +166,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin": "نظرة عامة",
   "/admin/orders": "إدارة الطلبات",
   "/admin/requests": "طلبات العملاء",
+  "/admin/customers": "الزبائن",
   "/admin/books": "إدارة الكتب",
   "/admin/quick-add": "إضافة سريعة",
   "/admin/catalog/categories": "التصنيفات",
@@ -275,6 +285,14 @@ function Sidebar({
   mobile?: boolean;
 }) {
   const { data: plan } = usePlan();
+  // Web orders waiting for a confirmation call — the number on «الطلبات».
+  const { data: pending } = useQuery({
+    queryKey: ["admin-orders", "pending-count"],
+    queryFn: () => fetchOrders({ status: "pending", page: 1, pageSize: 1 }),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+  const badges: Record<string, number | undefined> = { "/admin/orders": pending?.total || undefined };
   return (
     <div className="flex h-full w-full flex-col bg-card">
       {/* Brand */}
@@ -311,6 +329,14 @@ function Sidebar({
                   )}
                   <span className={active ? "text-primary" : "text-muted-foreground/80"}>{item.icon}</span>
                   {!collapsed && <span className="truncate">{item.label}</span>}
+                  {badges[item.to] ? (
+                    <span
+                      className={`${collapsed ? "absolute top-1 left-1 h-4 min-w-4 px-1 text-[9px]" : "ms-auto h-5 min-w-5 px-1.5 text-[10px]"} inline-flex items-center justify-center rounded-full bg-amber-500 font-bold text-white tabular-nums`}
+                      title={`${badges[item.to]} طلب في انتظار التأكيد`}
+                    >
+                      {badges[item.to]}
+                    </span>
+                  ) : null}
                   {!collapsed && item.feature && plan && !plan.features[item.feature] && (
                     <span className="ms-auto text-amber-600" title="غير متوفرة في باقتك">
                       <LockIcon />

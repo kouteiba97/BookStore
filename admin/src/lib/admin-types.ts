@@ -90,9 +90,29 @@ export interface AdminOrder {
   paymentMethod?: "cash" | "card" | "transfer" | "cod" | "other" | null;
   discount?: string;
   invoiceNumber?: string | null;
+  /** Public order number the customer tracks with ("BY-482193"). */
+  reference?: string | null;
+  carrier?: string | null;
+  trackingNumber?: string | null;
+  /** The storefront account that placed it, when logged in. */
+  customer?: { id: string; firstName: string; lastName: string } | null;
   soldAt?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminCustomer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string | null;
+  wilaya: string | null;
+  createdAt: string;
+  lastLoginAt: string | null;
+  ordersCount: number;
+  totalSpent: number;
+  lastOrderAt: string | null;
 }
 
 export interface AcademicField {

@@ -45,9 +45,11 @@ services:
         sync: false
       - key: META_APP_SECRET
         sync: false
-      - key: TELEGRAM_BOT_TOKEN    # optional: alerts when a person must act
+      - key: TELEGRAM_BOT_TOKEN    # optional: alerts when a person must act + one per new web order
         sync: false
       - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: ADMIN_URL             # optional: admin origin (https://admin.…) — new-order alerts link to the order
         sync: false
       - key: HEALTHCHECK_TICK_URL     # optional: healthchecks.io check, period 10 min, grace 30 min
         sync: false

@@ -1,4 +1,7 @@
-import sharp = require('sharp');
+// Same import as common/utils/cover-image.ts (ts-jest cannot call `import x = require`).
+import type SharpFn from 'sharp';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const sharp: typeof SharpFn = require('sharp');
 import { createHash } from 'crypto';
 
 /**

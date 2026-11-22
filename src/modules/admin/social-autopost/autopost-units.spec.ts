@@ -1,4 +1,8 @@
-import sharp = require('sharp');
+// Same import as common/utils/cover-image.ts: ts-jest types `import x = require`
+// as the module namespace, which is not callable.
+import type SharpFn from 'sharp';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const sharp: typeof SharpFn = require('sharp');
 import { pickBooks, type Candidate } from './book-picker';
 import { frameForInstagram, IG_HEIGHT, IG_WIDTH, instagramImageKey } from './instagram-image';
 import { classifyGraphError, ownerFix } from './meta-errors';

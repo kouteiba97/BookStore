@@ -15,10 +15,12 @@ import {
 } from './dto/order.dto';
 import { OrderStatus, canTransition, computeOrderTotals } from './order-rules';
 import { thumbUrlFor } from '../../../common/utils/cover-image';
+import { withReference } from '../../../common/orders/with-reference';
 
 const orderInclude = {
   items: { include: { book: { select: { id: true, title: true, imageUrl: true } } } },
   request: { select: { id: true } },
+  customer: { select: { id: true, firstName: true, lastName: true } },
 };
 
 type Tx = Prisma.TransactionClient;
@@ -71,6 +73,7 @@ export class OrdersService {
               { lastName: { contains: search, mode: 'insensitive' } },
               { phone: { contains: search } },
               { invoiceNumber: { contains: search } },
+              { reference: { contains: search.trim().toUpperCase() } },
               { items: { some: { bookTitle: { contains: search, mode: 'insensitive' } } } },
             ],
           }
@@ -134,12 +137,16 @@ export class OrdersService {
     const items = await this.resolveItems(storeId, dto.items);
     const totals = computeOrderTotals(items, dto.shippingCost ?? 0, dto.discount ?? 0);
     const status = dto.status ?? 'pending';
+    const channel = dto.channel ?? 'online';
 
-    return this.prisma.$transaction(async (tx) => {
+    // Online (web, phone, WhatsApp) orders get a number the customer can
+    // track; counter sales and imports do not need one.
+    const run = (reference: string | null) => this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
           storeId,
-          channel: dto.channel ?? 'online',
+          reference,
+          channel,
           paymentMethod: dto.paymentMethod ?? null,
           firstName: dto.firstName,
           lastName: dto.lastName,
@@ -155,6 +162,7 @@ export class OrdersService {
       if (takesStock(status)) await this.applyStock(tx, storeId, order.id, items, -1);
       return tx.order.findUnique({ where: { id: order.id }, include: orderInclude });
     });
+    return channel === 'online' ? withReference(run) : run(null);
   }
 
   /**
@@ -311,7 +319,7 @@ export class OrdersService {
     const items = await this.resolveItems(storeId, dto.items);
     const totals = computeOrderTotals(items, dto.shippingCost ?? 0);
 
-    return this.prisma.$transaction(async (tx) => {
+    return withReference((reference) => this.prisma.$transaction(async (tx) => {
       // Claim the request first: two clicks on "convert" must not produce two
       // orders. The conditional update only succeeds for the first one.
       const claimed = await tx.request.updateMany({
@@ -327,6 +335,7 @@ export class OrdersService {
       const order = await tx.order.create({
         data: {
           storeId,
+          reference,
           channel: 'online',
           firstName: request.firstName,
           lastName: request.lastName,
@@ -347,7 +356,19 @@ export class OrdersService {
       });
 
       return tx.order.findUnique({ where: { id: order.id }, include: orderInclude });
+    }));
+  }
+
+  /** Delivery company and tracking number, shown on the customer's tracking page. */
+  async updateShipping(id: string, dto: { carrier?: string | null; trackingNumber?: string | null }) {
+    const storeId = await this.storeResolver.getStoreId();
+    const clean = (v: string | null | undefined) => (v === undefined ? undefined : v?.trim() || null);
+    const { count } = await this.prisma.order.updateMany({
+      where: { id, storeId },
+      data: { carrier: clean(dto.carrier), trackingNumber: clean(dto.trackingNumber) },
     });
+    if (count === 0) throw new NotFoundException('Order not found');
+    return this.get(id);
   }
 
   // ── Invoices ────────────────────────────────────────────

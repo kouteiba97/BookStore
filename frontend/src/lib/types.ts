@@ -140,3 +140,63 @@ export interface HomeShelf {
   subtitle: string | null;
   books: Book[];
 }
+
+// ── Storefront orders ───────────────────────────────────
+
+export type OrderStatusValue = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
+
+/** An order as the customer sees it (no address, notes or costs). */
+export interface PublicOrder {
+  reference: string;
+  status: {
+    status: OrderStatusValue;
+    label: string;
+    hint: string;
+    /** 0 received · 1 confirmed · 2 shipped · 3 delivered. */
+    step: number;
+    cancelled: boolean;
+  };
+  firstName: string;
+  wilaya: string;
+  items: {
+    bookId: string;
+    title: string;
+    quantity: number;
+    /** 0 when the shop sets the price at confirmation. */
+    unitPrice: number;
+    imageUrl: string | null;
+    thumbUrl: string | null;
+  }[];
+  hasUnpricedItems: boolean;
+  subtotal: number;
+  discount: number;
+  shippingCost: number;
+  total: number;
+  carrier: string | null;
+  trackingNumber: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** What checkout returns: the order plus the phone it was saved with. */
+export interface PlacedOrder extends PublicOrder {
+  phone: string;
+  whatsappUrl: string | null;
+}
+
+export interface CheckoutCustomer {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  wilaya: string;
+  address: string;
+}
+
+export interface QuotedBook {
+  id: string;
+  title: string;
+  price: number | null;
+  imageUrl: string | null;
+  thumbUrl: string | null;
+  status: Inventory["status"] | null;
+}

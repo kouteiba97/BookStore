@@ -127,6 +127,23 @@ export const updateOrder = (id: string, data: any) =>
 export const updateOrderStatus = (id: string, status: string) =>
   adminApi.patch(`/orders/${id}/status`, { status }).then((r) => r.data);
 
+/** Delivery company and tracking number, shown on the customer's tracking page. */
+export const updateOrderShipping = (id: string, data: { carrier: string | null; trackingNumber: string | null }) =>
+  adminApi.patch(`/orders/${id}/shipping`, data).then((r) => r.data);
+
+// ── Customers (storefront accounts) ─────────────────────
+
+export const fetchCustomers = (params: { search?: string; page?: number; pageSize?: number }) =>
+  adminApi
+    .get<{ customers: import("./admin-types").AdminCustomer[]; total: number }>("/customers", { params })
+    .then((r) => r.data);
+
+/** One-time «set a new password» link (48 h) to send the customer on WhatsApp. */
+export const createCustomerResetLink = (id: string) =>
+  adminApi.post<{ url: string; expiresAt: string }>(`/customers/${id}/reset-link`).then((r) => r.data);
+
+export const deleteCustomer = (id: string) => adminApi.delete(`/customers/${id}`).then((r) => r.data);
+
 export const cancelOrder = (id: string) =>
   adminApi.post(`/orders/${id}/cancel`).then((r) => r.data);
 

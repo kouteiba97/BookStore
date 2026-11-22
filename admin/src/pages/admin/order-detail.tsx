@@ -24,6 +24,7 @@ import { useToast } from "@/components/admin/toaster";
 import { Thumb } from "@/components/admin/thumb";
 import { useFeature } from "@/components/admin/plan-gate";
 import { CHANNEL_LABEL, PAYMENT_LABEL } from "@/lib/money-api";
+import { NotifyCustomerButton, ShippingCard } from "@/components/admin/order-customer";
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "قيد الانتظار",
@@ -67,8 +68,14 @@ export default function OrderDetailPage() {
 
   const statusMutation = useMutation({
     mutationFn: (status: OrderStatus) => updateOrderStatus(id!, status),
-    onSuccess: () => {
-      toast.success("تم تحديث حالة الطلب");
+    onSuccess: (_data, status) => {
+      toast.success(
+        status === "shipped"
+          ? "تم الشحن — أضف رقم التتبّع ثم أبلغ الزبون عبر واتساب"
+          : status === "confirmed"
+            ? "تم تأكيد الطلب — أبلغ الزبون عبر واتساب"
+            : "تم تحديث حالة الطلب",
+      );
       qc.invalidateQueries({ queryKey: ["admin-order", id] });
       qc.invalidateQueries({ queryKey: ["admin-orders"] });
       qc.invalidateQueries({ queryKey: ["admin-stats"] });
@@ -110,9 +117,15 @@ export default function OrderDetailPage() {
             ← الرجوع للطلبات
           </Link>
           <div className="mt-1 flex items-center gap-3">
-            <h2 className="font-mono text-sm text-muted-foreground" dir="ltr">
-              #{order.id.slice(0, 8)}
-            </h2>
+            {order.reference ? (
+              <h2 className="font-mono text-base font-bold text-foreground" dir="ltr" title={`#${order.id.slice(0, 8)}`}>
+                {order.reference}
+              </h2>
+            ) : (
+              <h2 className="font-mono text-sm text-muted-foreground" dir="ltr">
+                #{order.id.slice(0, 8)}
+              </h2>
+            )}
             <StatusBadge status={order.status} label={STATUS_LABEL[order.status]} />
             {order.channel && (
               <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{CHANNEL_LABEL[order.channel]}</span>
@@ -147,6 +160,17 @@ export default function OrderDetailPage() {
           )}
         </div>
       </div>
+
+      {order.status === "pending" && order.items.some((it) => Number(it.unitPrice) <= 0) && (
+        <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          في هذا الطلب كتاب بلا سعر. اضغط «تعديل الطلب» لتحديد السعر وتكلفة التوصيل قبل التأكيد، حتى يعرف الزبون المبلغ عند الاستلام.
+        </div>
+      )}
+      {order.status === "pending" && order.channel === "online" && Number(order.shippingCost) === 0 && order.items.every((it) => Number(it.unitPrice) > 0) && (
+        <p className="rounded-xl border border-border/60 bg-muted/40 px-4 py-2.5 text-xs text-muted-foreground">
+          تكلفة التوصيل لم تُحدَّد بعد. حدّدها في «تعديل الطلب» بعد الاتصال بالزبون، ثم أكّد الطلب.
+        </p>
+      )}
 
       {/* ── Status pipeline ── */}
       {order.status !== "cancelled" && (
@@ -257,27 +281,46 @@ export default function OrderDetailPage() {
             <Info label="الولاية" value={order.wilaya} />
             <Info label="العنوان" value={order.address} />
             {order.notes && <Info label="ملاحظات" value={order.notes} />}
+            {order.customer && (
+              <p className="text-[11px] text-muted-foreground">
+                ↳ طلبه من <Link to={`/admin/customers?search=${encodeURIComponent(order.phone)}`} className="text-primary hover:underline">حسابه على الموقع</Link>
+              </p>
+            )}
             {order.request && (
               <p className="text-[11px] text-muted-foreground">
                 ↳ تم تحويله من <Link to="/admin/requests" className="text-primary hover:underline">طلب عميل</Link>
               </p>
             )}
           </div>
-          <div className="border-t border-border/40 px-5 py-3">
-            <a
-              href={`https://wa.me/${cleanPhone(order.phone)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347" />
-              </svg>
-              تواصل عبر واتساب
-            </a>
+          <div className="space-y-2 border-t border-border/40 px-5 py-3">
+            <NotifyCustomerButton order={order} />
+            <div className="flex gap-2">
+              <a
+                href={`tel:${order.phone}`}
+                className="inline-flex h-8 flex-1 items-center justify-center rounded-lg border border-border text-xs font-semibold hover:bg-muted"
+              >
+                اتصال
+              </a>
+              <a
+                href={`https://wa.me/${cleanPhone(order.phone)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-8 flex-1 items-center justify-center rounded-lg border border-border text-xs font-semibold hover:bg-muted"
+              >
+                محادثة فارغة
+              </a>
+            </div>
           </div>
         </Surface>
       </div>
+
+      {order.channel === "online" && ["confirmed", "shipped", "delivered"].includes(order.status) && (
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-start-3">
+            <ShippingCard order={order} />
+          </div>
+        </div>
+      )}
 
       {/* ── Edit modal ── */}
       <EditOrderModal

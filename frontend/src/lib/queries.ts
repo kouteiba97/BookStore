@@ -1,5 +1,5 @@
 import api from "./api";
-import type { Book, AutocompleteItem, Suggestions, Field, AcademicYear, Subject, StoreCategory, HomeSection, HomeShelf } from "./types";
+import type { Book, AutocompleteItem, Suggestions, Field, AcademicYear, Subject, StoreCategory, HomeSection, HomeShelf, CheckoutCustomer, PlacedOrder, PublicOrder, QuotedBook } from "./types";
 
 /** Newest books as cards. Pass `limit` — the home page shows 16, not the catalogue. */
 export const fetchBooks = (limit?: number, categoryId?: string) =>
@@ -60,6 +60,37 @@ export const createRequest = (data: {
   /** Honeypot — always empty for real people; the API rejects any value. */
   website?: string;
 }) => api.post("/requests", data).then((r) => r.data);
+
+// ── Orders (checkout and tracking) ──────────────────────
+
+/** Place an order. Prices are set by the server, never by the browser. */
+export const createOrder = (data: CheckoutCustomer & {
+  items: { bookId: string; quantity: number }[];
+  note?: string;
+  /** Honeypot — always empty for real people. */
+  website?: string;
+}) => api.post<PlacedOrder>("/orders", data).then((r) => r.data);
+
+/** Follow an order: its number and the phone it was placed with. */
+export const trackOrder = (ref: string, phone: string) =>
+  api.get<PublicOrder>("/orders/track", { params: { ref, phone } }).then((r) => r.data);
+
+/** Today's price and availability for the books in the cart. */
+export const quoteBooks = (bookIds: string[]) =>
+  api.post<{ books: QuotedBook[] }>("/orders/quote", { bookIds }).then((r) => r.data.books);
+
+/**
+ * The message to show for a failed call: the server's own (it is already in
+ * Arabic for validation errors) or a calm generic one.
+ */
+export function apiErrorMessage(err: unknown, fallback = "حدث خطأ، حاول مرة أخرى"): string {
+  const res = (err as { response?: { status?: number; data?: { message?: unknown } } })?.response;
+  if (res?.status === 429) return "محاولات كثيرة في وقت قصير. انتظر دقيقة ثم أعد المحاولة.";
+  const data = res?.data;
+  const m = data?.message;
+  const first = Array.isArray(m) ? m[0] : m;
+  return typeof first === "string" && /[\u0600-\u06FF]/.test(first) ? first : fallback;
+}
 
 export const fetchRequests = (params?: {
   status?: string;
