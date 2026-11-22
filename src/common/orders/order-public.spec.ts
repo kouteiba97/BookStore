@@ -6,6 +6,7 @@ import {
   publicStatus,
   samePhone,
   whatsappLink,
+  newOrderAlert,
 } from './order-public';
 
 describe('normalizePhone', () => {
@@ -80,5 +81,42 @@ describe('whatsapp', () => {
     });
     expect(msg).toContain('BY-482193');
     expect(msg).toContain('رياض الصالحين × 2');
+  });
+});
+
+describe('newOrderAlert', () => {
+  const base = {
+    id: 'ord-1',
+    reference: 'BY-482193',
+    firstName: 'محمد',
+    lastName: 'بن علي',
+    phone: '0555123456',
+    wilaya: 'قسنطينة',
+    items: [
+      { title: 'رياض الصالحين', quantity: 2, unitPrice: 1500 },
+      { title: 'كتاب بلا سعر', quantity: 1, unitPrice: 0 },
+    ],
+    subtotal: 3000,
+  };
+
+  it('names the order, the customer and every book', () => {
+    const msg = newOrderAlert(base);
+    expect(msg).toContain('BY-482193');
+    expect(msg).toContain('0555123456');
+    expect(msg).toContain('قسنطينة');
+    expect(msg).toContain('رياض الصالحين × 2');
+    expect(msg).toContain('بلا سعر');
+    expect(msg).toContain('+ كتب يُحدَّد سعرها');
+  });
+
+  it('links to the order in the dashboard when the admin address is known', () => {
+    expect(newOrderAlert({ ...base, adminUrl: 'https://admin.example.com/' })).toContain('https://admin.example.com/admin/orders/ord-1');
+    expect(newOrderAlert(base)).not.toContain('/admin/orders/');
+  });
+
+  it('shows the note and the account marker', () => {
+    const msg = newOrderAlert({ ...base, note: 'الطبعة الحديثة', fromAccount: true });
+    expect(msg).toContain('📝 الطبعة الحديثة');
+    expect(msg).toContain('(لديه حساب)');
   });
 });

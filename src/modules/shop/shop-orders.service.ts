@@ -11,7 +11,9 @@ import {
   publicStatus,
   samePhone,
   whatsappLink,
+  newOrderAlert,
 } from '../../common/orders/order-public';
+import { sendTelegram } from '../../common/notify/telegram';
 import { withReference } from '../../common/orders/with-reference';
 import { CreateShopOrderDto, MAX_QTY } from './dto/shop-order.dto';
 
@@ -115,6 +117,25 @@ export class ShopOrdersService {
     );
 
     const view = toPublicOrder(order);
+
+    // Tell the owner right away (Telegram, if configured). Never awaited: a
+    // slow or failing Telegram must not hold up or fail the customer's order.
+    void sendTelegram(
+      newOrderAlert({
+        id: order.id,
+        reference: view.reference,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        phone,
+        wilaya: dto.wilaya,
+        items: view.items,
+        subtotal: view.subtotal,
+        note: dto.note,
+        fromAccount: !!customerId,
+        adminUrl: process.env.ADMIN_URL,
+      }),
+      true,
+    ).catch(() => undefined);
     const shopNumber = process.env.WHATSAPP_NUMBER?.replace(/\D/g, '');
     return {
       ...view,

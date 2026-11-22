@@ -91,7 +91,7 @@ When you save, **all items are replaced** — the backend deletes existing items
 ## 5. A web order, start to finish
 
 1. The customer orders on the site (one book, or the whole cart). They get an order number like `BY-482193` and a screen explaining what happens next. **No stock moves yet.**
-2. The order appears in «الطلبات» as «قيد الانتظار» (badge in the menu). Prices come from the catalogue; a book without a price shows 0 and a warning.
+2. The order appears in «الطلبات» as «قيد الانتظار» (badge in the menu), and — when `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set on the API — your phone rings with a Telegram message: number, customer, phone, wilaya, books, total, note, and a link to the order (`ADMIN_URL`). Prices come from the catalogue; a book without a price shows 0 and a warning.
 3. Call the customer (or press «إبلاغ الزبون عبر واتساب»). In «تعديل الطلب» set the missing prices and the **shipping cost**.
 4. **تأكيد** → books leave stock. Send the confirmation message (it includes the amount to pay on delivery and the tracking link).
 5. Ship → fill «الشحن» (carrier + tracking number) → **شحن** → send the shipping message.

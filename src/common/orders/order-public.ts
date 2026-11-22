@@ -145,3 +145,45 @@ export function customerWhatsappMessage(o: {
     'أرجو تأكيد الطلب. شكرًا.',
   ].join('\n');
 }
+
+// ── Owner alert ──────────────────────────────────────────
+
+/**
+ * The Telegram message the owner gets the moment a web order arrives: who,
+ * where, what, how much, and a link straight to the order in the dashboard.
+ */
+export function newOrderAlert(o: {
+  id: string;
+  reference: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  wilaya: string;
+  items: { title: string; quantity: number; unitPrice: number }[];
+  subtotal: number;
+  note?: string | null;
+  fromAccount?: boolean;
+  adminUrl?: string | null;
+}): string {
+  const dzd = (n: number) => `${Math.round(n).toLocaleString('fr-DZ').replace(/ | /g, ' ')} دج`;
+  const unpriced = o.items.some((it) => it.unitPrice <= 0);
+  const lines = o.items.map(
+    (it) => `• ${it.title}${it.quantity > 1 ? ` × ${it.quantity}` : ''} — ${it.unitPrice > 0 ? dzd(it.unitPrice * it.quantity) : 'بلا سعر'}`,
+  );
+  const base = o.adminUrl?.trim().replace(/\/+$/, '');
+  return [
+    `🛒 طلب جديد ${o.reference}`,
+    '',
+    `👤 ${o.firstName} ${o.lastName}${o.fromAccount ? ' (لديه حساب)' : ''}`,
+    `📞 ${o.phone}`,
+    `📍 ${o.wilaya}`,
+    '',
+    ...lines,
+    '',
+    `المجموع: ${dzd(o.subtotal)}${unpriced ? ' + كتب يُحدَّد سعرها' : ''} (دون التوصيل)`,
+    ...(o.note ? ['', `📝 ${o.note}`] : []),
+    '',
+    'اتصل بالزبون لتأكيد الطلب وتكلفة التوصيل.',
+    ...(base ? [`${base}/admin/orders/${o.id}`] : []),
+  ].join('\n');
+}
