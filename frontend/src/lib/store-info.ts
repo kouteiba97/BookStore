@@ -1,22 +1,30 @@
 /**
- * The shop's physical location, shown in the footer map.
- * Override per deployment (the "full" edition sold to other stores) with
- * VITE_STORE_ADDRESS, and optionally VITE_STORE_MAP_QUERY when the address
- * text is not what Google Maps should search for.
+ * The shop's physical location, shown in the footer map and on /links.
+ * Override per deployment (the "full" edition sold to other stores):
+ *  - VITE_STORE_ADDRESS / VITE_STORE_ADDRESS_AR — the address text shown;
+ *  - VITE_STORE_MAP_URL — the shop's own Google Maps link (Share → copy link):
+ *    opens the listing itself, with photos, hours and directions;
+ *  - VITE_STORE_COORDS — "lat,lng" of the pin, for the embedded map.
+ * Without the last two, the map falls back to searching the address
+ * (or VITE_STORE_MAP_QUERY).
  */
 const address =
   import.meta.env.VITE_STORE_ADDRESS ?? "20, Rue Ernesto Che Guevara, 25000 Constantine, Algeria";
 
 const mapQuery = import.meta.env.VITE_STORE_MAP_QUERY ?? address;
 
+/** مكتبة البيان's own Google Maps listing and its pin. */
+const mapUrl = (import.meta.env.VITE_STORE_MAP_URL as string | undefined) ?? "https://maps.app.goo.gl/AJpSuNXdFU9BiQ3B9";
+const coords = (import.meta.env.VITE_STORE_COORDS as string | undefined) ?? "36.3475875,6.6052344";
+
 export const storeLocation = {
   address,
   /** Arabic line shown under the map. */
   addressAr: import.meta.env.VITE_STORE_ADDRESS_AR ?? "20، نهج إرنستو تشي غيفارا، 25000 قسنطينة، الجزائر",
-  /** Embeddable map — loaded only when the visitor asks for it. */
-  embedUrl: `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&hl=ar&z=16&output=embed`,
-  /** Opens Google Maps (app on phones) with directions available. */
-  openUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`,
+  /** Embeddable map on the exact pin — loaded only when the visitor asks for it. */
+  embedUrl: `https://maps.google.com/maps?q=${encodeURIComponent(coords?.trim() || mapQuery)}&hl=ar&z=17&output=embed`,
+  /** Opens the shop's listing in Google Maps (the app on phones), with directions. */
+  openUrl: mapUrl?.trim() || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`,
 };
 
 /** WhatsApp number in international form, digits only (wa.me links). */
